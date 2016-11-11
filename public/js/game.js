@@ -79,7 +79,9 @@ var Objects;
         __extends(Gunner, _super);
         function Gunner(game, x, y) {
             _super.call(this, game, x, y, 'ship');
-            this.anchor.set(0.5);
+            this.recruits = this.game.add.group();
+            this.anchors = this.game.add.group();
+            this.anchor.setTo(0.5, 0.5);
             // init inputs
             this.fire_button = this.game.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
             this.left_button = this.game.input.keyboard.addKey(Phaser.KeyCode.A);
@@ -106,6 +108,10 @@ var Objects;
             if (this.fire_button.isDown) {
                 this.weapon.fire();
             }
+            // rotate the ring
+            this.anchors.forEach(function (anchor) {
+                anchor.angle += 1;
+            }, null, true);
         };
         Gunner.prototype.collidePanda = function (gunner, panda) {
             switch (panda.state) {
@@ -113,8 +119,7 @@ var Objects;
                     gunner.die(); //lose 1 life
                     break;
                 case "attached":
-                    panda.attachTo(gunner);
-                    panda.rescue();
+                    this.rescuePanda(panda);
                     break;
                 default:
             }
@@ -124,13 +129,40 @@ var Objects;
             this.kill();
         };
         Gunner.prototype.rescuePanda = function (panda) {
-            this.recruits.add(panda);
             panda.rescue();
+            this.recruits.add(panda);
+            var anchor = this.game.add.sprite(0, 0);
+            this.anchors.add(anchor);
+            anchor.x = this.x - this.width / 2;
+            anchor.y = this.y - this.height / 2;
+            anchor.anchor.setTo(0.5);
+            panda.target = anchor.worldPosition;
+            this.refreshRing();
+        };
+        Gunner.prototype.removePanda = function (panda) {
+            this.recruits.remove(panda);
+            this.anchors.removeChildAt(0);
+            panda.kill();
             this.refreshRing();
         };
         Gunner.prototype.refreshRing = function () {
-            var ring_space = 50;
-            this.ring_radius = ring_space / 2.0 / Math.PI;
+            var _this = this;
+            var count = this.recruits.countLiving();
+            if (count <= 4) {
+                this.ring_radius = 20;
+            }
+            else {
+                var ring_space = 30;
+                this.ring_radius = count * ring_space / (2 * Math.PI);
+            }
+            console.log(this.ring_radius);
+            var rotation_unit = 360.0 / count;
+            var current_rotation = 0;
+            this.anchors.forEach(function (anchor) {
+                anchor.pivot.x = _this.ring_radius;
+                anchor.angle = current_rotation;
+                current_rotation += rotation_unit;
+            }, null, true);
         };
         return Gunner;
     }(Phaser.Sprite));
@@ -234,9 +266,8 @@ var Objects;
             moveToTarget(this, this.attachedTo.position, 20, null);
         };
         Panda.prototype.update_rescued = function () {
-            //Party at the base
-            this.body.velocity = [0, 0];
-            this.kill(); //and for now die but actually circle the base in a group of RescuedPandas (remember these our the lives!)
+            //follow the gunner's anchor position
+            moveToTarget(this, this.target, 0, 100);
         };
         Panda.prototype.update_sleepy = function () {
             //stay perfectly still
@@ -284,7 +315,7 @@ var Objects;
                     break;
                 case "warpingHome":
                     //blue and fly to turret home.
-                    moveToTarget(this, new Phaser.Point(this.game.world.centerX, this.game.world.centerY), 0, 100);
+                    moveToTarget(this, new Phaser.Point(200, 200), 0, 100);
                     break;
                 default:
                     break;
@@ -445,6 +476,9 @@ var State;
             this.game.input.keyboard.addKey(Phaser.Keyboard.NINE).onUp.add(this.changeAllPandasState, this, null, "rescued");
             this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
             this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnPandaFromGunner, this);
+            // TEST for gunner
+            this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
         };
         Game_state.prototype.update = function () {
             this.level.update_game_state(this);
@@ -473,8 +507,10 @@ var State;
             }*/
         };
         Game_state.prototype.shotPanda = function (bullet, panda) {
-            bullet.kill();
-            panda.stun();
+            if (panda.state != "rescued") {
+                bullet.kill();
+                panda.stun();
+            }
         };
         Game_state.prototype.shotRunner = function (bullet, arunner) {
             bullet.kill();
@@ -492,6 +528,15 @@ var State;
             //this.pandas.setAll('state', state);
             console.log("Made all the pandas " + state);
         };
+        Game_state.prototype.createRescuedPanda = function () {
+            var panda = this.spawnPanda(this.gunner.x - 40, this.gunner.y);
+            this.gunner.rescuePanda(panda);
+            //this.pandas.add(panda);
+        };
+        Game_state.prototype.removeOnPandaFromGunner = function () {
+            var panda = this.gunner.recruits.getAt(0);
+            this.gunner.removePanda(panda);
+        };
         return Game_state;
     }(Phaser.State));
     State.Game_state = Game_state;
@@ -501,7 +546,15 @@ function moveToTarget(source, target, distance, speed) {
     var gospeed = speed || 50;
     source.body.velocity.x = target.x - source.body.position.x;
     source.body.velocity.y = target.y - source.body.position.y;
-    if (source.body.velocity.x > distance || source.body.velocity.x < -distance ||
+    if (distance == 0) {
+        var magnitude_sqr = source.body.velocity.x * source.body.velocity.x + source.body.velocity.y * source.body.velocity.y;
+        if (magnitude_sqr > 0) {
+            var magnitude = Math.sqrt(magnitude_sqr);
+            source.body.velocity.x *= gospeed / magnitude;
+            source.body.velocity.y *= gospeed / magnitude;
+        }
+    }
+    else if (source.body.velocity.x > distance || source.body.velocity.x < -distance ||
         source.body.velocity.y > distance || source.body.velocity.y < -distance) {
         //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
         var magnitude = Math.sqrt(source.body.velocity.x * source.body.velocity.x + source.body.velocity.y * source.body.velocity.y);
