@@ -70,7 +70,7 @@ module Objects{
                     gunner.die(); //lose 1 life
                     break;
                 case "attached":
-                    this.rescuePanda(panda);
+                    gunner.rescuePanda(panda);
                     break;
                 default:
                     //nothing?
