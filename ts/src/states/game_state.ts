@@ -3,6 +3,7 @@ module State{
 
         unit = 12;
         bmd_unit_white : Phaser.BitmapData;
+        bmd_unit_black : Phaser.BitmapData;
         
         level : Array<string>;
         starty = 50;
@@ -22,6 +23,8 @@ module State{
         weapon : Phaser.Weapon;
         fire_button : Phaser.Key;
 
+        gray_filter : Phaser.Filter;
+
         preload(){
             // create a bitmap data
             // http://phaser.io/examples/v2/bitmapdata/cached-bitmapdata
@@ -33,11 +36,17 @@ module State{
 
             this.game.load.image('bullet', 'assets/img/shmup-bullet.png');
             this.game.load.image('ship', 'assets/img/thrust_ship.png');
+
+            this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
         }
 
 
         create(){
+            this.gray_filter = this.game.add.filter('Gray');
+            //gray.gray = 1.0;
+
             this.weapon = this.game.add.weapon(30, 'bullet');
+            this.weapon.bullets.filters = [this.gray_filter];
 
             //  The bullet will be automatically killed when it leaves the world bounds
             this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
@@ -50,6 +59,7 @@ module State{
 
             this.player = new Objects.Player(this.game, 50, 50);//this.add.sprite(400, 300, 'ship');
             this.game.add.existing(this.player);
+            this.player.filters = [this.gray_filter];
 
             this.game.physics.arcade.enable(this.player);
 
@@ -89,9 +99,11 @@ module State{
                 this.player.body.angularVelocity = 0;
             }
 
-            if (this.fire_button.isDown)
+            if (this.fire_button.justDown)
             {
                 this.weapon.fire();
+                if(this.player.filters == null) this.player.filters = [this.gray_filter];
+                else this.player.filters = null;
             }
 
         }

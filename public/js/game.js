@@ -55,7 +55,7 @@ var Objects;
         function Player(game, x, y) {
             //super(game, x, y, game.cache.getBitmapData('unit_white'));
             _super.call(this, game, x, y, 'ship');
-            this.anchor.set(0.5);
+            //this.anchor.set(0.5);
         }
         Player.prototype.update = function () {
         };
@@ -93,11 +93,20 @@ var State;
             this.bmd_unit_white.context.fillStyle = 'rgb(255,255,255)';
             this.bmd_unit_white.context.fillRect(0, 0, 24, 24);
             this.game.cache.addBitmapData('unit_white', this.bmd_unit_white);
+            this.bmd_unit_black = this.game.add.bitmapData(this.unit, this.unit);
+            this.bmd_unit_black.context.fillStyle = 'rgba(128,128,128,128)';
+            this.bmd_unit_black.context.fillRect(0, 0, 24, 24);
+            this.game.cache.addBitmapData('unit_black', this.bmd_unit_black);
             this.game.load.image('bullet', 'assets/img/shmup-bullet.png');
             this.game.load.image('ship', 'assets/img/thrust_ship.png');
+            this.game.load.image('grayscale', 'assets/img/gray.png');
+            this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
         };
         Game_state.prototype.create = function () {
+            this.gray_filter = this.game.add.filter('Gray');
+            //gray.gray = 1.0;
             this.weapon = this.game.add.weapon(30, 'bullet');
+            this.weapon.bullets.filters = [this.gray_filter];
             //  The bullet will be automatically killed when it leaves the world bounds
             this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
             //  The speed at which the bullet is fired
@@ -106,6 +115,10 @@ var State;
             this.weapon.fireRate = 100;
             this.player = new Objects.Player(this.game, 50, 50); //this.add.sprite(400, 300, 'ship');
             this.game.add.existing(this.player);
+            //this.player.blendMode = PIXI.blendModes.NORMAL;
+            this.player.filters = [this.gray_filter];
+            //var saturation = this.game.add.image(50,50,this.game.cache.getBitmapData('unit_black'));
+            //saturation.blendMode = PIXI.blendModes.LIGHTEN;
             this.game.physics.arcade.enable(this.player);
             this.player.body.drag.set(70);
             this.player.body.maxVelocity.set(200);
@@ -132,12 +145,27 @@ var State;
             else {
                 this.player.body.angularVelocity = 0;
             }
-            if (this.fire_button.isDown) {
+            if (this.fire_button.justDown) {
                 this.weapon.fire();
+                if (this.player.filters == null)
+                    this.player.filters = [this.gray_filter];
+                else
+                    this.player.filters = null;
             }
         };
         return Game_state;
     }(Phaser.State));
     State.Game_state = Game_state;
+})(State || (State = {}));
+var State;
+(function (State) {
+    var Menu_state = (function (_super) {
+        __extends(Menu_state, _super);
+        function Menu_state() {
+            _super.apply(this, arguments);
+        }
+        return Menu_state;
+    }(Phaser.State));
+    State.Menu_state = Menu_state;
 })(State || (State = {}));
 //# sourceMappingURL=game.js.map
