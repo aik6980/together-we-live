@@ -96,7 +96,7 @@ module State{
                 this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnPandaFromGunner, this);
 
             // TEST for gunner
-            this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
+            //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
         }
 
         update(){
