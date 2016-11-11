@@ -50,6 +50,11 @@ module State{
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
             
+            //create pandas group
+            this.pandas = this.game.add.group();
+            this.colliders = this.game.add.group();
+            global_colliders = this.colliders;
+            
             // create gunner player (first as it is centre of the world)
             this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
             this.game.add.existing(this.gunner);
@@ -59,15 +64,10 @@ module State{
             this.runner = new Objects.Runner(this.game, 80, 60, 150)
             this.runner.myGunner = this.gunner;
             this.game.add.existing(this.runner);
-            
-            
-            //create pandas group
-            this.pandas = this.game.add.group();
 
             //create level
             this.level = new Level.Level(this.game);
             this.level.load(this);
-
 
             //dev controls
             if (this.devMode)
@@ -123,15 +123,12 @@ module State{
         }
 
         shotPanda(bullet, panda)
-        {
-			            
+        {			            
 			if (panda.state != "rescued")
             {
                 bullet.kill();
                 panda.stun();
-            bullet.kill();        
-
-        }
+            }
         }
 
         shotRunner(runner, bullet){

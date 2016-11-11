@@ -454,6 +454,10 @@ var State;
             var obj = null; //reused lots.
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
+            //create pandas group
+            this.pandas = this.game.add.group();
+            this.colliders = this.game.add.group();
+            global_colliders = this.colliders;
             // create gunner player (first as it is centre of the world)
             this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
             this.game.add.existing(this.gunner);
@@ -462,8 +466,6 @@ var State;
             this.runner = new Objects.Runner(this.game, 80, 60, 150);
             this.runner.myGunner = this.gunner;
             this.game.add.existing(this.runner);
-            //create pandas group
-            this.pandas = this.game.add.group();
             //create level
             this.level = new Level.Level(this.game);
             this.level.load(this);
@@ -513,7 +515,6 @@ var State;
             if (panda.state != "rescued") {
                 bullet.kill();
                 panda.stun();
-                bullet.kill();
             }
         };
         Game_state.prototype.shotRunner = function (runner, bullet) {
