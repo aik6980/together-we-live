@@ -18,6 +18,7 @@ module State{
 
         // groups
         pandas : Phaser.Group;
+        colliders: Phaser.Group;
 
         gray_filter : Phaser.Filter;
 
@@ -60,18 +61,20 @@ module State{
             this.game.add.tween(sprite).to({ x: this.game.width }, 10000, Phaser.Easing.Linear.None, true);
             */
 
+            this.pandas = this.game.add.group();
+            this.colliders = this.add.group();
+
             // create runner player
             this.runner = new Objects.Runner(this.game, 80, 60, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
+            this.colliders.add(this.runner);
 
             // create gunner player
             this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
             this.game.add.existing(this.gunner);
             this.game.physics.arcade.enable(this.gunner);
             this.gunner.filters = [this.gray_filter];
-
-            this.pandas = this.game.add.group();
 
             this.level = new Level.Level(this.game);
             this.level.load(this);
