@@ -6,10 +6,12 @@ module Objects{
 
     export class Runner extends Phaser.Sprite{
         speed: number = 100;
-        state:  runnerStates = "alive";
-        cursors: Phaser.CursorKeys;
 
-        
+        state:  runnerStates = "alive";
+
+        linked_pandas : Phaser.LinkedList;
+
+        cursors: Phaser.CursorKeys;
 
         constructor(game : Phaser.Game, x: number, y: number, speed: number){
             super(game, x, y, game.cache.getBitmapData('unit_white'));
@@ -17,6 +19,9 @@ module Objects{
             this.changeState(this.state);
 
             this.cursors = this.game.input.keyboard.createCursorKeys();
+
+            this.linked_pandas = new Phaser.LinkedList();
+            this.linked_pandas.add(this);
         }
 
         update(){
@@ -37,7 +42,7 @@ module Objects{
                     break;
                 case "warpingHome":
                     //blue and fly to turret home.
-                    moveToTarget(this, new Phaser.Point(200, 200), 100)
+                    moveToTarget(this, new Phaser.Point(200, 200), 0, 100)
                     break;
                 default:
                     break;
@@ -45,7 +50,6 @@ module Objects{
             
 
         }     
-
 
         movement(){
             //Runner Movement
@@ -103,11 +107,32 @@ module Objects{
                     runner.changeState("scared");
                     break;
                 case "stunned":
-                    panda.attachTo(runner)
+                    runner.attachPanda(panda);
                     break;
                 default:
                     //nothing?
             }
+        }
+
+        attachPanda(panda : Panda)
+        {
+            panda.attachTo(this.linked_pandas.last);
+            this.linked_pandas.add(panda);
+        }
+
+        detachPanda(panda)
+        {
+            if (panda.next != null)
+            {
+                panda.next.attachTo(panda.prev);
+            }
+
+            this.linked_pandas.remove(panda);
+        }
+
+        die(){
+            console.log("runner is dying")
+            this.kill()
         }
     }
 }

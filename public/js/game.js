@@ -75,20 +75,6 @@ var Level;
 })(Level || (Level = {}));
 var Objects;
 (function (Objects) {
-    var Coin = (function (_super) {
-        __extends(Coin, _super);
-        function Coin(game, x, y) {
-            _super.call(this, game, x, y, game.cache.getBitmapData('unit_white'));
-            this.tint = Phaser.Color.getColor(215, 215, 0);
-        }
-        Coin.prototype.update = function () {
-        };
-        return Coin;
-    }(Phaser.Sprite));
-    Objects.Coin = Coin;
-})(Objects || (Objects = {}));
-var Objects;
-(function (Objects) {
     var Gunner = (function (_super) {
         __extends(Gunner, _super);
         function Gunner(game, x, y) {
@@ -128,7 +114,7 @@ var Objects;
                     break;
                 case "attached":
                     panda.attachTo(gunner);
-                    panda.changeState("rescued");
+                    panda.rescue();
                     break;
                 default:
             }
@@ -136,6 +122,15 @@ var Objects;
         Gunner.prototype.die = function () {
             console.log("gunner is dying (lose 1 life)");
             this.kill();
+        };
+        Gunner.prototype.rescuePanda = function (panda) {
+            this.recruits.add(panda);
+            panda.rescue();
+            this.refreshRing();
+        };
+        Gunner.prototype.refreshRing = function () {
+            var ring_space = 50;
+            this.ring_radius = ring_space / 2.0 / Math.PI;
         };
         return Gunner;
     }(Phaser.Sprite));
@@ -188,9 +183,17 @@ var Objects;
             }
         };
         Panda.prototype.attachTo = function (attachee) {
-            console.log("Panda should get attached to the attachee (which should be the runner)", attachee);
+            console.log("Panda get attached to the attachee: ", attachee);
             this.changeState("attached");
             this.attachedTo = attachee;
+        };
+        Panda.prototype.stun = function () {
+            this.detachPanda(this);
+            this.changeState("stunned");
+        };
+        Panda.prototype.rescue = function () {
+            this.detachPanda(this);
+            this.changeState("rescued");
         };
         Panda.prototype.changeState = function (targetState) {
             var prevState = this.state;
@@ -219,7 +222,7 @@ var Objects;
         };
         Panda.prototype.update_hostile = function () {
             if (this.target != null) {
-                moveToTarget(this, this.target, null);
+                moveToTarget(this, this.target, 0, null);
             }
         };
         Panda.prototype.update_stunned = function () {
@@ -228,7 +231,7 @@ var Objects;
         };
         Panda.prototype.update_attached = function () {
             //follow the leader! 
-            moveToTarget(this, this.attachedTo.position, null);
+            moveToTarget(this, this.attachedTo.position, 20, null);
         };
         Panda.prototype.update_rescued = function () {
             //Party at the base
@@ -238,6 +241,11 @@ var Objects;
         Panda.prototype.update_sleepy = function () {
             //stay perfectly still
             this.body.velocity = [0, 0];
+        };
+        Panda.prototype.detachPanda = function (panda) {
+            if (this.attachedTo != null) {
+                (Object)(this.attachedTo).detachPanda(panda);
+            }
         };
         return Panda;
     }(Phaser.Sprite));
@@ -255,6 +263,8 @@ var Objects;
             //super(game.add.sprite(x, y, "ghosts"));
             this.changeState(this.state);
             this.cursors = this.game.input.keyboard.createCursorKeys();
+            this.linked_pandas = new Phaser.LinkedList();
+            this.linked_pandas.add(this);
         }
         Runner.prototype.update = function () {
             this.body.velocity.setTo(0, 0); //reset runner movement (if no keys pressed will stop moving)
@@ -273,7 +283,7 @@ var Objects;
                     break;
                 case "warpingHome":
                     //blue and fly to turret home.
-                    moveToTarget(this, new Phaser.Point(200, 200), 100);
+                    moveToTarget(this, new Phaser.Point(200, 200), 0, 100);
                     break;
                 default:
                     break;
@@ -329,10 +339,24 @@ var Objects;
                     runner.changeState("scared");
                     break;
                 case "stunned":
-                    panda.attachTo(runner);
+                    runner.attachPanda(panda);
                     break;
                 default:
             }
+        };
+        Runner.prototype.attachPanda = function (panda) {
+            panda.attachTo(this.linked_pandas.last);
+            this.linked_pandas.add(panda);
+        };
+        Runner.prototype.detachPanda = function (panda) {
+            if (panda.next != null) {
+                panda.next.attachTo(panda.prev);
+            }
+            this.linked_pandas.remove(panda);
+        };
+        Runner.prototype.die = function () {
+            console.log("runner is dying");
+            this.kill();
         };
         return Runner;
     }(Phaser.Sprite));
@@ -444,7 +468,7 @@ var State;
         };
         Game_state.prototype.shotPanda = function (bullet, panda) {
             bullet.kill();
-            panda.changeState("stunned");
+            panda.stun();
         };
         Game_state.prototype.shotRunner = function (bullet, arunner) {
             bullet.kill();
@@ -467,13 +491,20 @@ var State;
     State.Game_state = Game_state;
 })(State || (State = {}));
 //Global Functions
-function moveToTarget(source, target, speed) {
+function moveToTarget(source, target, distance, speed) {
     var gospeed = speed || 50;
     source.body.velocity.x = target.x - source.body.position.x;
     source.body.velocity.y = target.y - source.body.position.y;
-    //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
-    var magnitude = Math.sqrt(source.body.velocity.x * source.body.velocity.x + source.body.velocity.y * source.body.velocity.y);
-    source.body.velocity.x *= gospeed / magnitude;
-    source.body.velocity.y *= gospeed / magnitude;
+    if (source.body.velocity.x > distance || source.body.velocity.x < -distance ||
+        source.body.velocity.y > distance || source.body.velocity.y < -distance) {
+        //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
+        var magnitude = Math.sqrt(source.body.velocity.x * source.body.velocity.x + source.body.velocity.y * source.body.velocity.y);
+        source.body.velocity.x *= gospeed / magnitude;
+        source.body.velocity.y *= gospeed / magnitude;
+    }
+    else {
+        source.body.velocity.x = 0;
+        source.body.velocity.y = 0;
+    }
 }
 //# sourceMappingURL=game.js.map

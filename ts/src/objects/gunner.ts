@@ -4,6 +4,9 @@ module Objects{
 
         weapon : Phaser.Weapon;
 
+        recruits : Phaser.Group;
+        ring_radius : number;
+
         fire_button : Phaser.Key;
         left_button : Phaser.Key;
         right_button : Phaser.Key;
@@ -47,7 +50,7 @@ module Objects{
             {
                 this.weapon.fire();
             }
-        }        
+        }
 
         collidePanda(gunner, panda){
             switch (panda.state){
@@ -56,7 +59,7 @@ module Objects{
                     break;
                 case "attached":
                     panda.attachTo(gunner);
-                    panda.changeState("rescued");
+                    panda.rescue();
                     break;
                 default:
                     //nothing?
@@ -67,6 +70,22 @@ module Objects{
             console.log("gunner is dying (lose 1 life)")
             this.kill()
         }
-        
+
+        rescuePanda(panda : Panda)
+        {
+            this.recruits.add(panda);
+            panda.rescue();
+
+            this.refreshRing();
+        }
+
+        refreshRing()
+        {
+            var ring_space : number = 50;
+
+            this.ring_radius = ring_space / 2.0 / Math.PI;
+
+            
+        }
     }
 }

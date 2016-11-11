@@ -124,8 +124,8 @@ module State{
 
         shotPanda(bullet, panda)
         {
-            bullet.kill();        
-            panda.changeState("stunned");
+            bullet.kill();            
+            panda.stun();
         }
 
         shotRunner(bullet, arunner){
@@ -149,19 +149,24 @@ module State{
     }
 }
 
-
 //Global Functions
-function moveToTarget(source: Phaser.Sprite, target: Phaser.Point, speed:number){
+function moveToTarget(source: Phaser.Sprite, target: Phaser.Point, distance: number, speed: number){
     var gospeed = speed || 50
-
     
     source.body.velocity.x = target.x - source.body.position.x;
     source.body.velocity.y = target.y - source.body.position.y;
     
-    //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
-    var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y)
-    
-    source.body.velocity.x *= gospeed / magnitude;
-    source.body.velocity.y *= gospeed / magnitude;
-    
+    if (source.body.velocity.x > distance || source.body.velocity.x < -distance ||
+        source.body.velocity.y > distance || source.body.velocity.y < -distance)
+    {
+        //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
+        var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y);
+        source.body.velocity.x *= gospeed / magnitude;
+        source.body.velocity.y *= gospeed / magnitude;
+    }
+    else
+    {
+        source.body.velocity.x = 0;
+        source.body.velocity.y = 0;
+    }
 }
