@@ -265,6 +265,7 @@ var Objects;
             this.cursors = this.game.input.keyboard.createCursorKeys();
             this.linked_pandas = new Phaser.LinkedList();
             this.linked_pandas.add(this);
+            setCollisionWithWalls(this, true);
         }
         Runner.prototype.update = function () {
             this.body.velocity.setTo(0, 0); //reset runner movement (if no keys pressed will stop moving)
@@ -283,7 +284,7 @@ var Objects;
                     break;
                 case "warpingHome":
                     //blue and fly to turret home.
-                    moveToTarget(this, new Phaser.Point(200, 200), 0, 100);
+                    moveToTarget(this, new Phaser.Point(this.game.world.centerX, this.game.world.centerY), 0, 100);
                     break;
                 default:
                     break;
@@ -317,9 +318,12 @@ var Objects;
                     break;
                 case "alive":
                     this.tint = Phaser.Color.getColor(100, 50, 0); //brown??
+                    setCollisionWithWalls(this, true);
+                    break;
                 case "warpingHome":
                     //blue and fly to turret home.
                     this.tint = Phaser.Color.getColor(0, 0, 200); //blueish
+                    setCollisionWithWalls(this, false);
                     break;
                 default:
                     break;
@@ -418,11 +422,11 @@ var State;
             */
             this.pandas = this.game.add.group();
             this.colliders = this.add.group();
+            global_colliders = this.colliders;
             // create runner player
             this.runner = new Objects.Runner(this.game, 80, 60, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
-            this.colliders.add(this.runner);
             // create gunner player
             this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
             this.game.add.existing(this.gunner);
@@ -508,5 +512,12 @@ function moveToTarget(source, target, distance, speed) {
         source.body.velocity.x = 0;
         source.body.velocity.y = 0;
     }
+}
+var global_colliders;
+function setCollisionWithWalls(entity, value) {
+    if (value)
+        global_colliders.add(entity);
+    else
+        global_colliders.remove(entity);
 }
 //# sourceMappingURL=game.js.map

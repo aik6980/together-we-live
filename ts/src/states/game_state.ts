@@ -63,12 +63,12 @@ module State{
 
             this.pandas = this.game.add.group();
             this.colliders = this.add.group();
+            global_colliders = this.colliders;
 
             // create runner player
             this.runner = new Objects.Runner(this.game, 80, 60, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
-            this.colliders.add(this.runner);
 
             // create gunner player
             this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
@@ -172,4 +172,13 @@ function moveToTarget(source: Phaser.Sprite, target: Phaser.Point, distance: num
         source.body.velocity.x = 0;
         source.body.velocity.y = 0;
     }
+}
+
+var global_colliders : Phaser.Group;
+function setCollisionWithWalls(entity, value : boolean)
+{
+    if (value)
+        global_colliders.add(entity);
+    else
+        global_colliders.remove(entity);
 }

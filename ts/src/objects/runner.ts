@@ -22,6 +22,8 @@ module Objects{
 
             this.linked_pandas = new Phaser.LinkedList();
             this.linked_pandas.add(this);
+
+            setCollisionWithWalls(this, true);
         }
 
         update(){
@@ -82,9 +84,12 @@ module Objects{
                         break;
                     case "alive":
                         this.tint = Phaser.Color.getColor(100,50,0); //brown??
+                        setCollisionWithWalls(this, true);
+                        break;
                     case "warpingHome":
                         //blue and fly to turret home.
                         this.tint = Phaser.Color.getColor(0, 0, 200); //blueish
+                        setCollisionWithWalls(this, false);
                         break;
                     default:
                         break;
