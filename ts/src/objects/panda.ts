@@ -16,6 +16,7 @@ module Objects{
 
         attachTo(attachee){
             console.log("Panda should get attachd to the attache", attachee);
+            this.kill();
         }
 
         changeState(targetState: string){

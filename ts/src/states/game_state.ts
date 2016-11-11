@@ -3,6 +3,7 @@ module State{
 
         unit = 12;
         bmd_unit_white : Phaser.BitmapData;
+        bmd_unit_black : Phaser.BitmapData;
         
         level : Array<string>;
         starty = 50;
@@ -25,6 +26,8 @@ module State{
         weapon : Phaser.Weapon;
         fire_button : Phaser.Key;
 
+        gray_filter : Phaser.Filter;
+
         preload(){
             // create a bitmap data
             // http://phaser.io/examples/v2/bitmapdata/cached-bitmapdata
@@ -36,13 +39,19 @@ module State{
 
             this.game.load.image('bullet', 'assets/img/shmup-bullet.png');
             this.game.load.image('ship', 'assets/img/thrust_ship.png');
+
+            this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
         }
 
 
         create(){
             var obj = null; //reused lots.
 
+            this.gray_filter = this.game.add.filter('Gray');
+            //gray.gray = 1.0;
+
             this.weapon = this.game.add.weapon(30, 'bullet');
+            this.weapon.bullets.filters = [this.gray_filter];
 
             //  The bullet will be automatically killed when it leaves the world bounds
             this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
@@ -57,6 +66,7 @@ module State{
             this.runner = new Objects.Runner(this.game, 50, 50, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
+            //this.player.filters = [this.gray_filter];
 
             //Setup groups
             this.pandas = this.game.add.group();
@@ -75,20 +85,21 @@ module State{
             //Setup Controls
             this.cursors = this.input.keyboard.createCursorKeys();
 
-            /*
+
             //dev controls
             ///num keys to change all the pandas states?
             //  Here we create 3 hotkeys, keys 1-3 and bind them all to their own functions
             //listeners not working
-            var key1, key2, key3;
+            /*var key1, key2, key3;
             key1 = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
-            key1.onDown.add(changePandasState("hostile"), this);
+            key1.onDown.*/
+            //key1.onDown.add(changePandasState("hostile"), this);
 
-            key2 = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+            /*key2 = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
             key2.onDown.add(changePandasState("stunned"), this);
 
             key3 = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
-            key3.onDown.add(changePandasState("rescued"), this);
+            key3.onDown.add(changePandasState("rescued"), this);*/
 
 
             function changePandasState(state: string){
@@ -96,7 +107,7 @@ module State{
 
                 //this.pandas.callAllExists(changeState(state), true)
             }
-            */
+
 
         }
 
@@ -105,10 +116,16 @@ module State{
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);         
 
 
-            //Runner movement
-            var runnerSpeed = this.runner.speed;
+/*
+            {
+                this.weapon.fire();
+                if(this.player.filters == null) this.player.filters = [this.gray_filter];
+            }
+*/
 
-            this.runner.body.velocity.setTo(0, 0) //reset player movement (if no keys pressed will stop moving)
+var runnerSpeed = this.runner.speed;
+
+            this.runner.body.velocity.setTo(0, 0) //reset runner movement (if no keys pressed will stop moving)
 
             //horizontal movement
             if (this.cursors.left.isDown) 
