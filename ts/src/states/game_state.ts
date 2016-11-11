@@ -9,8 +9,11 @@ module State{
 
         cursors : Phaser.CursorKeys;
 
+        // Players
+        runner : Objects.Runner;
+
         // groups
-        player : Objects.Player;
+        pandas : Phaser.Group;
 
         /*
         spawn_point : Array<number>; 
@@ -37,6 +40,8 @@ module State{
 
 
         create(){
+            var obj = null; //reused lots.
+
             this.weapon = this.game.add.weapon(30, 'bullet');
 
             //  The bullet will be automatically killed when it leaves the world bounds
@@ -48,51 +53,74 @@ module State{
             //  Speed-up the rate of fire, allowing them to shoot 1 bullet every 60ms
             this.weapon.fireRate = 100;
 
-            this.player = new Objects.Player(this.game, 50, 50);//this.add.sprite(400, 300, 'ship');
-            this.game.add.existing(this.player);
+            // create runner player
+            this.runner = new Objects.Runner(this.game, 50, 50, 150);
+            this.game.add.existing(this.runner);
+            this.game.physics.arcade.enable(this.runner);
 
-            this.game.physics.arcade.enable(this.player);
+            //Setup groups
+            this.pandas = this.game.add.group();
+            
+            //spawn some pandas
+            obj = new Objects.Panda(this.game, 100, 100, "stunned");
+            obj.name = "Aik"
+	        this.pandas.add(obj);
+	        this.game.physics.enable(obj, Phaser.Physics.ARCADE);
 
-            this.player.body.drag.set(70);
-            this.player.body.maxVelocity.set(200);
+            obj = new Objects.Panda(this.game, 150, 100, "hostile");
+            obj.name = "Gavin"
+	        this.pandas.add(obj);
+	        this.game.physics.enable(obj, Phaser.Physics.ARCADE);
 
-            //  Tell the Weapon to track the 'player' Sprite
-            //  With no offsets from the position
-            //  But the 'true' argument tells the weapon to track sprite rotation
-            this.weapon.trackSprite(this.player, 0, 0, true);
-
+            //Setup Controls
             this.cursors = this.input.keyboard.createCursorKeys();
 
-            this.fire_button = this.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
+            /*
+            //dev controls
+            ///num keys to change all the pandas states?
+            //  Here we create 3 hotkeys, keys 1-3 and bind them all to their own functions
+            //listeners not working
+            var key1, key2, key3;
+            key1 = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+            key1.onDown.add(changePandasState("hostile"), this);
+
+            key2 = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+            key2.onDown.add(changePandasState("stunned"), this);
+
+            key3 = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
+            key3.onDown.add(changePandasState("rescued"), this);
+
+
+            function changePandasState(state: string){
+                console.log("changing all the pandas to " + state);
+
+                //this.pandas.callAllExists(changeState(state), true)
+            }
+            */
+
         }
 
         update(){
+            //collisions
+            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);         
+
+
+            //Runner movement
+            var runnerSpeed = this.runner.speed;
+
+            this.runner.body.velocity.setTo(0, 0) //reset player movement (if no keys pressed will stop moving)
+
+            //horizontal movement
+            if (this.cursors.left.isDown) 
+                this.runner.body.velocity.x = -runnerSpeed;
+            else if (this.cursors.right.isDown) 
+                this.runner.body.velocity.x = runnerSpeed;
+
+            //vertical movement
             if (this.cursors.up.isDown)
-            {
-                this.game.physics.arcade.accelerationFromRotation(this.player.rotation, 300, this.player.body.acceleration);
-            }
-            else
-            {
-                this.player.body.acceleration.set(0);
-            }
-
-            if (this.cursors.left.isDown)
-            {
-                this.player.body.angularVelocity = -300;
-            }
-            else if (this.cursors.right.isDown)
-            {
-                this.player.body.angularVelocity = 300;
-            }
-            else
-            {
-                this.player.body.angularVelocity = 0;
-            }
-
-            if (this.fire_button.isDown)
-            {
-                this.weapon.fire();
-            }
+                this.runner.body.velocity.y = -runnerSpeed;
+            else if (this.cursors.down.isDown)
+                this.runner.body.velocity.y = runnerSpeed;
 
         }
 
