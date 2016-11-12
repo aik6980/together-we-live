@@ -18,6 +18,7 @@ module State{
 
         // groups
         pandas : Phaser.Group;
+        united: Phaser.Group;
 
         gray_filter : Phaser.Filter;
 
@@ -49,36 +50,24 @@ module State{
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
             
-            /*
-            //create sample ghost srpite
-            var sprite = this.game.add.sprite(200, 200, 'ghosts');
-            sprite.animations.add('down', [0,1,2]);
-            sprite.animations.add('left', [3,4,5]);
-            sprite.animations.add('right', [6,7,8]);
-            sprite.animations.add('up', [9,10,11]);
-            sprite.animations.play('right', 5, true);
-            this.game.add.tween(sprite).to({ x: this.game.width }, 10000, Phaser.Easing.Linear.None, true);
-            */
-
-            // create runner player
-            this.runner = new Objects.Runner(this.game, 80, 60, 150);
-            this.game.add.existing(this.runner);
-            this.game.physics.arcade.enable(this.runner);
-
-            // create gunner player
+            // create gunner player (first as it is centre of the world)
             this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
             this.game.add.existing(this.gunner);
-            this.game.physics.arcade.enable(this.gunner);
             this.gunner.filters = [this.gray_filter];
 
+            // create runner player
+            this.runner = new Objects.Runner(this.game, 80, 60, 150)
+            this.runner.myGunner = this.gunner;
+            this.game.add.existing(this.runner);
+            
+            
+            //create pandas group
             this.pandas = this.game.add.group();
 
+            //create level
             this.level = new Level.Level(this.game);
             this.level.load(this);
 
-
-            //Setup Controls
-            //Runner and Gunner now have their controls define individually
 
             //dev controls
             if (this.devMode)
@@ -87,50 +76,59 @@ module State{
                 this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.NINE).onUp.add(this.changeAllPandasState, this, null, "rescued");
-                this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
+                //this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
         }
 
         update(){
             this.level.update_game_state(this);
+            ///Collisions
+            //N.b. the player when "warping" is not checked for collision;
 
-            //collisions
-            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this); 
+            //character collisions
+            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, function(){ return this.runner.state != 'warping';}, this); 
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
-            this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); 
-            //bullet collissions
+            this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
+
+            //level collisions
+            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this);
+            this.game.physics.arcade.collide(this.pandas, this.level.collision_layer);
+
+            //bullet collisions
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.shotPanda, null, this);
-            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, null, this);
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, function(){ return this.runner.state != 'warping';}, this);
         }
 
 
         render(){
             if (this.devMode)
-                //this.game.debug.bodyInfo(this.runner, 32, 32);
-                this.game.debug.body(this.gunner);
-                this.game.debug.body(this.runner);
 
-                this.pandas.forEach(panda => {
-                    this.game.debug.body(panda);                    
-                }, null, true);
-                
-                /*this.pandas.forEach()
-                this.pandas.forEachAlive(renderGroup, this);{
-                    function renderGroup(member){
-                        this.game.debug.body(member);
-                    }
-                }*/
+                if (false){
+                    //bounding boxes
+                    this.game.debug.body(this.gunner);
+                    this.game.debug.body(this.runner);
+
+                    this.pandas.forEach(panda => {
+                        this.game.debug.body(panda);                    
+                    }, null, true);
+                }
+
+                this.game.debug.text("Runner: " + this.runner.state, 10, 300);
         }
 
         shotPanda(bullet, panda)
         {
+            console.log(bullet, panda)
             bullet.kill();        
             panda.changeState("stunned");
         }
 
-        shotRunner(bullet, arunner){
+        shotRunner(runner, bullet){
+            //this is bizarre but documented - group vs sprite passes the callback parameters in the sprite first order.
+            //The two objects will be passed to this function in the same order in which you specified them, unless you are checking Group vs. Sprite, in which case Sprite will always be the first parameter." 
+            console.log(bullet, runner)
             bullet.kill();
-            this.runner.changeState("shot");
+            runner.changeState("shot");
         }
 
         spawnPanda(x, y){

@@ -10,6 +10,8 @@ module Objects{
 
         constructor(game : Phaser.Game, x: number, y: number){
             super(game, x, y, 'ship');
+            this.game.physics.enable(this, Phaser.Physics.ARCADE);
+            this.body.immovable = true; //stop shoving the gunner!
 
             this.anchor.set(0.5);
 

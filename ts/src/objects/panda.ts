@@ -20,6 +20,7 @@ module Objects{
             //animations
             //this.key = 'ghosts';
             this.animations.add('idle', [0,1]);
+            this.animations.add('stunned', [1,2]);
             this.animations.add('down', [0,1,2]);
             this.animations.add('left', [3,4,5]);
             this.animations.add('right', [6,7,8]);
@@ -106,18 +107,14 @@ module Objects{
         {            
             if (this.target != null){
                 moveToTarget(this, this.target, null);
-                /*this.body.velocity.x = this.target.x - this.body.position.x;
-                this.body.velocity.y = this.target.y - this.body.position.y;
-
-                var magnitude = this.body.velocity.getMagnitude();
-                this.body.velocity.x *= 50 / magnitude;
-                this.body.velocity.y *= 50 / magnitude;*/
             }
         }
 
         update_stunned(){
             //remain stunned for X seconds
             //wobble (tween)
+            this.animations.play('stunned', 10, true);
+            this.alpha = 0.8;
         }
 
         update_attached(){
@@ -134,7 +131,8 @@ module Objects{
         }
 
         update_sleepy(){
-            //stay perfectly still
+            //stay perfectly still (might also be hidden)
+            this.attachedTo = null; //break attachment
             this.body.velocity = [0,0];
         }
     }

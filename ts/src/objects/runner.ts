@@ -2,18 +2,20 @@
 
 module Objects{
 
-    type runnerStates = "alive" | "shot" | "scared" | "warpingHome" | "dead";
+    type runnerStates = "alive" | "shot" | "scared" | "warping" | "dead";
 
     export class Runner extends Phaser.Sprite{
         speed: number = 100;
         state:  runnerStates = "alive";
         cursors: Phaser.CursorKeys;
+        myGunner: Gunner;
 
         
 
         constructor(game : Phaser.Game, x: number, y: number, speed: number){
             super(game, x, y, game.cache.getBitmapData('unit_white'));
-            //super(game.add.sprite(x, y, "ghosts"));
+            this.game.physics.enable(this, Phaser.Physics.ARCADE);
+            //this.myGunner = myGunner;
             this.changeState(this.state);
 
             this.cursors = this.game.input.keyboard.createCursorKeys();
@@ -28,16 +30,18 @@ module Objects{
                     this.kill(); //die already!
                     break;
                 case "shot": //shot or scared
+                    this.changeState("warping");
+                    break;
                 case "scared":
-                    console.log("runner was " + this.state + " so will be warpingHome");
-                    this.changeState("warpingHome");
+                    this.changeState("warping");
                     break;
                 case "alive":
                     this.movement();
                     break;
-                case "warpingHome":
+                case "warping":
                     //blue and fly to turret home.
-                    moveToTarget(this, new Phaser.Point(200, 200), 100)
+                    //moveToTarget(this, new Phaser.Point(200, 200), 300)
+                    moveToTarget(this, this.myGunner.position, 300)
                     break;
                 default:
                     break;
@@ -72,13 +76,18 @@ module Objects{
                         this.kill();
                         break;
                     case "shot": //shot or scared
+                        //play sound "ARRRRGH"
+                        this.tint = Phaser.Color.getColor(255, 10, 0); //dirty red)
+                        break;
                     case "scared":
-                        console.log("I'm shot or scared and I'm actually " + targetState);
-                        this.tint = Phaser.Color.getColor(240, 0, 30); //dirty red
+                        //play sound "EEEEEEEK"
+                        this.tint = Phaser.Color.getColor(0, 30, 200); //light blue-green (pale with fright?)
+                        this.alpha = 0.6;
                         break;
                     case "alive":
                         this.tint = Phaser.Color.getColor(100,50,0); //brown??
-                    case "warpingHome":
+                        this.alpha = 1.0;
+                    case "warping":
                         //blue and fly to turret home.
                         this.tint = Phaser.Color.getColor(0, 0, 200); //blueish
                         break;
@@ -89,7 +98,7 @@ module Objects{
 
         collideGunner(runner: Runner, gunner: Gunner){
             console.log("runner collided with gunner while in state " + runner.state);
-            if (runner.state == "warpingHome"){
+            if (runner.state == "warping"){
                 console.log("runner revived by warping home to gunner");
                 runner.changeState("alive");
             }
