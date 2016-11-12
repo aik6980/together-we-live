@@ -26,7 +26,7 @@ module Objects{
             AddToWorldObjects(this.recruits);
             AddToWorldObjects(this.anchors);
 
-            //this.anchor.setTo(0.5, 0.5);
+            this.anchor.setTo(0.5, 0.5);
 
             // init inputs
             this.fire_button = this.game.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
