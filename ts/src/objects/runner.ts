@@ -206,7 +206,7 @@ module Objects{
 
         detachPanda(panda) //don't remove it's called in a chain
         {
-            if (panda.next != null)
+            if (panda.next != null/* && panda.prev != null*/)
             {
                 panda.next.attachTo(panda.prev);
             }

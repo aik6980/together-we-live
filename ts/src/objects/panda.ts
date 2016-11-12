@@ -290,7 +290,10 @@ module Objects{
 
         update_attached(){
             //follow the leader! 
-            moveToTarget(this, this.attachedTo.position, 20, null)
+            if (this.attachedTo != null)
+            {
+                moveToTarget(this, this.attachedTo.position, 20, null)
+            }
         }
 
         update_rescued(){
