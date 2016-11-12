@@ -22,6 +22,9 @@ module Objects{
 
             this.recruits = this.game.add.group();
             this.anchors = this.game.add.group();
+            
+            AddToWorldObjects(this.recruits);
+            AddToWorldObjects(this.anchors);
 
             //this.anchor.setTo(0.5, 0.5);
 
@@ -61,8 +64,13 @@ module Objects{
             }
 
             // rotate the ring
+            var index = 0;
             this.anchors.forEach(anchor => {
                 anchor.angle += 1;
+
+                var panda = this.recruits.getAt(index++) as Panda;
+                panda.target.x = (anchor.worldPosition.x - this.worldPosition.x) / global_game_scale + anchor.position.x;
+                panda.target.y = (anchor.worldPosition.y - this.worldPosition.y) / global_game_scale + anchor.position.y;
             }, null, true);
         }
 
@@ -93,41 +101,41 @@ module Objects{
             var anchor = this.game.add.sprite(0, 0);
             this.anchors.add(anchor)
 
-            anchor.x = this.x - this.width / 2;
-            anchor.y = this.y - this.height / 2;
+            anchor.x = this.x
+            anchor.y = this.y
             //anchor.anchor.setTo(0.5);
 
-            panda.target = anchor;
+            panda.target = new Phaser.Point();
 
             this.refreshRing();
         }
         
         removePanda(panda : Panda)
         {
-            this.recruits.remove(panda);
-            this.anchors.removeChildAt(0);
+            var anchor = this.anchors.getAt(0) as Phaser.Sprite;
+            this.anchors.remove(anchor);
+
+            console.log(panda);
+
             panda.kill();
+            this.recruits.remove(panda);
 
             this.refreshRing();
         }
 
         refreshRing()
         {
-            var count = this.recruits.countLiving();
-
-            if (count <= 4)
+            if (this.recruits.total <= 4)
             {
                 this.ring_radius = 20;
             }
             else
             {
                 var ring_space : number = 30;
-                this.ring_radius = count * ring_space / (2 * Math.PI);
+                this.ring_radius = this.recruits.total * ring_space / (2 * Math.PI);
             }
 
-            console.log(this.ring_radius);
-
-            var rotation_unit = 360.0 / count;
+            var rotation_unit = 360.0 / this.recruits.total;
             var current_rotation = 0;
 
             this.anchors.forEach(anchor => {
