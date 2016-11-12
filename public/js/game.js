@@ -574,6 +574,7 @@ var State;
             global_world_objects = this.world_objects;
             this.world_objects.add(this.pandas);
             this.world_objects.add(this.spawner);
+            this.world_objects.add(this.colliders);
             //create level
             this.level = new Level.Level(this.game);
             this.level.load(this);
@@ -593,8 +594,8 @@ var State;
             this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
             this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnePandaFromGunner, this);
             // TEST for gunner
-            this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 30, this.createHostilePanda, this);
+            //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
+            //this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 30, this.createHostilePanda, this);
         };
         Game_state.prototype.spawn_trigger = function (args) {
             this.spawn_system.spawn();

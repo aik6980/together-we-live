@@ -67,6 +67,7 @@ module State{
             
             this.world_objects.add(this.pandas);
             this.world_objects.add(this.spawner);
+            this.world_objects.add(this.colliders);
 
             //create level
             this.level = new Level.Level(this.game);
