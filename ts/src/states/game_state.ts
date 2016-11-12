@@ -205,6 +205,7 @@ module State{
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
             var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
+            AddToWorldObjects(text);
         }
 
         loseTheGame(){
@@ -215,6 +216,7 @@ module State{
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
             var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
+            AddToWorldObjects(text);
         }
 
         shotPanda(bullet, panda)
