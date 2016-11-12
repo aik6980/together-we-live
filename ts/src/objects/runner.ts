@@ -14,6 +14,8 @@ module Objects{
         cursors: Phaser.CursorKeys;
         myGunner: Gunner;
 
+        preWarpCountdown: number;
+
         constructor(game : Phaser.Game, x: number, y: number){
             super(game, x, y, game.cache.getBitmapData('unit_white'));
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
@@ -32,21 +34,18 @@ module Objects{
             this.body.velocity.setTo(0, 0) //reset runner movement (if no keys pressed will stop moving)
             //TODO Runner collission with walls?
             
+            console.log("Runner Update. State = " + this.state);
+
             switch (this.state){
                 case "dead":
+                    console.log("the runner is dead?");
                     this.kill(); //die already!
                     break;
-                case "shot": //shot or scared
-                    this.changeState("warping");
-                    break;
-                case "scared":
-                    this.changeState("warping");
-                    break;
-                case "alive":
+                case "alive": //move around
                     this.movement();
                     break;
-                case "warping":
-                    //blue and fly to turret home.
+                case "warping": //fly to turret home.
+                    console.log("Runner IS warping right now!")
                     moveToTarget(this, this.myGunner.position, 0, 300)
                     break;
                 default:
@@ -59,7 +58,9 @@ module Objects{
         movement(){
             var chainSlowDown = (1 - (this.linked_pandas.total-1) / gameplay_runner_chainLengthSlowDown)
             if (chainSlowDown > gameplay_runner_chainMaxSlowDown) //don't get too slow
-                chainSlowDown = gameplay_runner_chainMaxSlowDown; 
+                chainSlowDown = gameplay_runner_chainMaxSlowDown;
+
+            chainSlowDown = 1; //overwrite for now
             var gospeed = this.speed * chainSlowDown;
 
             //Runner Movement
@@ -83,10 +84,11 @@ module Objects{
 
                 switch (targetState){
                     case "dead":
-                        this.kill();
+                        this.die();
                         break;
                     case "shot": //shot or scared
                         //play sound "ARRRRGH"
+                        this.preWarpCountdown = gameplay_runner_prewarpTime;
                         this.tint = Phaser.Color.getColor(255, 10, 0); //dirty red)
                         break;
                     case "scared":
@@ -98,23 +100,30 @@ module Objects{
                         this.tint = Phaser.Color.getColor(100,50,0); //brown??
                         setCollisionWithWalls(this, true);
                         this.speed = gameplay_runner_baseSpeed;
-                        this.alpha = 1.0;
+                        this.alpha = 1;
                         break;
                     case "warping":
                         //blue and fly to turret home.
                         this.tint = Phaser.Color.getColor(0, 0, 200); //blueish
                         setCollisionWithWalls(this, false);
+                        this.alpha = 0.3;
                         break;
                     default:
                         break;
                 }
+
+                if (targetState == "shot" || targetState == "scared"){
+                    console.log("prepare to warp!!!");
+                    //this.game.time.events.add(Phaser.Timer.SECOND * gameplay_runner_prewarpTime/1000, this.changeState, this, "warping"); //timer works but 2nd time runner dies stays dead
+                    this.changeState("warping");
+                }
             }        
 
         collideGunner(runner: Runner, gunner: Gunner){
-            //console.log("runner collided with gunner while in state " + runner.state);
+            console.log("runner collided with gunner while in state " + runner.state, runner, gunner);
             if (runner.state == "warping"){
-                console.log("runner revived by warping home to gunner");
                 runner.changeState("alive");
+                console.log("runner revived by warping home to gunner");
             }
         }
         

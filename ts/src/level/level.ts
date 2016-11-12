@@ -19,24 +19,24 @@ module Level{
             var y : number = object.y - this.map.tileHeight/2;
             switch(object.type){
                 case 'gunner':
-                // create gunner player
-                game_state.gunner = new Objects.Gunner(this.game, x, y);
-                game_state.world_objects.add(game_state.gunner);
-                this.game.physics.arcade.enable(game_state.gunner);
-                //game_state.world_objects.add(game_state.gunner.weapon);
-                game_state.world_objects.add(game_state.gunner.weapon.bullets); 
-                //this.gunner.filters = [this.gray_filter];
+                    // create gunner player
+                    game_state.gunner = new Objects.Gunner(this.game, x, y);
+                    game_state.world_objects.add(game_state.gunner);
+                    this.game.physics.arcade.enable(game_state.gunner);
+                    //game_state.world_objects.add(game_state.gunner.weapon);
+                    game_state.world_objects.add(game_state.gunner.weapon.bullets); 
+                    //this.gunner.filters = [this.gray_filter];
                 break;
                 case 'runner':
-                // create runner player
-                game_state.runner = new Objects.Runner(this.game, x, y);
-                game_state.runner.myGunner = game_state.gunner;
-                game_state.world_objects.add(game_state.runner);
-                this.game.physics.arcade.enable(game_state.runner);
+                    // create runner player
+                    game_state.runner = new Objects.Runner(this.game, x, y);
+                    game_state.runner.myGunner = game_state.gunner;
+                    game_state.world_objects.add(game_state.runner);
+                    this.game.physics.arcade.enable(game_state.runner);
                 break;
                 case 'spawn_panda':
-                //game_state.pandas.add(game_state.spawnPanda(x, y));
-                game_state.spawner.add(new Objects.Spawner(this.game, x, y));
+                    //game_state.pandas.add(game_state.spawnPanda(x, y));
+                    game_state.spawner.add(new Objects.Spawner(this.game, x, y));
                 break;
             }
         }

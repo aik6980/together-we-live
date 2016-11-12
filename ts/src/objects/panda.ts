@@ -30,11 +30,11 @@ module Objects{
             this.animations.play('idle', 20, true);
 
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
-            this.body.setSize(24, 24, 3, 4);
+            //this.body.setSize(24, 24, 3, 4);
 
             this.changeState(startState);
             
-            this.anchor.set(0.5,0.5);
+            //this.anchor.set(0.5,0.5);
         }
 
         update(){
@@ -69,14 +69,22 @@ module Objects{
         stun()
         {
             this.detachPanda(this);
-            switch (this.state){
+            switch (this.state){ //check curernt state
                 case "hostile":
                     this.stuntime = gameplay_panda_stunTime;
                     this.stunlockcount = 1;
+                    //this.game.time.events.add(Phaser.Timer.SECOND * this.stuntime / 1000, WRITEAfunc(), this)   
+                    //game.time.events.add(Phaser.Timer.SECOND * 4, fadePicture, this);
+                    //game
                     break;
-                case "stunned":
+                case "stunned": //increase stun but if passed the max stunlock we should respawn the panda as hostile
                     this.stuntime += gameplay_panda_stunTime; //increase stun time and lockout
-                    this.stunlockcount += 1;
+                    if (this.stunlockcount > gameplay_panda_stunLockCount){
+                        console.log("why you stun lock a panda??")
+                        console.log("DESPAWN THE PANDA and maybe respawn one?")
+                    } else {
+                        this.stunlockcount += 1;
+                    }
                     break;
                 default:
                     break;

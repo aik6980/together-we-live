@@ -4,7 +4,7 @@ module Objects{
 
         weapon : Phaser.Weapon;
         powerLevel: number; //based on number of recruits (i.e. the rescued pandas)
-        rotateSpeed: number = 300;
+        rotateSpeed: number = gameplay_gunner_baseTurnSpeed;
 
         recruits : Phaser.Group;
         anchors : Phaser.Group;
