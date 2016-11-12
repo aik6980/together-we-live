@@ -96,7 +96,7 @@ module Objects{
             anchor.y = this.y - this.height / 2;
             anchor.anchor.setTo(0.5);
 
-            panda.target = anchor.worldPosition;
+            panda.target = anchor;
 
             this.refreshRing();
         }

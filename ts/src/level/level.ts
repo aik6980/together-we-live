@@ -33,7 +33,8 @@ module Level{
                 this.game.physics.arcade.enable(game_state.runner);
                 break;
                 case 'spawn_panda':
-                game_state.pandas.add(game_state.spawnPanda(x, y));
+                //game_state.pandas.add(game_state.spawnPanda(x, y));
+                game_state.spawner.add(new Objects.Spawner(this.game, x, y));
                 break;
             }
         }
