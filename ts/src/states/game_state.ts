@@ -205,9 +205,21 @@ function setCollisionWithWalls(entity, value : boolean)
 
 ////Global Gameplay variables
 
+//Gunner Gameplay
+var gameplay_gunner_baseTurnSpeed: number = 300;
+var gameplay_gunner_startingPandaLives: number = 3;
+
 //Runner Gameplay
-var gameplay_runner_baseSpeed: number = 100;
+var gameplay_runner_baseSpeed: number = 150;
 var gameplay_runner_chainLengthSlowDown: number = 5;
 var gameplay_runner_chainMaxSlowDown: number = 0.7; 
 
 //Panda Gameplay
+var gameplay_panda_baseSpeed: number = 100;
+var gameplay_panda_stunTime: number = 5000;
+var gameplay_panda_stunLockCount: number = 4; //if stunlocked x times without a break will be respawned elsewhere
+
+var gameplay_pandas_spawnRateMin: number = 1000;
+var gameplay_pandas_spawnRateMax: number = 3000;
+var gameplay_pandas_maxEmbarrassment: number = 500; //maximum number of pandas
+

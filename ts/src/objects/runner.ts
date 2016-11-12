@@ -47,7 +47,6 @@ module Objects{
                     break;
                 case "warping":
                     //blue and fly to turret home.
-
                     moveToTarget(this, this.myGunner.position, 0, 300)
                     break;
                 default:
@@ -61,9 +60,7 @@ module Objects{
             var chainSlowDown = (1 - (this.linked_pandas.total-1) / gameplay_runner_chainLengthSlowDown)
             if (chainSlowDown > gameplay_runner_chainMaxSlowDown) //don't get too slow
                 chainSlowDown = gameplay_runner_chainMaxSlowDown; 
-            var gospeed = this.speed * chainSlowDown
-
-            console.log(chainSlowDown, gospeed);
+            var gospeed = this.speed * chainSlowDown;
 
             //Runner Movement
             //horizontal movement
@@ -100,6 +97,7 @@ module Objects{
                     case "alive":
                         this.tint = Phaser.Color.getColor(100,50,0); //brown??
                         setCollisionWithWalls(this, true);
+                        this.speed = gameplay_runner_baseSpeed;
                         this.alpha = 1.0;
                         break;
                     case "warping":

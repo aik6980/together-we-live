@@ -28,6 +28,7 @@ module Level{
                 case 'runner':
                 // create runner player
                 game_state.runner = new Objects.Runner(this.game, x, y);
+                game_state.runner.myGunner = game_state.gunner;
                 game_state.world_objects.add(game_state.runner);
                 this.game.physics.arcade.enable(game_state.runner);
                 break;
