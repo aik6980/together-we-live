@@ -1,12 +1,14 @@
 module State{
     export class Game_state extends Phaser.State{
 
-        unit = 12;
+        unit = 16;
         bmd_unit_white : Phaser.BitmapData;
         bmd_unit_black : Phaser.BitmapData;
         
-        level : Array<string>;
         starty = 50;
+
+        // world
+        level : Level.Level;
 
         devMode: boolean = true;
 
@@ -18,7 +20,7 @@ module State{
         pandas : Phaser.Group;
 
         gray_filter : Phaser.Filter;
-        
+
         preload(){
             // create a bitmap data
             // http://phaser.io/examples/v2/bitmapdata/cached-bitmapdata
@@ -31,18 +33,21 @@ module State{
             this.game.load.image('bullet', 'assets/img/shmup-bullet.png');
             this.game.load.image('ship', 'assets/img/thrust_ship.png');
 
+            // grayscale shader
             this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
-        }
 
+            this.game.load.tilemap('world', 'assets/data/world.json', null, Phaser.Tilemap.TILED_JSON);
+            this.game.load.image('world_tileset', 'assets/img/tiny32.png');
+        }
 
         create(){
             var obj = null; //reused lots.
 
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
-
+            
             // create runner player
-            this.runner = new Objects.Runner(this.game, 50, 50, 150);
+            this.runner = new Objects.Runner(this.game, 35, 50, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
 
@@ -52,12 +57,14 @@ module State{
             this.game.physics.arcade.enable(this.gunner);
             this.gunner.filters = [this.gray_filter];
 
-            //Setup groups
             this.pandas = this.game.add.group();
-            
+
+            this.level = new Level.Level(this.game);
+            this.level.load(this);
+
             //spawn some pandas
-            this.pandas.add(this.spawnPanda(100, 100));
-            this.pandas.add(this.spawnPanda(150, 100));
+            //this.pandas.add(this.spawnPanda(100, 100));
+            //this.pandas.add(this.spawnPanda(150, 100));
             //this.pandas.add(this.spawnPanda(150, 150));
 
             //Setup Controls
@@ -81,13 +88,12 @@ module State{
         }
 
         update(){
+            this.level.update_game_state(this);
+
             //collisions
-            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);
-
+            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this); 
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
-
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.onPandaHit, null, this);
-
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.onRunnerHit, null, this);
         }
 
@@ -103,7 +109,7 @@ module State{
         }
 
         spawnPanda(x, y){
-            var obj = new Objects.Panda(this.game, x, y, "hostile");
+            var obj = new Objects.Panda(this.game, x, y, "sleepy");
             //obj.name = random name
             obj.target = this.gunner.position;
             this.game.physics.enable(obj, Phaser.Physics.ARCADE);

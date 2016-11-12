@@ -20,6 +20,59 @@ var SimpleGame;
 window.onload = function () {
     var game = new SimpleGame.Game();
 };
+var Level;
+(function (Level_1) {
+    var Level = (function () {
+        function Level(game) {
+            this.game = game;
+        }
+        Level.prototype.create_game_state_object = function (object, game_state) {
+            var x = object.x + this.map.tileWidth / 2;
+            var y = object.y - this.map.tileHeight / 2;
+            switch (object.type) {
+                case 'spawn_panda':
+                    console.log('panda');
+                    game_state.pandas.add(game_state.spawnPanda(x, y));
+                    break;
+            }
+        };
+        Level.prototype.update_game_state = function (game_state) {
+            // collision with world
+            this.game.physics.arcade.collide(game_state.runner, this.collision_layer);
+        };
+        Level.prototype.load = function (game_state) {
+            // create tile map
+            this.map = this.game.add.tilemap('world');
+            this.map.addTilesetImage('tiny32', 'world_tileset');
+            // create layers
+            this.collision_layer = this.map.createLayer('collision');
+            //var layer2 = this.map.createLayer('trigger');
+            // setup collision tiles
+            var collision_tiles = [];
+            this.map.layers[0].data.forEach(function (data_row) {
+                data_row.forEach(function (tile) {
+                    if (tile.index > 0 && collision_tiles.indexOf(tile.index) === -1) {
+                        collision_tiles.push(tile.index);
+                    }
+                });
+            });
+            // collision layer is at level 0 for now
+            this.map.setCollision(collision_tiles, true, this.map.layers[0].name);
+            // Setup groups
+            for (var object_layer in this.map.objects) {
+                if (this.map.objects.hasOwnProperty(object_layer)) {
+                    // create layer objects
+                    for (var i in this.map.objects[object_layer]) {
+                        var object = this.map.objects[object_layer][i];
+                        this.create_game_state_object(object, game_state);
+                    }
+                }
+            }
+        };
+        return Level;
+    }());
+    Level_1.Level = Level;
+})(Level || (Level = {}));
 var Objects;
 (function (Objects) {
     var Coin = (function (_super) {
@@ -98,6 +151,7 @@ var Objects;
             this.changeState(startState);
             //this.state = startState;
             //game.physics.enable(this, Phaser.Physics.ARCADE); //does this work here?
+            this.anchor.set(0.5, 0.5);
         }
         Panda.prototype.update = function () {
             this.body.velocity.x = 0;
@@ -288,7 +342,7 @@ var State;
         __extends(Game_state, _super);
         function Game_state() {
             _super.apply(this, arguments);
-            this.unit = 12;
+            this.unit = 16;
             this.starty = 50;
             this.devMode = true;
         }
@@ -301,14 +355,17 @@ var State;
             this.game.cache.addBitmapData('unit_white', this.bmd_unit_white);
             this.game.load.image('bullet', 'assets/img/shmup-bullet.png');
             this.game.load.image('ship', 'assets/img/thrust_ship.png');
+            // grayscale shader
             this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
+            this.game.load.tilemap('world', 'assets/data/world.json', null, Phaser.Tilemap.TILED_JSON);
+            this.game.load.image('world_tileset', 'assets/img/tiny32.png');
         };
         Game_state.prototype.create = function () {
             var obj = null; //reused lots.
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
             // create runner player
-            this.runner = new Objects.Runner(this.game, 50, 50, 150);
+            this.runner = new Objects.Runner(this.game, 35, 50, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
             // create gunner player
@@ -316,11 +373,12 @@ var State;
             this.game.add.existing(this.gunner);
             this.game.physics.arcade.enable(this.gunner);
             this.gunner.filters = [this.gray_filter];
-            //Setup groups
             this.pandas = this.game.add.group();
+            this.level = new Level.Level(this.game);
+            this.level.load(this);
             //spawn some pandas
-            this.pandas.add(this.spawnPanda(100, 100));
-            this.pandas.add(this.spawnPanda(150, 100));
+            //this.pandas.add(this.spawnPanda(100, 100));
+            //this.pandas.add(this.spawnPanda(150, 100));
             //this.pandas.add(this.spawnPanda(150, 150));
             //Setup Controls
             //Runner and Gunner now have their controls define individually
@@ -340,6 +398,7 @@ var State;
             console.log("Made all the pandas " + state);
         };
         Game_state.prototype.update = function () {
+            this.level.update_game_state(this);
             //collisions
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
@@ -355,7 +414,7 @@ var State;
             this.runner.changeState("shot");
         };
         Game_state.prototype.spawnPanda = function (x, y) {
-            var obj = new Objects.Panda(this.game, x, y, "hostile");
+            var obj = new Objects.Panda(this.game, x, y, "sleepy");
             //obj.name = random name
             obj.target = this.gunner.position;
             this.game.physics.enable(obj, Phaser.Physics.ARCADE);
@@ -378,4 +437,15 @@ function moveToTarget(source, target, speed) {
     source.body.velocity.y *= gospeed / magnitude;
     */
 }
+var State;
+(function (State) {
+    var Menu_state = (function (_super) {
+        __extends(Menu_state, _super);
+        function Menu_state() {
+            _super.apply(this, arguments);
+        }
+        return Menu_state;
+    }(Phaser.State));
+    State.Menu_state = Menu_state;
+})(State || (State = {}));
 //# sourceMappingURL=game.js.map

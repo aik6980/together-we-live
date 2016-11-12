@@ -21,6 +21,7 @@ module Objects{
 
             //game.physics.enable(this, Phaser.Physics.ARCADE); //does this work here?
             
+            this.anchor.set(0.5,0.5);
         }
 
         update(){       
