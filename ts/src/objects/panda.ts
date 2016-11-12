@@ -15,6 +15,8 @@ module Objects{
 
         idle_time : number = 0;
 
+        sound_stunned : Phaser.Sound;
+
         constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){        
             super(game, x, y, 'panda_sad');
 
@@ -42,6 +44,8 @@ module Objects{
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
             //this.body.setSize(24, 24, 3, 4);
             this.changeState(startState);
+
+            this.sound_stunned = this.game.add.audio('Turret_HitsGhost2');
         }
 
         update(){
@@ -243,7 +247,7 @@ module Objects{
                     this.colorNum = Phaser.Color.getColor(255,0,0); //red
                     break;
                 case "stunned":                    
-                    this.game.add.audio('Turret_HitsGhost2').play(null,null,global_sfx_volume);
+                    this.sound_stunned.play(null,null,global_sfx_volume);
                     this.loadTexture("panda_stun", 0, false);
                     console.log("we have stunnd panda so the key is now " + this.key);
                     this.idle_time = 0.0;

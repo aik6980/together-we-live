@@ -24,6 +24,9 @@ module Objects{
         force_target : Phaser.Point;
         force_not_firing : boolean;
 
+        sound_fire : Phaser.Sound;
+        sound_kidnap : Phaser.Sound;
+
         constructor(game : Phaser.Game, x: number, y: number){
             //super(game, x, y, 'ship');
             super(game, x, y, 'gunner_turret');
@@ -45,6 +48,10 @@ module Objects{
 
             // init physics            
             this.game.physics.arcade.enable(this);
+            
+            // init audio
+            this.sound_fire = this.game.add.audio('Turret_Fire');
+            this.sound_kidnap = this.game.add.audio('Ghost_Merges_To_Turret');
 
             // init weapon based on powerLevel
             this.weapon = this.game.add.weapon(30, 'bullet');
@@ -55,7 +62,7 @@ module Objects{
 
             this.weapon.onFire.add(function(){
                 // play sound
-                this.game.add.audio('Turret_Fire').play(null,null,global_sfx_volume);
+                this.sound_fire.play(null,null,global_sfx_volume);
             }, this);
         }
 
@@ -171,7 +178,7 @@ module Objects{
 
         kidnapPandaWith(kidnapper : Panda)
         {
-            this.game.add.audio('Ghost_Merges_To_Turret').play(null,null,global_sfx_volume);
+            this.sound_kidnap.play(null,null,global_sfx_volume);
 
             var panda = this.getClosestRecruit(kidnapper.position);
             this.removePanda(panda);

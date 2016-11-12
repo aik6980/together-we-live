@@ -18,6 +18,9 @@ module Objects{
 
         force_target : Phaser.Point;
 
+        sound_shot : Phaser.Sound;
+        sound_scared : Phaser.Sound;
+
         constructor(game : Phaser.Game, x: number, y: number){
             super(game, x, y, 'runner');
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
@@ -37,6 +40,8 @@ module Objects{
             this.animations.add('up', [0]);
             this.animations.add('idle', [0]);
 
+            this.sound_shot = this.game.add.audio('Turret_HitsHatter2');
+            this.sound_scared = this.game.add.audio('Turret_HitsHatter1');
         }
 
         update(){
@@ -135,12 +140,14 @@ module Objects{
                         break;
                     case "shot": //shot or scared
                         //play sound "ARRRRGH"
-                        this.game.add.audio('Turret_HitsHatter2').play(null,null,global_sfx_volume);
+                        this.sound_shot.play(null,null,global_sfx_volume);
                         this.tint = Phaser.Color.getColor(255, 10, 0); //dirty red)
                         break;
                     case "scared":
                         //play sound "EEEEEEEK"
-                        this.game.add.audio('Turret_HitsHatter1').play(null,null,global_sfx_volume);
+                        if (prevState != "scared") {
+                            this.sound_scared.play(null,null,global_sfx_volume);
+                        }
                         this.tint = Phaser.Color.getColor(0, 30, 200); //light blue-green (pale with fright?)
                         this.alpha = 0.6;
                         break;
