@@ -8,7 +8,7 @@ var SimpleGame;
     var Game = (function (_super) {
         __extends(Game, _super);
         function Game() {
-            _super.call(this, 256, 256, Phaser.AUTO, 'content', null);
+            _super.call(this, 500, 500, Phaser.AUTO, 'content', null);
             // add states
             this.state.add('game', new State.Game_state);
             this.state.start('game');
@@ -36,17 +36,41 @@ var Objects;
 })(Objects || (Objects = {}));
 var Objects;
 (function (Objects) {
-    var Enemy = (function (_super) {
-        __extends(Enemy, _super);
-        function Enemy(game, x, y) {
-            _super.call(this, game, x, y, game.cache.getBitmapData('unit_white'));
-            this.tint = Phaser.Color.getColor(215, 0, 0);
+    var Gunner = (function (_super) {
+        __extends(Gunner, _super);
+        function Gunner(game, x, y) {
+            _super.call(this, game, x, y, 'ship');
+            this.anchor.set(0.5);
+            // init inputs
+            this.fire_button = this.game.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
+            this.left_button = this.game.input.keyboard.addKey(Phaser.KeyCode.A);
+            this.right_button = this.game.input.keyboard.addKey(Phaser.KeyCode.D);
+            // init physics            
+            this.game.physics.arcade.enable(this);
+            // init weapon            
+            this.weapon = this.game.add.weapon(30, 'bullet');
+            this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
+            this.weapon.bulletSpeed = 200;
+            this.weapon.fireRate = 200;
+            this.weapon.trackSprite(this, 0, 0, true);
         }
-        Enemy.prototype.update = function () {
+        Gunner.prototype.update = function () {
+            if (this.left_button.isDown) {
+                this.body.angularVelocity = -300;
+            }
+            else if (this.right_button.isDown) {
+                this.body.angularVelocity = 300;
+            }
+            else {
+                this.body.angularVelocity = 0;
+            }
+            if (this.fire_button.isDown) {
+                this.weapon.fire();
+            }
         };
-        return Enemy;
+        return Gunner;
     }(Phaser.Sprite));
-    Objects.Enemy = Enemy;
+    Objects.Gunner = Gunner;
 })(Objects || (Objects = {}));
 //pandas are wondering the map, they can be friends, enemies, collectibles and lives
 var Objects;
@@ -55,56 +79,52 @@ var Objects;
         __extends(Panda, _super);
         function Panda(game, x, y, startState) {
             _super.call(this, game, x, y, game.cache.getBitmapData('unit_white'));
+            this.state = "hostile";
             this.state = startState;
             //game.physics.enable(this, Phaser.Physics.ARCADE); //does this work here?
         }
         Panda.prototype.attachTo = function (attachee) {
-            console.log("Panda should get attachd to the attachee", attachee);
-            this.changeState("attached");
+            console.log("Panda should get attachd to the attache", attachee);
+            this.kill();
         };
         Panda.prototype.changeState = function (targetState) {
             this.state = targetState;
+            this.body.velocity.x = 0;
+            this.body.velocity.y = 0;
         };
         Panda.prototype.update = function () {
             //state based colour changes
             switch (this.state) {
                 case "hostile":
                     this.tint = Phaser.Color.getColor(255, 0, 0); //red
+                    this.update_hostile();
                     break;
                 case "stunned":
                     this.tint = Phaser.Color.getColor(0, 255, 255); //yellow
                     break;
-                case "attached":
-                    this.tint = Phaser.Color.getColor(30, 10, 250); //blue
-                    break;
                 case "rescued":
                     this.tint = Phaser.Color.getColor(0, 255, 0); //green
                     break;
-                case "sleepy":
+                default:
                     this.tint = Phaser.Color.getColor(255, 255, 255); //white
                     break;
-                default:
-                    this.tint = Phaser.Color.getColor(50, 50, 50); //gray
+            }
+        };
+        Panda.prototype.update_hostile = function () {
+            if (this.target != null) {
+                this.body.velocity.x = this.target.x - this.body.position.x;
+                this.body.velocity.y = this.target.y - this.body.position.y;
+                var magnitude = this.body.velocity.getMagnitude();
+                this.body.velocity.x *= 50 / magnitude;
+                this.body.velocity.y *= 50 / magnitude;
+                console.log("distx:" + (this.target.x - this.body.position.x)
+                    + " disty:" + (this.target.y - this.body.position.y));
+                console.log("vel=" + this.body.velocity.x + "," + this.body.velocity.y);
             }
         };
         return Panda;
     }(Phaser.Sprite));
     Objects.Panda = Panda;
-})(Objects || (Objects = {}));
-var Objects;
-(function (Objects) {
-    var Player = (function (_super) {
-        __extends(Player, _super);
-        function Player(game, x, y) {
-            //super(game, x, y, game.cache.getBitmapData('unit_white'));
-            _super.call(this, game, x, y, 'ship');
-            this.anchor.set(0.5);
-        }
-        Player.prototype.update = function () {
-        };
-        return Player;
-    }(Phaser.Sprite));
-    Objects.Player = Player;
 })(Objects || (Objects = {}));
 //The runner is the player that goes and collect
 var Objects;
@@ -178,47 +198,52 @@ var State;
             var obj = null; //reused lots.
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
-            this.weapon = this.game.add.weapon(30, 'bullet');
-            this.weapon.bullets.filters = [this.gray_filter];
-            //  The bullet will be automatically killed when it leaves the world bounds
-            this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
-            //  The speed at which the bullet is fired
-            this.weapon.bulletSpeed = 600;
-            //  Speed-up the rate of fire, allowing them to shoot 1 bullet every 60ms
-            this.weapon.fireRate = 100;
             // create runner player
             this.runner = new Objects.Runner(this.game, 50, 50, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
             //this.player.filters = [this.gray_filter];
+            // create gunner player
+            this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
+            this.game.add.existing(this.gunner);
+            this.game.physics.arcade.enable(this.gunner);
             //Setup groups
             this.pandas = this.game.add.group();
             //spawn some pandas
-            obj = new Objects.Panda(this.game, 100, 100, "stunned");
+            obj = new Objects.Panda(this.game, 100, 100, "hostile");
             obj.name = "Aik";
+            obj.target = this.gunner.position;
             this.pandas.add(obj);
             this.game.physics.enable(obj, Phaser.Physics.ARCADE);
             obj = new Objects.Panda(this.game, 150, 100, "hostile");
             obj.name = "Gavin";
+            obj.target = this.gunner.position;
             this.pandas.add(obj);
             this.game.physics.enable(obj, Phaser.Physics.ARCADE);
             //Setup Controls
             this.cursors = this.input.keyboard.createCursorKeys();
             //dev controls
             ///num keys to change all the pandas states?
-            this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
-        };
-        Game_state.prototype.changeAllPandasState = function (args, state) {
-            console.log("Make all the pandas " + state, state);
-            this.pandas.setAll('state', state);
+            //  Here we create 3 hotkeys, keys 1-3 and bind them all to their own functions
+            //listeners not working
+            /*var key1, key2, key3;
+            key1 = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+            key1.onDown.*/
+            //key1.onDown.add(changePandasState("hostile"), this);
+            /*key2 = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+            key2.onDown.add(changePandasState("stunned"), this);
+
+            key3 = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
+            key3.onDown.add(changePandasState("rescued"), this);*/
+            function changePandasState(state) {
+                console.log("changing all the pandas to " + state);
+                //this.pandas.callAllExists(changeState(state), true)
+            }
         };
         Game_state.prototype.update = function () {
             //collisions
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.onPandaHit, null, this);
             /*
                         {
                             this.weapon.fire();
@@ -237,6 +262,10 @@ var State;
                 this.runner.body.velocity.y = -runnerSpeed;
             else if (this.cursors.down.isDown)
                 this.runner.body.velocity.y = runnerSpeed;
+        };
+        Game_state.prototype.onPandaHit = function (bullet, panda) {
+            bullet.kill();
+            panda.changeState("stunned");
         };
         return Game_state;
     }(Phaser.State));
