@@ -35,6 +35,7 @@ module Objects{
 
             // init physics            
             this.game.physics.arcade.enable(this);
+            this.body.syncBounds = true;
 
             // init weapon            
             this.weapon = this.game.add.weapon(60, 'bullet');
