@@ -53,7 +53,9 @@ module Level{
                 this.collision_layer.setScale(this.current_scale);
                 game_state.world_objects.scale.setTo(this.current_scale);
                 game_state.world_objects.forEach(function(sprite : Phaser.Sprite){
-                    sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
+                    if(sprite.body != null){
+                        sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
+                    }
                 }, this);
             }, this);
         }
