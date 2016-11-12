@@ -7,6 +7,8 @@ module Level{
         // collision map
         collision_layer : Phaser.TilemapLayer;
 
+        art_layer : Phaser.TilemapLayer;
+
         // level progression
         current_scale = 1.0;
 
@@ -53,7 +55,9 @@ module Level{
 
             tween.onUpdateCallback(function(){
                 //console.log(this);
+                global_game_scale = this.current_scale;
                 this.collision_layer.setScale(this.current_scale);
+                this.art_layer.setScale(this.current_scale);
                 game_state.world_objects.scale.setTo(this.current_scale);
                 
                 var tracker = game_state.gunner 
@@ -68,6 +72,19 @@ module Level{
                         sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
                     }
                 }, this);
+                
+                game_state.world_objects.forEach(function(group : Phaser.Group){
+                    //console.log(group);
+                    if(group.type == Phaser.GROUP)
+                    {
+                        group.forEach(function(sprite: Phaser.Sprite){
+                            if(sprite.body != null){
+                                sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
+                            }
+                        }, this);
+                    }
+                }, this);
+
             }, this);
         }
 
@@ -80,7 +97,9 @@ module Level{
             // create layers
             this.collision_layer = this.map.createLayer('collision');
             this.collision_layer.resize(2048,2048);
-            //var layer2 = this.map.createLayer('trigger');
+
+            this.art_layer = this.map.createLayer('art');
+            this.art_layer.resize(2048,2048);
             
             // setup collision tiles
             var collision_tiles = [];
@@ -104,7 +123,7 @@ module Level{
                     }
                 }
             }
-            this.collision_layer.debug = true;
+            //this.collision_layer.debug = true;
 
             //this.game.world.scale.setTo(1.5);
             //this.collision_layer.setScale(1.5);

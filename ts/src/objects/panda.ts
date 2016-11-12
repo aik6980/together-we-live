@@ -7,7 +7,7 @@ module Objects{
     export class Panda extends Phaser.Sprite{
         state: pandaStates;
         name: string;
-        target : Phaser.Sprite;
+        target : Phaser.Point;
         attachedTo: Phaser.Sprite;
         colorNum: number;
         size: number; //not implemeted yet
@@ -16,7 +16,8 @@ module Objects{
 
         constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){        
             super(game, x, y, 'ghosts');
-            
+
+            //this.anchor.set(0.5,0.5);
             this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
             setCollisionWithWalls(this, false); //panda ghosts can float through walls.
             
@@ -33,8 +34,6 @@ module Objects{
             //this.body.setSize(24, 24, 3, 4);
 
             this.changeState(startState);
-            
-            //this.anchor.set(0.5,0.5);
         }
 
         update(){
@@ -129,7 +128,7 @@ module Objects{
         update_hostile()
         {            
             if (this.target != null){
-                moveToTarget(this, this.target.position, 0, null);
+                moveToTarget(this, this.target, 0, null);
             }
         }
 
@@ -147,7 +146,7 @@ module Objects{
 
         update_rescued(){
             //follow the gunner's anchor position
-            moveToTarget(this, this.target.position, 0, 100)
+            moveToTarget(this, this.target, 0, 100)
         }
 
         update_sleepy(){
