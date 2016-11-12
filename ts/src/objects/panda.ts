@@ -7,7 +7,7 @@ module Objects{
     export class Panda extends Phaser.Sprite{
         state: pandaStates;
         name: string;
-        target : PIXI.Point;
+        target : Phaser.Sprite;
         attachedTo: Phaser.Sprite;
         colorNum: number;
         size: number; //not implemeted yet
@@ -121,7 +121,7 @@ module Objects{
         update_hostile()
         {            
             if (this.target != null){
-                moveToTarget(this, this.target, 0, null);
+                moveToTarget(this, this.target.position, 0, null);
             }
         }
 
@@ -139,7 +139,7 @@ module Objects{
 
         update_rescued(){
             //follow the gunner's anchor position
-            moveToTarget(this, this.target, 0, 100)
+            moveToTarget(this, this.target.position, 0, 100)
         }
 
         update_sleepy(){

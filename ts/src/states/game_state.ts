@@ -17,6 +17,9 @@ module State{
         runner : Objects.Runner;
         gunner : Objects.Gunner;
 
+        spawner : Phaser.Group;
+        spawn_system : Objects.Spawn_System;
+
         // groups
         pandas : Phaser.Group;
         colliders: Phaser.Group;
@@ -55,9 +58,14 @@ module State{
             this.colliders = this.game.add.group();
             global_colliders = this.colliders;
 
+            this.spawner = this.game.add.group();
+            this.spawn_system = new Objects.Spawn_System(this);
+
             // world scaling helper
             this.world_objects = this.game.add.group();
+            
             this.world_objects.add(this.pandas);
+            this.world_objects.add(this.spawner);
 
             //create level
             this.level = new Level.Level(this.game);
@@ -74,9 +82,15 @@ module State{
             this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeWorldScale, this, null, 1.0);
             this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR).onUp.add(this.changeWorldScale, this, null, 0.5);
 
+            this.game.input.keyboard.addKey(Phaser.Keyboard.SIX).onUp.add(this.spawn_trigger, this, null);
+
             this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
             this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+        }
+
+        spawn_trigger(args){
+            this.spawn_system.spawn();
         }
 
         changeWorldScale(args, scale:number){
@@ -124,6 +138,7 @@ module State{
   //              this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
 //                this.game.debug.text("Runner: " + this.runner.state + "with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
 
+                this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
         }
 
         shotPanda(bullet, panda)
@@ -143,8 +158,9 @@ module State{
         }
 
         spawnPanda(x, y){
-            var obj = new Objects.Panda(this.game, x, y, "sleepy");
-            obj.target = this.gunner.position;
+            var obj = new Objects.Panda(this.game, x, y, "hostile");
+            obj.target = this.gunner;
+            //console.log(obj.target);
             return obj;
         }
 
