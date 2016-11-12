@@ -55,6 +55,7 @@ module Level{
 
             tween.onUpdateCallback(function(){
                 //console.log(this);
+                global_game_scale = this.current_scale;
                 this.collision_layer.setScale(this.current_scale);
                 this.art_layer.setScale(this.current_scale);
                 game_state.world_objects.scale.setTo(this.current_scale);

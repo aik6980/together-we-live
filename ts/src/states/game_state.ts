@@ -63,9 +63,11 @@ module State{
 
             // world scaling helper
             this.world_objects = this.game.add.group();
+            global_world_objects = this.world_objects;
             
             this.world_objects.add(this.pandas);
             this.world_objects.add(this.spawner);
+            this.world_objects.add(this.colliders);
 
             //create level
             this.level = new Level.Level(this.game);
@@ -86,7 +88,13 @@ module State{
 
             this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
             this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
-                this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+
+            this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnePandaFromGunner, this);
+
+            // TEST for gunner
+            //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
+            //this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 30, this.createHostilePanda, this);
         }
 
         spawn_trigger(args){
@@ -159,7 +167,7 @@ module State{
 
         spawnPanda(x, y){
             var obj = new Objects.Panda(this.game, x, y, "hostile");
-            obj.target = this.gunner;
+            obj.target = this.gunner.position;
             //console.log(obj.target);
             return obj;
         }
@@ -174,10 +182,16 @@ module State{
         {            
             var panda = this.spawnPanda(this.gunner.x - 40, this.gunner.y);
             this.gunner.rescuePanda(panda);
-            //this.pandas.add(panda);
         }
 
-        removeOnPandaFromGunner()
+        createHostilePanda()
+        {            
+            var panda = this.spawnPanda(this.world.width * this.world.scale.x, this.world.height);
+            this.pandas.add(panda);
+            panda.changeState("hostile");
+        }
+
+        removeOnePandaFromGunner()
         {
             var panda = this.gunner.recruits.getAt(0) as Objects.Panda;
             this.gunner.removePanda(panda);
@@ -218,13 +232,26 @@ function moveToTarget(source: Phaser.Sprite, target: PIXI.Point, distance: numbe
 }
 
 var global_colliders : Phaser.Group;
-function setCollisionWithWalls(entity, value : boolean)
+function setCollisionWithWalls(object, value : boolean)
 {
     if (value)
-        global_colliders.add(entity);
+        global_colliders.add(object);
     else
-        global_colliders.remove(entity);
+        global_colliders.remove(object);
 }
+
+var global_world_objects : Phaser.Group;
+function AddToWorldObjects(object)
+{
+    global_world_objects.add(object);
+}
+
+function RemoveFromWorldObjects(object)
+{
+    global_world_objects.remove(object);
+}
+
+var global_game_scale = 1.0;
 
 ////Global Gameplay variables
 
@@ -245,4 +272,3 @@ var gameplay_panda_stunLockCount: number = 4; //if stunlocked x times without a 
 var gameplay_pandas_spawnRateMin: number = 1000;
 var gameplay_pandas_spawnRateMax: number = 3000;
 var gameplay_pandas_maxEmbarrassment: number = 500; //maximum number of pandas
-
