@@ -6,6 +6,12 @@
 	  "gunner": {
 		  "baseTurnSpeed": 300
 		, "winRecruits": 10
+		, "fireAngleOffset": -90
+        , "bulletSpeed": 200
+        , "bulletLifeSpan": 2000
+        , "fireRate": 400
+        , "ringMinRadius": 20
+        , "ringSpaceBetween": 30
 		}
 	, "runner": {
 		  "baseSpeed": 150
