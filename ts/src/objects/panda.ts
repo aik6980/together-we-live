@@ -88,6 +88,12 @@ module Objects{
         {            
             if (this.target != null){
                 moveToTarget(this, this.target, null);
+                /*this.body.velocity.x = this.target.x - this.body.position.x;
+                this.body.velocity.y = this.target.y - this.body.position.y;
+
+                var magnitude = this.body.velocity.getMagnitude();
+                this.body.velocity.x *= 50 / magnitude;
+                this.body.velocity.y *= 50 / magnitude;*/
             }
         }
 

@@ -191,9 +191,29 @@ var Objects;
             this.cursors = this.game.input.keyboard.createCursorKeys();
         }
         Runner.prototype.update = function () {
-            //TODO Runner collission with walls?
-            //Runner Movement
             this.body.velocity.setTo(0, 0); //reset runner movement (if no keys pressed will stop moving)
+            //TODO Runner collission with walls?
+            switch (this.state) {
+                case "dead":
+                    this.kill(); //die already!
+                    break;
+                case "shot": //shot or scared
+                case "scared":
+                    this.changeState("warpingHome");
+                    break;
+                case "alive":
+                    this.movement();
+                    break;
+                case "warpingHome":
+                    //blue and fly to turret home.
+                    moveToTarget(this, new Phaser.Point(200, 200), 100);
+                    break;
+                default:
+                    break;
+            }
+        };
+        Runner.prototype.movement = function () {
+            //Runner Movement
             //horizontal movement
             if (this.cursors.left.isDown)
                 this.body.velocity.x = -this.speed;
@@ -215,6 +235,7 @@ var Objects;
                     break;
                 case "shot": //shot or scared
                 case "scared":
+                    console.log("I'm shot or scared and I'm actually " + targetState);
                     this.tint = Phaser.Color.getColor(240, 0, 30); //dirty red
                     break;
                 case "alive":
@@ -269,6 +290,7 @@ var State;
             _super.apply(this, arguments);
             this.unit = 12;
             this.starty = 50;
+            this.devMode = true;
         }
         Game_state.prototype.preload = function () {
             // create a bitmap data
@@ -303,10 +325,12 @@ var State;
             //Setup Controls
             //Runner and Gunner now have their controls define individually
             //dev controls
+            if (this.devMode)
+                this.changeAllPandasState(null, "sleepy");
             ///num keys to change all the pandas states?
             this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
             this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.NINE).onUp.add(this.changeAllPandasState, this, null, "rescued");
             this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
             this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
         };
@@ -346,8 +370,12 @@ function moveToTarget(source, target, speed) {
     var gospeed = speed || 50;
     source.body.velocity.x = target.x - source.body.position.x;
     source.body.velocity.y = target.y - source.body.position.y;
+    /*
+    console.log(source.body.velcocity, gospeed);
+    
     var magnitude = source.body.velocity.getMagnitude();
     source.body.velocity.x *= gospeed / magnitude;
     source.body.velocity.y *= gospeed / magnitude;
+    */
 }
 //# sourceMappingURL=game.js.map

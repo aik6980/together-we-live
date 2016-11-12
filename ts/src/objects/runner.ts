@@ -19,12 +19,34 @@ module Objects{
         }
 
         update(){
-
+            this.body.velocity.setTo(0, 0) //reset runner movement (if no keys pressed will stop moving)
             //TODO Runner collission with walls?
             
-            //Runner Movement
-            this.body.velocity.setTo(0, 0) //reset runner movement (if no keys pressed will stop moving)
+            switch (this.state){
+                case "dead":
+                    this.kill(); //die already!
+                    break;
+                case "shot": //shot or scared
+                case "scared":
+                    this.changeState("warpingHome");
+                    break;
+                case "alive":
+                    this.movement();
+                    break;
+                case "warpingHome":
+                    //blue and fly to turret home.
+                    moveToTarget(this, new Phaser.Point(200, 200), 100)
+                    break;
+                default:
+                    break;
+            }
+            
 
+        }     
+
+
+        movement(){
+            //Runner Movement
             //horizontal movement
             if (this.cursors.left.isDown) 
                 this.body.velocity.x = -this.speed;
@@ -36,31 +58,32 @@ module Objects{
                 this.body.velocity.y = -this.speed;
             else if (this.cursors.down.isDown)
                 this.body.velocity.y = this.speed;
-        }        
+        }   
 
-    changeState(targetState: runnerStates){
-        ///MORE work needed here
-            var prevState = this.state;
-            this.state = targetState;
+        changeState(targetState: runnerStates){
+            ///MORE work needed here
+                var prevState = this.state;
+                this.state = targetState;
 
-            switch (targetState){
-                case "dead":
-                    this.kill();
-                    break;
-                case "shot": //shot or scared
-                case "scared":
-                    this.tint = Phaser.Color.getColor(240, 0, 30); //dirty red
-                    break;
-                case "alive":
-                    this.tint = Phaser.Color.getColor(100,50,0); //brown??
-                case "warpingHome":
-                    //blue and fly to turret home.
-                    this.tint = Phaser.Color.getColor(0, 0, 200); //blueish
-                    break;
-                default:
-                    break;
-            }
-        }        
+                switch (targetState){
+                    case "dead":
+                        this.kill();
+                        break;
+                    case "shot": //shot or scared
+                    case "scared":
+                        console.log("I'm shot or scared and I'm actually " + targetState);
+                        this.tint = Phaser.Color.getColor(240, 0, 30); //dirty red
+                        break;
+                    case "alive":
+                        this.tint = Phaser.Color.getColor(100,50,0); //brown??
+                    case "warpingHome":
+                        //blue and fly to turret home.
+                        this.tint = Phaser.Color.getColor(0, 0, 200); //blueish
+                        break;
+                    default:
+                        break;
+                }
+            }        
 
         
         collidePanda(runner, panda){

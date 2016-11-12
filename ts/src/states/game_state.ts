@@ -8,6 +8,8 @@ module State{
         level : Array<string>;
         starty = 50;
 
+        devMode: boolean = true;
+
         // Players
         runner : Objects.Runner;
         gunner : Objects.Gunner;
@@ -61,14 +63,15 @@ module State{
             //Setup Controls
             //Runner and Gunner now have their controls define individually
 
-
             //dev controls
+            if (this.devMode)
+                this.changeAllPandasState(null, "sleepy");
             ///num keys to change all the pandas states?
-            this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.NINE).onUp.add(this.changeAllPandasState, this, null, "rescued");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
         }
 
         changeAllPandasState(args, state: string){
@@ -105,7 +108,7 @@ module State{
             obj.target = this.gunner.position;
             this.game.physics.enable(obj, Phaser.Physics.ARCADE);
             return obj;
-        }        
+        }
     }
 }
 
@@ -113,11 +116,15 @@ module State{
 //Global Functions
 function moveToTarget(source: Phaser.Sprite, target: Phaser.Point, speed:number){
     var gospeed = speed || 50
+
     
     source.body.velocity.x = target.x - source.body.position.x;
     source.body.velocity.y = target.y - source.body.position.y;
-
+    /*
+    console.log(source.body.velcocity, gospeed);
+    
     var magnitude = source.body.velocity.getMagnitude();
     source.body.velocity.x *= gospeed / magnitude;
     source.body.velocity.y *= gospeed / magnitude;
+    */
 }
