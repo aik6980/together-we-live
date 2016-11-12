@@ -24,14 +24,28 @@ var Level;
 (function (Level_1) {
     var Level = (function () {
         function Level(game) {
+            // level progression
+            this.current_scale = 1.0;
             this.game = game;
         }
         Level.prototype.create_game_state_object = function (object, game_state) {
             var x = object.x + this.map.tileWidth / 2;
             var y = object.y - this.map.tileHeight / 2;
             switch (object.type) {
+                case 'gunner':
+                    // create gunner player
+                    game_state.gunner = new Objects.Gunner(this.game, x, y);
+                    game_state.world_objects.add(game_state.gunner);
+                    this.game.physics.arcade.enable(game_state.gunner);
+                    //this.gunner.filters = [this.gray_filter];
+                    break;
+                case 'runner':
+                    // create runner player
+                    game_state.runner = new Objects.Runner(this.game, x, y, 150);
+                    game_state.world_objects.add(game_state.runner);
+                    this.game.physics.arcade.enable(game_state.runner);
+                    break;
                 case 'spawn_panda':
-                    console.log('panda');
                     game_state.pandas.add(game_state.spawnPanda(x, y));
                     break;
             }
@@ -39,13 +53,27 @@ var Level;
         Level.prototype.update_game_state = function (game_state) {
             // collision with world
             this.game.physics.arcade.collide(game_state.runner, this.collision_layer);
+            this.game.camera.follow(game_state.gunner);
+        };
+        Level.prototype.changeWorldScale = function (scale, game_state) {
+            var tween = this.game.add.tween(this).to({ current_scale: scale }, 2000, Phaser.Easing.Exponential.InOut, true, 0, 0, false);
+            tween.onUpdateCallback(function () {
+                //console.log(this);
+                this.collision_layer.setScale(this.current_scale);
+                game_state.world_objects.scale.setTo(this.current_scale);
+                game_state.world_objects.forEach(function (sprite) {
+                    sprite.body.setSize(sprite.width * game_state.world_objects.scale.x, sprite.height * game_state.world_objects.scale.y);
+                }, this);
+            }, this);
         };
         Level.prototype.load = function (game_state) {
+            this.game.world.setBounds(-4500, -4500, 9000, 9000);
             // create tile map
             this.map = this.game.add.tilemap('world');
             this.map.addTilesetImage('tiny32', 'world_tileset');
             // create layers
             this.collision_layer = this.map.createLayer('collision');
+            this.collision_layer.resize(2048, 2048);
             //var layer2 = this.map.createLayer('trigger');
             // setup collision tiles
             var collision_tiles = [];
@@ -68,6 +96,16 @@ var Level;
                     }
                 }
             }
+            this.collision_layer.debug = true;
+            //this.game.world.scale.setTo(1.5);
+            //this.collision_layer.setScale(1.5);
+            //game_state.world_objects.scale.setTo(1.5);
+            //game_state.world_objects.forEach(function(sprite : Phaser.Sprite){
+            //    sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
+            //});
+            ///game_state.gunner.scale.setTo(1.5);
+            //game_state.runner.scale.setTo(1.5);
+            //this.changeWorldScale(0.5, game_state);
         };
         return Level;
     }());
@@ -342,16 +380,8 @@ var State;
             var obj = null; //reused lots.
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
-            // create runner player
-            this.runner = new Objects.Runner(this.game, 35, 50, 150);
-            this.game.add.existing(this.runner);
-            this.game.physics.arcade.enable(this.runner);
-            // create gunner player
-            this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
-            this.game.add.existing(this.gunner);
-            this.game.physics.arcade.enable(this.gunner);
-            this.gunner.filters = [this.gray_filter];
             this.pandas = this.game.add.group();
+            this.world_objects = this.game.add.group();
             this.level = new Level.Level(this.game);
             this.level.load(this);
             //spawn some pandas
@@ -362,11 +392,18 @@ var State;
             //Runner and Gunner now have their controls define individually
             //dev controls
             ///num keys to change all the pandas states?
-            this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
+            //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
+            //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeWorldScale, this, null, 2.0);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeWorldScale, this, null, 1.5);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeWorldScale, this, null, 1.0);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR).onUp.add(this.changeWorldScale, this, null, 0.5);
             this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
             this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
             this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+        };
+        Game_state.prototype.changeWorldScale = function (args, scale) {
+            this.level.changeWorldScale(scale, this);
         };
         Game_state.prototype.changeAllPandasState = function (args, state) {
             this.pandas.forEachExists(function (panda) { panda.changeState(state); }, null);
@@ -380,6 +417,9 @@ var State;
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.onPandaHit, null, this);
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.onRunnerHit, null, this);
+        };
+        Game_state.prototype.render = function () {
+            this.game.debug.body(this.runner);
         };
         Game_state.prototype.onPandaHit = function (bullet, panda) {
             bullet.kill();
