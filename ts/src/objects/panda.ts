@@ -14,7 +14,24 @@ module Objects{
         size: number; //not implemeted yet
 
         constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){        
-            super(game, x, y, game.cache.getBitmapData('unit_white'));
+            super(game, x, y, 'ghosts' /*game.cache.getBitmapData('unit_white')*/);
+            
+            this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
+            //animations
+            //this.key = 'ghosts';
+            this.animations.add('idle', [0,1]);
+            this.animations.add('down', [0,1,2]);
+            this.animations.add('left', [3,4,5]);
+            this.animations.add('right', [6,7,8]);
+            this.animations.add('up', [9,10,11]);
+            this.animations.play('idle', 20, true);
+
+            //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
+            this.body.setSize(24, 24, 3, 4);
+            
+            
+            
+
             this.changeState(startState);
             //this.state = startState;
 

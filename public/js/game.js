@@ -147,7 +147,18 @@ var Objects;
     var Panda = (function (_super) {
         __extends(Panda, _super);
         function Panda(game, x, y, startState) {
-            _super.call(this, game, x, y, game.cache.getBitmapData('unit_white'));
+            _super.call(this, game, x, y, 'ghosts' /*game.cache.getBitmapData('unit_white')*/);
+            this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
+            //animations
+            //this.key = 'ghosts';
+            this.animations.add('idle', [0, 1]);
+            this.animations.add('down', [0, 1, 2]);
+            this.animations.add('left', [3, 4, 5]);
+            this.animations.add('right', [6, 7, 8]);
+            this.animations.add('up', [9, 10, 11]);
+            this.animations.play('idle', 20, true);
+            //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
+            this.body.setSize(24, 24, 3, 4);
             this.changeState(startState);
             //this.state = startState;
             //game.physics.enable(this, Phaser.Physics.ARCADE); //does this work here?
@@ -241,6 +252,7 @@ var Objects;
             _super.call(this, game, x, y, game.cache.getBitmapData('unit_white'));
             this.speed = 100;
             this.state = "alive";
+            //super(game.add.sprite(x, y, "ghosts"));
             this.changeState(this.state);
             this.cursors = this.game.input.keyboard.createCursorKeys();
         }
@@ -253,6 +265,7 @@ var Objects;
                     break;
                 case "shot": //shot or scared
                 case "scared":
+                    console.log("runner was " + this.state + " so will be warpingHome");
                     this.changeState("warpingHome");
                     break;
                 case "alive":
@@ -302,6 +315,13 @@ var Objects;
                     break;
             }
         };
+        Runner.prototype.collideGunner = function (runner, gunner) {
+            console.log("runner collided with gunner while in state " + runner.state);
+            if (runner.state == "warpingHome") {
+                console.log("runner revived by warping home to gunner");
+                runner.changeState("alive");
+            }
+        };
         Runner.prototype.collidePanda = function (runner, panda) {
             console.log("I collided with a " + panda.state + " PANDA called " + panda.name);
             switch (panda.state) {
@@ -313,10 +333,6 @@ var Objects;
                     break;
                 default:
             }
-        };
-        Runner.prototype.die = function () {
-            console.log("runner is dying");
-            this.kill();
         };
         return Runner;
     }(Phaser.Sprite));
@@ -359,13 +375,25 @@ var State;
             this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
             this.game.load.tilemap('world', 'assets/data/world.json', null, Phaser.Tilemap.TILED_JSON);
             this.game.load.image('world_tileset', 'assets/img/tiny32.png');
+            //spritesheet
+            this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32);
         };
         Game_state.prototype.create = function () {
             var obj = null; //reused lots.
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
+            /*
+            //create sample ghost srpite
+            var sprite = this.game.add.sprite(200, 200, 'ghosts');
+            sprite.animations.add('down', [0,1,2]);
+            sprite.animations.add('left', [3,4,5]);
+            sprite.animations.add('right', [6,7,8]);
+            sprite.animations.add('up', [9,10,11]);
+            sprite.animations.play('right', 5, true);
+            this.game.add.tween(sprite).to({ x: this.game.width }, 10000, Phaser.Easing.Linear.None, true);
+            */
             // create runner player
-            this.runner = new Objects.Runner(this.game, 35, 50, 150);
+            this.runner = new Objects.Runner(this.game, 80, 60, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
             // create gunner player
@@ -376,10 +404,6 @@ var State;
             this.pandas = this.game.add.group();
             this.level = new Level.Level(this.game);
             this.level.load(this);
-            //spawn some pandas
-            //this.pandas.add(this.spawnPanda(100, 100));
-            //this.pandas.add(this.spawnPanda(150, 100));
-            //this.pandas.add(this.spawnPanda(150, 150));
             //Setup Controls
             //Runner and Gunner now have their controls define individually
             //dev controls
@@ -392,24 +416,37 @@ var State;
             this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
             this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
         };
-        Game_state.prototype.changeAllPandasState = function (args, state) {
-            this.pandas.forEachExists(function (panda) { panda.changeState(state); }, null);
-            //this.pandas.setAll('state', state);
-            console.log("Made all the pandas " + state);
-        };
         Game_state.prototype.update = function () {
             this.level.update_game_state(this);
             //collisions
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
-            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.onPandaHit, null, this);
-            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.onRunnerHit, null, this);
+            this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this);
+            //bullet collissions
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.shotPanda, null, this);
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, null, this);
         };
-        Game_state.prototype.onPandaHit = function (bullet, panda) {
+        Game_state.prototype.render = function () {
+            var _this = this;
+            if (this.devMode)
+                //this.game.debug.bodyInfo(this.runner, 32, 32);
+                this.game.debug.body(this.gunner);
+            this.game.debug.body(this.runner);
+            this.pandas.forEach(function (panda) {
+                _this.game.debug.body(panda);
+            }, null, true);
+            /*this.pandas.forEach()
+            this.pandas.forEachAlive(renderGroup, this);{
+                function renderGroup(member){
+                    this.game.debug.body(member);
+                }
+            }*/
+        };
+        Game_state.prototype.shotPanda = function (bullet, panda) {
             bullet.kill();
             panda.changeState("stunned");
         };
-        Game_state.prototype.onRunnerHit = function (bullet, runner) {
+        Game_state.prototype.shotRunner = function (bullet, arunner) {
             bullet.kill();
             this.runner.changeState("shot");
         };
@@ -417,8 +454,13 @@ var State;
             var obj = new Objects.Panda(this.game, x, y, "sleepy");
             //obj.name = random name
             obj.target = this.gunner.position;
-            this.game.physics.enable(obj, Phaser.Physics.ARCADE);
+            //this.game.physics.enable(obj, Phaser.Physics.ARCADE);
             return obj;
+        };
+        Game_state.prototype.changeAllPandasState = function (args, state) {
+            this.pandas.forEachExists(function (panda) { panda.changeState(state); }, null);
+            //this.pandas.setAll('state', state);
+            console.log("Made all the pandas " + state);
         };
         return Game_state;
     }(Phaser.State));
@@ -429,23 +471,9 @@ function moveToTarget(source, target, speed) {
     var gospeed = speed || 50;
     source.body.velocity.x = target.x - source.body.position.x;
     source.body.velocity.y = target.y - source.body.position.y;
-    /*
-    console.log(source.body.velcocity, gospeed);
-    
-    var magnitude = source.body.velocity.getMagnitude();
+    //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
+    var magnitude = Math.sqrt(source.body.velocity.x * source.body.velocity.x + source.body.velocity.y * source.body.velocity.y);
     source.body.velocity.x *= gospeed / magnitude;
     source.body.velocity.y *= gospeed / magnitude;
-    */
 }
-var State;
-(function (State) {
-    var Menu_state = (function (_super) {
-        __extends(Menu_state, _super);
-        function Menu_state() {
-            _super.apply(this, arguments);
-        }
-        return Menu_state;
-    }(Phaser.State));
-    State.Menu_state = Menu_state;
-})(State || (State = {}));
 //# sourceMappingURL=game.js.map

@@ -38,6 +38,9 @@ module State{
 
             this.game.load.tilemap('world', 'assets/data/world.json', null, Phaser.Tilemap.TILED_JSON);
             this.game.load.image('world_tileset', 'assets/img/tiny32.png');
+
+            //spritesheet
+            this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32)
         }
 
         create(){
@@ -46,8 +49,19 @@ module State{
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
             
+            /*
+            //create sample ghost srpite
+            var sprite = this.game.add.sprite(200, 200, 'ghosts');
+            sprite.animations.add('down', [0,1,2]);
+            sprite.animations.add('left', [3,4,5]);
+            sprite.animations.add('right', [6,7,8]);
+            sprite.animations.add('up', [9,10,11]);
+            sprite.animations.play('right', 5, true);
+            this.game.add.tween(sprite).to({ x: this.game.width }, 10000, Phaser.Easing.Linear.None, true);
+            */
+
             // create runner player
-            this.runner = new Objects.Runner(this.game, 35, 50, 150);
+            this.runner = new Objects.Runner(this.game, 80, 60, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
 
@@ -62,10 +76,6 @@ module State{
             this.level = new Level.Level(this.game);
             this.level.load(this);
 
-            //spawn some pandas
-            //this.pandas.add(this.spawnPanda(100, 100));
-            //this.pandas.add(this.spawnPanda(150, 100));
-            //this.pandas.add(this.spawnPanda(150, 150));
 
             //Setup Controls
             //Runner and Gunner now have their controls define individually
@@ -81,29 +91,44 @@ module State{
                 this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
         }
 
-        changeAllPandasState(args, state: string){
-            this.pandas.forEachExists(function(panda) { panda.changeState(state); }, null );
-            //this.pandas.setAll('state', state);
-            console.log("Made all the pandas " + state);
-        }
-
         update(){
             this.level.update_game_state(this);
 
             //collisions
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this); 
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
-            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.onPandaHit, null, this);
-            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.onRunnerHit, null, this);
+            this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); 
+            //bullet collissions
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.shotPanda, null, this);
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, null, this);
         }
 
-        onPandaHit(bullet, panda)
+
+        render(){
+            if (this.devMode)
+                //this.game.debug.bodyInfo(this.runner, 32, 32);
+                this.game.debug.body(this.gunner);
+                this.game.debug.body(this.runner);
+
+                this.pandas.forEach(panda => {
+                    this.game.debug.body(panda);                    
+                }, null, true);
+                
+                /*this.pandas.forEach()
+                this.pandas.forEachAlive(renderGroup, this);{
+                    function renderGroup(member){
+                        this.game.debug.body(member);
+                    }
+                }*/
+        }
+
+        shotPanda(bullet, panda)
         {
-            bullet.kill();            
+            bullet.kill();        
             panda.changeState("stunned");
         }
 
-        onRunnerHit(bullet, runner){
+        shotRunner(bullet, arunner){
             bullet.kill();
             this.runner.changeState("shot");
         }
@@ -112,9 +137,15 @@ module State{
             var obj = new Objects.Panda(this.game, x, y, "sleepy");
             //obj.name = random name
             obj.target = this.gunner.position;
-            this.game.physics.enable(obj, Phaser.Physics.ARCADE);
+            //this.game.physics.enable(obj, Phaser.Physics.ARCADE);
             return obj;
         }
+
+        changeAllPandasState(args, state: string){
+            this.pandas.forEachExists(function(panda) { panda.changeState(state); }, null );
+            //this.pandas.setAll('state', state);
+            console.log("Made all the pandas " + state);
+        }        
     }
 }
 
@@ -126,11 +157,11 @@ function moveToTarget(source: Phaser.Sprite, target: Phaser.Point, speed:number)
     
     source.body.velocity.x = target.x - source.body.position.x;
     source.body.velocity.y = target.y - source.body.position.y;
-    /*
-    console.log(source.body.velcocity, gospeed);
     
-    var magnitude = source.body.velocity.getMagnitude();
+    //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
+    var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y)
+    
     source.body.velocity.x *= gospeed / magnitude;
     source.body.velocity.y *= gospeed / magnitude;
-    */
+    
 }

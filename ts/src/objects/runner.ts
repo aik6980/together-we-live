@@ -13,6 +13,7 @@ module Objects{
 
         constructor(game : Phaser.Game, x: number, y: number, speed: number){
             super(game, x, y, game.cache.getBitmapData('unit_white'));
+            //super(game.add.sprite(x, y, "ghosts"));
             this.changeState(this.state);
 
             this.cursors = this.game.input.keyboard.createCursorKeys();
@@ -28,6 +29,7 @@ module Objects{
                     break;
                 case "shot": //shot or scared
                 case "scared":
+                    console.log("runner was " + this.state + " so will be warpingHome");
                     this.changeState("warpingHome");
                     break;
                 case "alive":
@@ -85,8 +87,15 @@ module Objects{
                 }
             }        
 
+        collideGunner(runner: Runner, gunner: Gunner){
+            console.log("runner collided with gunner while in state " + runner.state);
+            if (runner.state == "warpingHome"){
+                console.log("runner revived by warping home to gunner");
+                runner.changeState("alive");
+            }
+        }
         
-        collidePanda(runner, panda){
+        collidePanda(runner: Runner, panda: Panda){
             console.log("I collided with a "+ panda.state + " PANDA called " + panda.name);
 
             switch (panda.state){
@@ -99,11 +108,6 @@ module Objects{
                 default:
                     //nothing?
             }
-        }
-
-        die(){
-            console.log("runner is dying")
-            this.kill()
         }
     }
 }
