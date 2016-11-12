@@ -13,6 +13,7 @@ module State{
         devMode: boolean = true;
 
         // Players
+        world_objects : Phaser.Group;
         runner : Objects.Runner;
         gunner : Objects.Gunner;
 
@@ -49,21 +50,13 @@ module State{
 
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
-            
             //create pandas group
             this.pandas = this.game.add.group();
             this.colliders = this.game.add.group();
             global_colliders = this.colliders;
-            
-            // create gunner player (first as it is centre of the world)
-            this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
-            this.game.add.existing(this.gunner);
-            this.gunner.filters = [this.gray_filter];
 
-            // create runner player
-            this.runner = new Objects.Runner(this.game, 80, 60)
-            this.runner.myGunner = this.gunner;
-            this.game.add.existing(this.runner);
+            // world scaling helper
+            this.world_objects = this.game.add.group(); 
 
             //create level
             this.level = new Level.Level(this.game);
@@ -73,16 +66,20 @@ module State{
             if (this.devMode)
                 this.changeAllPandasState(null, "sleepy");
             ///num keys to change all the pandas states?
-                this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
-                this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
-                this.game.input.keyboard.addKey(Phaser.Keyboard.NINE).onUp.add(this.changeAllPandasState, this, null, "rescued");
-                //this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
+            //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
+            //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeWorldScale, this, null, 2.0);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeWorldScale, this, null, 1.5);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeWorldScale, this, null, 1.0);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR).onUp.add(this.changeWorldScale, this, null, 0.5);
+
+            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+        }
 
-                this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnPandaFromGunner, this);
-
-            // TEST for gunner
-            //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
+        changeWorldScale(args, scale:number){
+            this.level.changeWorldScale(scale, this);
         }
 
         update(){
@@ -104,8 +101,8 @@ module State{
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, function(){ return this.runner.state != 'warping';}, this);
         }
 
-
         render(){
+			
             var debugBoundingBoxes = false;
             if (this.devMode)
 
