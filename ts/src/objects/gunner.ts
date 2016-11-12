@@ -118,7 +118,7 @@ module Objects{
 
         kidnapPandaWith(kidnapper : Panda)
         {
-            var panda = this.recruits.getAt(0) as Objects.Panda;
+            var panda = this.getClosestRecruit(kidnapper.position);
             this.removePanda(panda);
 
             // pick offscreen direction
@@ -158,6 +158,26 @@ module Objects{
 
             this.recruits.remove(panda);
             this.refreshRing();
+        }
+
+        getClosestRecruit(target : Phaser.Point)
+        {
+            var closest_panda : Panda;
+            var closest_distance;
+
+            this.recruits.forEach(panda => {
+
+                var diff_x = target.x - panda.x; 
+                var diff_y = target.y - panda.y; 
+                var distance = diff_x*diff_x + diff_y*diff_y;
+
+                if (closest_panda == null || distance < closest_distance)
+                {
+                    closest_panda = panda;
+                }
+            }, null, true);
+
+            return closest_panda;
         }
 
         refreshRing()
