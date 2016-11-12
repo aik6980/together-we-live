@@ -8,7 +8,7 @@ module Objects{
 
         //bulletSpeed: number = ;
 
-        fire_angle_offset : number = 90;
+        fire_angle_offset : number = -90;
 
         recruits : Phaser.Group;
         anchors : Phaser.Group;
