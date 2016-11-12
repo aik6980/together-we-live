@@ -169,6 +169,8 @@ module Objects{
 
         kidnapPandaWith(kidnapper : Panda)
         {
+            this.game.add.audio('Ghost_Merges_To_Turret').play(null,null,global_sfx_volume);
+
             var panda = this.getClosestRecruit(kidnapper.position);
             this.removePanda(panda);
 
