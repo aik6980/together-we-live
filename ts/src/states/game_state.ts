@@ -106,9 +106,10 @@ module State{
 
 
         render(){
+            var debugBoundingBoxes = false;
             if (this.devMode)
 
-                if (false){
+                if (debugBoundingBoxes){
                     //bounding boxes
                     this.game.debug.body(this.gunner);
                     this.game.debug.body(this.runner);

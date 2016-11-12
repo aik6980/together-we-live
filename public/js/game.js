@@ -79,6 +79,8 @@ var Objects;
         __extends(Gunner, _super);
         function Gunner(game, x, y) {
             _super.call(this, game, x, y, 'ship');
+            this.game.physics.enable(this, Phaser.Physics.ARCADE);
+            this.body.immovable = true; //stop shoving the gunner!
             this.recruits = this.game.add.group();
             this.anchors = this.game.add.group();
             this.anchor.setTo(0.5, 0.5);
@@ -179,6 +181,7 @@ var Objects;
             //animations
             //this.key = 'ghosts';
             this.animations.add('idle', [0, 1]);
+            this.animations.add('stunned', [1, 2]);
             this.animations.add('down', [0, 1, 2]);
             this.animations.add('left', [3, 4, 5]);
             this.animations.add('right', [6, 7, 8]);
@@ -260,6 +263,8 @@ var Objects;
         Panda.prototype.update_stunned = function () {
             //remain stunned for X seconds
             //wobble (tween)
+            this.animations.play('stunned', 10, true);
+            this.alpha = 0.8;
         };
         Panda.prototype.update_attached = function () {
             //follow the leader! 
@@ -270,7 +275,8 @@ var Objects;
             moveToTarget(this, this.target, 0, 100);
         };
         Panda.prototype.update_sleepy = function () {
-            //stay perfectly still
+            //stay perfectly still (might also be hidden)
+            this.attachedTo = null; //break attachment
             this.body.velocity = [0, 0];
         };
         Panda.prototype.detachPanda = function (panda) {
@@ -291,7 +297,8 @@ var Objects;
             _super.call(this, game, x, y, game.cache.getBitmapData('unit_white'));
             this.speed = 100;
             this.state = "alive";
-            //super(game.add.sprite(x, y, "ghosts"));
+            this.game.physics.enable(this, Phaser.Physics.ARCADE);
+            //this.myGunner = myGunner;
             this.changeState(this.state);
             this.cursors = this.game.input.keyboard.createCursorKeys();
             this.linked_pandas = new Phaser.LinkedList();
@@ -305,17 +312,18 @@ var Objects;
                 case "dead":
                     this.kill(); //die already!
                     break;
-                case "shot": //shot or scared
+                case "shot":
+                    this.changeState("warping");
+                    break;
                 case "scared":
-                    console.log("runner was " + this.state + " so will be warpingHome");
-                    this.changeState("warpingHome");
+                    this.changeState("warping");
                     break;
                 case "alive":
                     this.movement();
                     break;
-                case "warpingHome":
+                case "warping":
                     //blue and fly to turret home.
-                    moveToTarget(this, new Phaser.Point(200, 200), 0, 100);
+                    moveToTarget(this, this.myGunner.position, 0, 300);
                     break;
                 default:
                     break;
@@ -342,16 +350,21 @@ var Objects;
                 case "dead":
                     this.kill();
                     break;
-                case "shot": //shot or scared
+                case "shot":
+                    //play sound "ARRRRGH"
+                    this.tint = Phaser.Color.getColor(255, 10, 0); //dirty red)
+                    break;
                 case "scared":
-                    console.log("I'm shot or scared and I'm actually " + targetState);
-                    this.tint = Phaser.Color.getColor(240, 0, 30); //dirty red
+                    //play sound "EEEEEEEK"
+                    this.tint = Phaser.Color.getColor(0, 30, 200); //light blue-green (pale with fright?)
+                    this.alpha = 0.6;
                     break;
                 case "alive":
                     this.tint = Phaser.Color.getColor(100, 50, 0); //brown??
                     setCollisionWithWalls(this, true);
+                    this.alpha = 1.0;
                     break;
-                case "warpingHome":
+                case "warping":
                     //blue and fly to turret home.
                     this.tint = Phaser.Color.getColor(0, 0, 200); //blueish
                     setCollisionWithWalls(this, false);
@@ -362,7 +375,7 @@ var Objects;
         };
         Runner.prototype.collideGunner = function (runner, gunner) {
             console.log("runner collided with gunner while in state " + runner.state);
-            if (runner.state == "warpingHome") {
+            if (runner.state == "warping") {
                 console.log("runner revived by warping home to gunner");
                 runner.changeState("alive");
             }
@@ -441,32 +454,19 @@ var State;
             var obj = null; //reused lots.
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
-            /*
-            //create sample ghost srpite
-            var sprite = this.game.add.sprite(200, 200, 'ghosts');
-            sprite.animations.add('down', [0,1,2]);
-            sprite.animations.add('left', [3,4,5]);
-            sprite.animations.add('right', [6,7,8]);
-            sprite.animations.add('up', [9,10,11]);
-            sprite.animations.play('right', 5, true);
-            this.game.add.tween(sprite).to({ x: this.game.width }, 10000, Phaser.Easing.Linear.None, true);
-            */
-            this.pandas = this.game.add.group();
-            this.colliders = this.add.group();
-            global_colliders = this.colliders;
-            // create runner player
-            this.runner = new Objects.Runner(this.game, 80, 60, 150);
-            this.game.add.existing(this.runner);
-            this.game.physics.arcade.enable(this.runner);
-            // create gunner player
+            // create gunner player (first as it is centre of the world)
             this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
             this.game.add.existing(this.gunner);
-            this.game.physics.arcade.enable(this.gunner);
             this.gunner.filters = [this.gray_filter];
+            // create runner player
+            this.runner = new Objects.Runner(this.game, 80, 60, 150);
+            this.runner.myGunner = this.gunner;
+            this.game.add.existing(this.runner);
+            //create pandas group
+            this.pandas = this.game.add.group();
+            //create level
             this.level = new Level.Level(this.game);
             this.level.load(this);
-            //Setup Controls
-            //Runner and Gunner now have their controls define individually
             //dev controls
             if (this.devMode)
                 this.changeAllPandasState(null, "sleepy");
@@ -474,47 +474,54 @@ var State;
             this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
             this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
             this.game.input.keyboard.addKey(Phaser.Keyboard.NINE).onUp.add(this.changeAllPandasState, this, null, "rescued");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
+            //this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
             this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
             this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnPandaFromGunner, this);
             // TEST for gunner
-            this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
+            //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
         };
         Game_state.prototype.update = function () {
             this.level.update_game_state(this);
-            //collisions
-            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);
+            ///Collisions
+            //N.b. the player when "warping" is not checked for collision;
+            //character collisions
+            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, function () { return this.runner.state != 'warping'; }, this);
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
-            this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this);
-            //bullet collissions
+            this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
+            //level collisions
+            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function () { return this.runner.state != 'warping'; }, this);
+            this.game.physics.arcade.collide(this.pandas, this.level.collision_layer);
+            //bullet collisions
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.shotPanda, null, this);
-            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, null, this);
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, function () { return this.runner.state != 'warping'; }, this);
         };
         Game_state.prototype.render = function () {
             var _this = this;
+            var debugBoundingBoxes = false;
             if (this.devMode)
-                //this.game.debug.bodyInfo(this.runner, 32, 32);
-                this.game.debug.body(this.gunner);
-            this.game.debug.body(this.runner);
-            this.pandas.forEach(function (panda) {
-                _this.game.debug.body(panda);
-            }, null, true);
-            /*this.pandas.forEach()
-            this.pandas.forEachAlive(renderGroup, this);{
-                function renderGroup(member){
-                    this.game.debug.body(member);
+                if (debugBoundingBoxes) {
+                    //bounding boxes
+                    this.game.debug.body(this.gunner);
+                    this.game.debug.body(this.runner);
+                    this.pandas.forEach(function (panda) {
+                        _this.game.debug.body(panda);
+                    }, null, true);
                 }
-            }*/
+            this.game.debug.text("Runner: " + this.runner.state, 10, 300);
         };
         Game_state.prototype.shotPanda = function (bullet, panda) {
             if (panda.state != "rescued") {
                 bullet.kill();
                 panda.stun();
+                bullet.kill();
             }
         };
-        Game_state.prototype.shotRunner = function (bullet, arunner) {
+        Game_state.prototype.shotRunner = function (runner, bullet) {
+            //this is bizarre but documented - group vs sprite passes the callback parameters in the sprite first order.
+            //The two objects will be passed to this function in the same order in which you specified them, unless you are checking Group vs. Sprite, in which case Sprite will always be the first parameter." 
+            console.log(bullet, runner);
             bullet.kill();
-            this.runner.changeState("shot");
+            runner.changeState("shot");
         };
         Game_state.prototype.spawnPanda = function (x, y) {
             var obj = new Objects.Panda(this.game, x, y, "sleepy");
