@@ -8,9 +8,10 @@ module Objects{
         //state: string = "hostile";
         state: pandaStates;
         name: string;
+        target : Phaser.Point;
 
         constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){
-        target : Phaser.Point;
+        
             super(game, x, y, game.cache.getBitmapData('unit_white'));
             this.state = startState;
 
@@ -46,7 +47,6 @@ module Objects{
                     break;
                 case "rescued":
                     this.tint = Phaser.Color.getColor(0, 255, 0); //green
-                    break;
                     break;
                 case "sleepy":
                     this.tint = Phaser.Color.getColor(255, 255, 255); //white

@@ -79,13 +79,12 @@ var Objects;
         __extends(Panda, _super);
         function Panda(game, x, y, startState) {
             _super.call(this, game, x, y, game.cache.getBitmapData('unit_white'));
-            this.state = "hostile";
             this.state = startState;
             //game.physics.enable(this, Phaser.Physics.ARCADE); //does this work here?
         }
         Panda.prototype.attachTo = function (attachee) {
-            console.log("Panda should get attachd to the attache", attachee);
-            this.kill();
+            console.log("Panda should get attachd to the attachee", attachee);
+            this.changeState("attached");
         };
         Panda.prototype.changeState = function (targetState) {
             this.state = targetState;
@@ -102,11 +101,17 @@ var Objects;
                 case "stunned":
                     this.tint = Phaser.Color.getColor(0, 255, 255); //yellow
                     break;
+                case "attached":
+                    this.tint = Phaser.Color.getColor(30, 10, 250); //blue
+                    break;
                 case "rescued":
                     this.tint = Phaser.Color.getColor(0, 255, 0); //green
                     break;
-                default:
+                case "sleepy":
                     this.tint = Phaser.Color.getColor(255, 255, 255); //white
+                    break;
+                default:
+                    this.tint = Phaser.Color.getColor(50, 50, 50); //gray
                     break;
             }
         };
@@ -224,21 +229,15 @@ var State;
             this.cursors = this.input.keyboard.createCursorKeys();
             //dev controls
             ///num keys to change all the pandas states?
-            //  Here we create 3 hotkeys, keys 1-3 and bind them all to their own functions
-            //listeners not working
-            /*var key1, key2, key3;
-            key1 = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
-            key1.onDown.*/
-            //key1.onDown.add(changePandasState("hostile"), this);
-            /*key2 = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
-            key2.onDown.add(changePandasState("stunned"), this);
-
-            key3 = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
-            key3.onDown.add(changePandasState("rescued"), this);*/
-            function changePandasState(state) {
-                console.log("changing all the pandas to " + state);
-                //this.pandas.callAllExists(changeState(state), true)
-            }
+            this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+        };
+        Game_state.prototype.changeAllPandasState = function (args, state) {
+            console.log("Make all the pandas " + state, state);
+            this.pandas.setAll('state', state);
         };
         Game_state.prototype.update = function () {
             //collisions
