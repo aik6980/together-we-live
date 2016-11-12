@@ -239,11 +239,23 @@ module State{
         }
 
         spawnPandaInState(x, y, state: pandaStates){
-            var pobj = new Objects.Panda(this.game, x, y, state);
-            pobj.body.height = pobj.body.height * this.level.current_scale;
-            pobj.body.width = pobj.body.width * this.level.current_scale;
-            pobj.target = this.gunner.position; //pandas target the Gunner by default
-            return pobj;
+
+            if (state == "rescued")
+            {
+                var pobj = new Objects.Panda(this.game, x, y, "sleepy");
+                pobj.body.height = pobj.body.height * this.level.current_scale;
+                pobj.body.width = pobj.body.width * this.level.current_scale;
+                this.gunner.rescuePanda(pobj);
+                return pobj;
+            }
+            else
+            {
+                var pobj = new Objects.Panda(this.game, x, y, state);
+                pobj.body.height = pobj.body.height * this.level.current_scale;
+                pobj.body.width = pobj.body.width * this.level.current_scale;
+                pobj.target = this.gunner.position; //pandas target the Gunner by default
+                return pobj;
+            }
         }
 
         changeAllPandasState(args, state: string){
