@@ -42,7 +42,6 @@ module Objects{
             this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
             this.weapon.bulletSpeed = 200;
             this.weapon.fireRate = 200;
-            this.weapon.trackSprite(this, 0, 0, true);
         }
 
         update(){
@@ -61,7 +60,11 @@ module Objects{
 
             if (this.fire_button.isDown)
             {
-                this.weapon.fire();
+                this.weapon.x = this.position.x;
+                this.weapon.y = this.position.y;
+                this.weapon.fireAtXY(
+                    this.weapon.x + Math.cos(this.body.rotation * Math.PI / 180.0), 
+                    this.weapon.y + Math.sin(this.body.rotation * Math.PI / 180.0));
             }
 
             // rotate the ring
