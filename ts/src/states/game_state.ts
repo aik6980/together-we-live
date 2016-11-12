@@ -8,8 +8,6 @@ module State{
         level : Array<string>;
         starty = 50;
 
-        cursors : Phaser.CursorKeys;
-
         // Players
         runner : Objects.Runner;
         gunner : Objects.Gunner;
@@ -45,33 +43,25 @@ module State{
             this.runner = new Objects.Runner(this.game, 50, 50, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
-            //this.player.filters = [this.gray_filter];
 
             // create gunner player
             this.gunner = new Objects.Gunner(this.game, this.world.centerX, this.world.centerY);
             this.game.add.existing(this.gunner);
             this.game.physics.arcade.enable(this.gunner);
+            this.gunner.filters = [this.gray_filter];
 
             //Setup groups
             this.pandas = this.game.add.group();
             
             //spawn some pandas
-            obj = new Objects.Panda(this.game, 100, 100, "hostile");
-            obj.name = "Aik"
-            obj.target = this.gunner.position;
-	        this.pandas.add(obj);
-	        this.game.physics.enable(obj, Phaser.Physics.ARCADE);
-
-            obj = new Objects.Panda(this.game, 150, 100, "hostile");
-            obj.name = "Gavin"
-            obj.target = this.gunner.position;
-	        this.pandas.add(obj);
-	        this.game.physics.enable(obj, Phaser.Physics.ARCADE);
+            this.pandas.add(this.spawnPanda(100, 100));
+            this.pandas.add(this.spawnPanda(150, 100));
+            //this.pandas.add(this.spawnPanda(150, 150));
 
             //Setup Controls
-            this.cursors = this.input.keyboard.createCursorKeys();
+            //Runner and Gunner now have their controls define individually
 
-    type pandaStates = "hostile" | "stunned" | "attached" | "rescued" | "sleepy";
+
             //dev controls
             ///num keys to change all the pandas states?
             this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
@@ -82,43 +72,52 @@ module State{
         }
 
         changeAllPandasState(args, state: string){
-            console.log("Make all the pandas " + state, state);
-            this.pandas.setAll('state', state);  
+            this.pandas.forEachExists(function(panda) { panda.changeState(state); }, null );
+            //this.pandas.setAll('state', state);
+            console.log("Made all the pandas " + state);
         }
 
         update(){
             //collisions
-            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);         
+            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);
+
+            this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
+
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.onPandaHit, null, this);
 
-/*
-            {
-                this.weapon.fire();
-                if(this.player.filters == null) this.player.filters = [this.gray_filter];
-            }
-*/
-
-            var runnerSpeed = this.runner.speed;
-
-            this.runner.body.velocity.setTo(0, 0) //reset runner movement (if no keys pressed will stop moving)
-
-            //horizontal movement
-            if (this.cursors.left.isDown) 
-                this.runner.body.velocity.x = -runnerSpeed;
-            else if (this.cursors.right.isDown) 
-                this.runner.body.velocity.x = runnerSpeed;
-
-            //vertical movement
-            if (this.cursors.up.isDown)
-                this.runner.body.velocity.y = -runnerSpeed;
-            else if (this.cursors.down.isDown)
-                this.runner.body.velocity.y = runnerSpeed;
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.onRunnerHit, null, this);
         }
 
         onPandaHit(bullet, panda)
         {
             bullet.kill();            
             panda.changeState("stunned");
-                    }
-                    }
+        }
+
+        onRunnerHit(bullet, runner){
+            bullet.kill();
+            this.runner.changeState("shot");
+        }
+
+        spawnPanda(x, y){
+            var obj = new Objects.Panda(this.game, x, y, "hostile");
+            //obj.name = random name
+            obj.target = this.gunner.position;
+            this.game.physics.enable(obj, Phaser.Physics.ARCADE);
+            return obj;
+        }        
+    }
+}
+
+
+//Global Functions
+function moveToTarget(source: Phaser.Sprite, target: Phaser.Point, speed:number){
+    var gospeed = speed || 50
+    
+    source.body.velocity.x = target.x - source.body.position.x;
+    source.body.velocity.y = target.y - source.body.position.y;
+
+    var magnitude = source.body.velocity.getMagnitude();
+    source.body.velocity.x *= gospeed / magnitude;
+    source.body.velocity.y *= gospeed / magnitude;
 }

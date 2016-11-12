@@ -47,6 +47,26 @@ module Objects{
             {
                 this.weapon.fire();
             }
+        }        
+
+        collidePanda(gunner, panda){
+            switch (panda.state){
+                case "hostile":
+                    gunner.die(); //lose 1 life
+                    break;
+                case "attached":
+                    panda.attachTo(gunner);
+                    panda.changeState("rescued");
+                    break;
+                default:
+                    //nothing?
+            }
         }
+
+        die(){
+            console.log("gunner is dying (lose 1 life)")
+            this.kill()
+        }
+        
     }
 }
