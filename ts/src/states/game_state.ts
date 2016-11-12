@@ -131,7 +131,7 @@ module State{
 
             ///DID YOU LOSE YET?
             if (this.gunner.recruits.length == 0){
-                //this.loseTheGame();
+                this.loseTheGame();
                 //this.game.paused = true;
             }
 
@@ -203,7 +203,7 @@ module State{
             this.game.debug.text(str, 250, 250);
             //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
-            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
         }
 
@@ -213,7 +213,7 @@ module State{
             this.game.debug.text(str, 250, 250);
             //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
-            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
         }
 
@@ -288,6 +288,7 @@ module State{
         {
             var panda = this.gunner.recruits.getAt(0) as Objects.Panda;
             this.gunner.removePanda(panda);
+            panda.kill();
         }
     }
 }
