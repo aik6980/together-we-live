@@ -5,7 +5,7 @@ module Objects{
     type runnerStates = "alive" | "shot" | "scared" | "warping" | "dead";
 
     export class Runner extends Phaser.Sprite{
-        speed: number = 100;
+        speed: number =  gameplay_runner_baseSpeed;
 
         state:  runnerStates = "alive";
 
@@ -14,7 +14,7 @@ module Objects{
         cursors: Phaser.CursorKeys;
         myGunner: Gunner;
 
-        constructor(game : Phaser.Game, x: number, y: number, speed: number){
+        constructor(game : Phaser.Game, x: number, y: number){
             super(game, x, y, game.cache.getBitmapData('unit_white'));
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
             //this.myGunner = myGunner;
@@ -58,18 +58,25 @@ module Objects{
         }     
 
         movement(){
+            var chainSlowDown = (1 - (this.linked_pandas.total-1) / gameplay_runner_chainLengthSlowDown)
+            if (chainSlowDown > gameplay_runner_chainMaxSlowDown) //don't get too slow
+                chainSlowDown = gameplay_runner_chainMaxSlowDown; 
+            var gospeed = this.speed * chainSlowDown
+
+            console.log(chainSlowDown, gospeed);
+
             //Runner Movement
             //horizontal movement
             if (this.cursors.left.isDown) 
-                this.body.velocity.x = -this.speed;
+                this.body.velocity.x = -gospeed;
             else if (this.cursors.right.isDown) 
-                this.body.velocity.x = this.speed;
+                this.body.velocity.x = gospeed;
 
             //vertical movement
             if (this.cursors.up.isDown)
-                this.body.velocity.y = -this.speed;
+                this.body.velocity.y = -gospeed;
             else if (this.cursors.down.isDown)
-                this.body.velocity.y = this.speed;
+                this.body.velocity.y = gospeed;
         }   
 
         changeState(targetState: runnerStates){
@@ -106,7 +113,7 @@ module Objects{
             }        
 
         collideGunner(runner: Runner, gunner: Gunner){
-            console.log("runner collided with gunner while in state " + runner.state);
+            //console.log("runner collided with gunner while in state " + runner.state);
             if (runner.state == "warping"){
                 console.log("runner revived by warping home to gunner");
                 runner.changeState("alive");
@@ -114,8 +121,6 @@ module Objects{
         }
         
         collidePanda(runner: Runner, panda: Panda){
-            console.log("I collided with a "+ panda.state + " PANDA called " + panda.name);
-
             switch (panda.state){
                 case "hostile":
                     runner.changeState("scared");

@@ -3,6 +3,8 @@ module Objects{
     export class Gunner extends Phaser.Sprite{
 
         weapon : Phaser.Weapon;
+        powerLevel: number;
+        rotateSpeed: number = 300;
 
         recruits : Phaser.Group;
         anchors : Phaser.Group;
@@ -42,11 +44,11 @@ module Objects{
         update(){
             if (this.left_button.isDown)
             {
-                this.body.angularVelocity = -300;
+                this.body.angularVelocity = -this.rotateSpeed;
             }
             else if (this.right_button.isDown)
             {
-                this.body.angularVelocity = 300;
+                this.body.angularVelocity = this.rotateSpeed;
             }
             else
             {

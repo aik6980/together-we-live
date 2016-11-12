@@ -61,7 +61,7 @@ module State{
             this.gunner.filters = [this.gray_filter];
 
             // create runner player
-            this.runner = new Objects.Runner(this.game, 80, 60, 150)
+            this.runner = new Objects.Runner(this.game, 80, 60)
             this.runner.myGunner = this.gunner;
             this.game.add.existing(this.runner);
 
@@ -134,16 +134,13 @@ module State{
         shotRunner(runner, bullet){
             //this is bizarre but documented - group vs sprite passes the callback parameters in the sprite first order.
             //The two objects will be passed to this function in the same order in which you specified them, unless you are checking Group vs. Sprite, in which case Sprite will always be the first parameter." 
-            console.log(bullet, runner)
             bullet.kill();
             runner.changeState("shot");
         }
 
         spawnPanda(x, y){
             var obj = new Objects.Panda(this.game, x, y, "sleepy");
-            //obj.name = random name
             obj.target = this.gunner.position;
-            //this.game.physics.enable(obj, Phaser.Physics.ARCADE);
             return obj;
         }
 
@@ -208,3 +205,12 @@ function setCollisionWithWalls(entity, value : boolean)
     else
         global_colliders.remove(entity);
 }
+
+////Global Gameplay variables
+
+//Runner Gameplay
+var gameplay_runner_baseSpeed: number = 100;
+var gameplay_runner_chainLengthSlowDown: number = 5;
+var gameplay_runner_chainMaxSlowDown: number = 0.7; 
+
+//Panda Gameplay

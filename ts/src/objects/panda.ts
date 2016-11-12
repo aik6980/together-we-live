@@ -68,7 +68,6 @@ module Objects{
         }
         
         attachTo(attachee: Phaser.Sprite){
-            console.log("Panda get attached to the attachee: ", attachee);
             this.changeState("attached");
             this.attachedTo = attachee;
         }

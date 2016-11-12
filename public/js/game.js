@@ -79,6 +79,7 @@ var Objects;
         __extends(Gunner, _super);
         function Gunner(game, x, y) {
             _super.call(this, game, x, y, 'ship');
+            this.rotateSpeed = 300;
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
             this.body.immovable = true; //stop shoving the gunner!
             this.recruits = this.game.add.group();
@@ -99,10 +100,10 @@ var Objects;
         }
         Gunner.prototype.update = function () {
             if (this.left_button.isDown) {
-                this.body.angularVelocity = -300;
+                this.body.angularVelocity = -this.rotateSpeed;
             }
             else if (this.right_button.isDown) {
-                this.body.angularVelocity = 300;
+                this.body.angularVelocity = this.rotateSpeed;
             }
             else {
                 this.body.angularVelocity = 0;
@@ -218,7 +219,6 @@ var Objects;
             }
         };
         Panda.prototype.attachTo = function (attachee) {
-            console.log("Panda get attached to the attachee: ", attachee);
             this.changeState("attached");
             this.attachedTo = attachee;
         };
@@ -293,9 +293,9 @@ var Objects;
 (function (Objects) {
     var Runner = (function (_super) {
         __extends(Runner, _super);
-        function Runner(game, x, y, speed) {
+        function Runner(game, x, y) {
             _super.call(this, game, x, y, game.cache.getBitmapData('unit_white'));
-            this.speed = 100;
+            this.speed = gameplay_runner_baseSpeed;
             this.state = "alive";
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
             //this.myGunner = myGunner;
@@ -330,17 +330,22 @@ var Objects;
             }
         };
         Runner.prototype.movement = function () {
+            var chainSlowDown = (1 - (this.linked_pandas.total - 1) / gameplay_runner_chainLengthSlowDown);
+            if (chainSlowDown > gameplay_runner_chainMaxSlowDown)
+                chainSlowDown = gameplay_runner_chainMaxSlowDown;
+            var gospeed = this.speed * chainSlowDown;
+            console.log(chainSlowDown, gospeed);
             //Runner Movement
             //horizontal movement
             if (this.cursors.left.isDown)
-                this.body.velocity.x = -this.speed;
+                this.body.velocity.x = -gospeed;
             else if (this.cursors.right.isDown)
-                this.body.velocity.x = this.speed;
+                this.body.velocity.x = gospeed;
             //vertical movement
             if (this.cursors.up.isDown)
-                this.body.velocity.y = -this.speed;
+                this.body.velocity.y = -gospeed;
             else if (this.cursors.down.isDown)
-                this.body.velocity.y = this.speed;
+                this.body.velocity.y = gospeed;
         };
         Runner.prototype.changeState = function (targetState) {
             ///MORE work needed here
@@ -374,14 +379,13 @@ var Objects;
             }
         };
         Runner.prototype.collideGunner = function (runner, gunner) {
-            console.log("runner collided with gunner while in state " + runner.state);
+            //console.log("runner collided with gunner while in state " + runner.state);
             if (runner.state == "warping") {
                 console.log("runner revived by warping home to gunner");
                 runner.changeState("alive");
             }
         };
         Runner.prototype.collidePanda = function (runner, panda) {
-            console.log("I collided with a " + panda.state + " PANDA called " + panda.name);
             switch (panda.state) {
                 case "hostile":
                     runner.changeState("scared");
@@ -463,7 +467,7 @@ var State;
             this.game.add.existing(this.gunner);
             this.gunner.filters = [this.gray_filter];
             // create runner player
-            this.runner = new Objects.Runner(this.game, 80, 60, 150);
+            this.runner = new Objects.Runner(this.game, 80, 60);
             this.runner.myGunner = this.gunner;
             this.game.add.existing(this.runner);
             //create level
@@ -520,15 +524,12 @@ var State;
         Game_state.prototype.shotRunner = function (runner, bullet) {
             //this is bizarre but documented - group vs sprite passes the callback parameters in the sprite first order.
             //The two objects will be passed to this function in the same order in which you specified them, unless you are checking Group vs. Sprite, in which case Sprite will always be the first parameter." 
-            console.log(bullet, runner);
             bullet.kill();
             runner.changeState("shot");
         };
         Game_state.prototype.spawnPanda = function (x, y) {
             var obj = new Objects.Panda(this.game, x, y, "sleepy");
-            //obj.name = random name
             obj.target = this.gunner.position;
-            //this.game.physics.enable(obj, Phaser.Physics.ARCADE);
             return obj;
         };
         Game_state.prototype.changeAllPandasState = function (args, state) {
@@ -581,4 +582,10 @@ function setCollisionWithWalls(entity, value) {
     else
         global_colliders.remove(entity);
 }
+////Global Gameplay variables
+//Runner Gameplay
+var gameplay_runner_baseSpeed = 100;
+var gameplay_runner_chainLengthSlowDown = 5;
+var gameplay_runner_chainMaxSlowDown = 0.7;
+//Panda Gameplay
 //# sourceMappingURL=game.js.map
