@@ -31,6 +31,14 @@ module State{
         progressPercent: number = 0;
         peakProgressPercent: number = 0;
 
+        // demo
+        panda1 : Objects.Panda;
+        wait_for_panda1 : boolean;
+        panda2 : Objects.Panda;
+        wait_for_panda2 : boolean;
+        panda3 : Objects.Panda;
+        wait_for_panda3 : boolean;
+
         // music
         music : Phaser.Sound;
 
@@ -174,82 +182,132 @@ module State{
             this.runner.force_target = new Phaser.Point(this.runner.position.x, this.runner.position.y);
             
             //spawn the lives for the gunner
-            var panda1 = this.spawnPandaInState(this.gunner.x - 230, this.gunner.y, "hostile");
-            this.pandas.add(panda1);
-            var panda2 = this.spawnPandaInState(this.gunner.x - 50, this.gunner.y - 400, "hostile");
-            this.pandas.add(panda2);
-            var panda3 = this.spawnPandaInState(this.gunner.x + 100, this.gunner.y - 400, "hostile");
-            this.pandas.add(panda3);
+            this.panda1 = this.spawnPandaInState(this.gunner.x - 230, this.gunner.y, "hostile");
+            this.pandas.add(this.panda1);
+            this.panda2 = this.spawnPandaInState(this.gunner.x - 50, this.gunner.y - 400, "hostile");
+            this.pandas.add(this.panda2);
+            this.panda3 = this.spawnPandaInState(this.gunner.x + 100, this.gunner.y - 400, "hostile");
+            this.pandas.add(this.panda3);
 
-            // shot them            
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function(){
-                // aim panda1
-                this.gunner.force_target = panda1.position;
-            }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function(){
+            this.wait_for_panda1 = true;
+        }
+
+        start_demo_phase1()
+        {
+            // aim panda1
+            this.gunner.force_target = this.panda1.position;
+
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 1, 1, function(){
                 // stun it!
                 this.gunner.fire();
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 3.6, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 1.6, 1, function(){
                 // the runner try to catch it
-                this.runner.force_target = new Phaser.Point(panda1.x, this.runner.y);
+                this.runner.force_target = new Phaser.Point(this.panda1.x, this.runner.y);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 4, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function(){
                 // runner keep going and catch it
-                this.runner.force_target = panda1.position;
+                this.runner.force_target = this.panda1.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 4.2, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2.2, 1, function(){
                 // the runner starts to  bring it back
                 this.runner.force_target = new Phaser.Point(this.gunner.x, this.gunner.y + 50);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function(){
                 // bring it back safe
                 this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
+                this.wait_for_panda2 = true;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 5.8, 1, function(){
-                // panda2 is coming, aim it!
-                this.gunner.force_target = panda2.position;
-            }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 6.2, 1, function(){
+        }
+
+        start_demo_phase2()
+        { 
+            // panda2 is coming, aim it!
+            this.gunner.force_target = this.panda2.position;
+            
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 0.4, 1, function(){
                 // stun it!
                 this.gunner.fire();   
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 6.8, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 1, 1, function(){
                 // runner try to catch it
-                this.runner.force_target = panda2.position;
+                this.runner.force_target = this.panda2.position;
+                this.wait_for_panda3 = true;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.2, 1, function(){
-                // but wait.. panda3 is coming
-                this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
-            }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.5, 1, function(){
+        }
+
+        start_demo_phase3()
+        {
+            // but wait.. panda3 is coming
+            this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
+            
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 0.3, 1, function(){
                 // gunner aim panda3                
-                this.gunner.force_target = panda3.position;
+                this.gunner.force_target = this.panda3.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 8, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 0.8, 1, function(){
                 // stun it!
                 this.gunner.fire();
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 9, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function(){
                 // then runner can safely catch both of them
-                this.runner.force_target = panda2.position;
+                this.runner.force_target = this.panda2.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 10, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function(){
                 // bring them back home
                 this.runner.force_target = new Phaser.Point(this.gunner.position.x + 50, this.gunner.position.y + 10);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 11, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 4, 1, function(){
                 this.stop_demo();
             }, this);
-
-            //ended
         }
 
         update_demo(){
-            
+            if (this.wait_for_panda1)
+            {
+                var wait_distance_sqr = 120*120;
+
+                var diff_x = this.panda1.x - this.gunner.x;
+                var diff_y = this.panda1.y - this.gunner.y;
+
+                var distance = diff_x*diff_x + diff_y*diff_y;
+                if (distance < wait_distance_sqr)
+                {
+                    this.start_demo_phase1();
+                    this.wait_for_panda1 = false;
+                }
+            }
+            else if (this.wait_for_panda2)
+            {
+                var wait_distance_sqr = 120*120;
+
+                var diff_x = this.panda2.x - this.gunner.x;
+                var diff_y = this.panda2.y - this.gunner.y;
+
+                var distance = diff_x*diff_x + diff_y*diff_y;
+                if (distance < wait_distance_sqr)
+                {
+                    this.start_demo_phase2();
+                    this.wait_for_panda2 = false;
+                }
+            }
+            else if (this.wait_for_panda3)
+            {
+                var wait_distance_sqr = 130*130;
+
+                var diff_x = this.panda3.x - this.gunner.x;
+                var diff_y = this.panda3.y - this.gunner.y;
+
+                var distance = diff_x*diff_x + diff_y*diff_y;
+                if (distance < wait_distance_sqr)
+                {
+                    this.start_demo_phase3();
+                    this.wait_for_panda3 = false;
+                }
+            }
         }
 
         stop_demo(){
