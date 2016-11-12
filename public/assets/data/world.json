@@ -12,17 +12,42 @@
          "y":0
         }, 
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "draworder":"topdown",
          "height":10,
          "name":"trigger",
+         "objects":[
+                {
+                 "gid":8,
+                 "height":16,
+                 "id":7,
+                 "name":"",
+                 "rotation":0,
+                 "type":"spawn_panda",
+                 "visible":true,
+                 "width":16,
+                 "x":32,
+                 "y":32
+                }, 
+                {
+                 "gid":8,
+                 "height":16,
+                 "id":8,
+                 "name":"",
+                 "rotation":0,
+                 "type":"spawn_panda",
+                 "visible":true,
+                 "width":16,
+                 "x":32,
+                 "y":144
+                }],
          "opacity":1,
-         "type":"tilelayer",
+         "type":"objectgroup",
          "visible":true,
          "width":10,
          "x":0,
          "y":0
         }],
- "nextobjectid":1,
+ "nextobjectid":10,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tileheight":16,
