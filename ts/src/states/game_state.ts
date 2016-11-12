@@ -118,7 +118,7 @@ module State{
 
         render(){
 			
-            var debugBoundingBoxes = false;
+            var debugBoundingBoxes = true;
             if (this.devMode)
 
                 if (debugBoundingBoxes){
@@ -200,7 +200,7 @@ function moveToTarget(source: Phaser.Sprite, target: PIXI.Point, distance: numbe
         source.body.velocity.y > distance || source.body.velocity.y < -distance)
     {
     //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
-        var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y);
+    var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y);
     source.body.velocity.x *= gospeed / magnitude;
     source.body.velocity.y *= gospeed / magnitude;
     }

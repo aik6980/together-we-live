@@ -53,11 +53,25 @@ module Level{
                 //console.log(this);
                 this.collision_layer.setScale(this.current_scale);
                 game_state.world_objects.scale.setTo(this.current_scale);
+                
                 game_state.world_objects.forEach(function(sprite : Phaser.Sprite){
                     if(sprite.body != null){
                         sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
                     }
                 }, this);
+                
+                game_state.world_objects.forEach(function(group : Phaser.Group){
+                    //console.log(group);
+                    if(group.type == Phaser.GROUP)
+                    {
+                        group.forEach(function(sprite: Phaser.Sprite){
+                            if(sprite.body != null){
+                                sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
+                            }
+                        }, this);
+                    }
+                }, this);
+
             }, this);
         }
 
@@ -94,7 +108,7 @@ module Level{
                     }
                 }
             }
-            this.collision_layer.debug = true;
+            //this.collision_layer.debug = true;
 
             //this.game.world.scale.setTo(1.5);
             //this.collision_layer.setScale(1.5);

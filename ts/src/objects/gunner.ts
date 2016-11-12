@@ -23,7 +23,7 @@ module Objects{
             this.recruits = this.game.add.group();
             this.anchors = this.game.add.group();
 
-            this.anchor.setTo(0.5, 0.5);
+            //this.anchor.setTo(0.5, 0.5);
 
             // init inputs
             this.fire_button = this.game.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
@@ -94,7 +94,7 @@ module Objects{
 
             anchor.x = this.x - this.width / 2;
             anchor.y = this.y - this.height / 2;
-            anchor.anchor.setTo(0.5);
+            //anchor.anchor.setTo(0.5);
 
             panda.target = anchor;
 
