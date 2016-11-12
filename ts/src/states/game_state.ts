@@ -170,62 +170,66 @@ module State{
             this.pandas.add(panda3);
 
             // shot them            
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function(){
                 // aim panda1
                 this.gunner.force_target = panda1.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 4, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function(){
                 // stun it!
                 this.gunner.fire();
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 4.6, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 3.6, 1, function(){
                 // the runner try to catch it
                 this.runner.force_target = new Phaser.Point(panda1.x, this.runner.y);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 4, 1, function(){
                 // runner keep going and catch it
                 this.runner.force_target = panda1.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 6, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 4.2, 1, function(){
                 // the runner starts to  bring it back
                 this.runner.force_target = new Phaser.Point(this.gunner.x, this.gunner.y + 50);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.5, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 1, function(){
                 // bring it back safe
                 this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 8.8, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 5.8, 1, function(){
                 // panda2 is coming, aim it!
                 this.gunner.force_target = panda2.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 9.5, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 6.2, 1, function(){
                 // stun it!
                 this.gunner.fire();   
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 9.8, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 6.8, 1, function(){
                 // runner try to catch it
                 this.runner.force_target = panda2.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 10.1, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.2, 1, function(){
                 // but wait.. panda3 is coming
                 this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 11, 1, function(){
-                // gunner stun panda3 anyway
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.5, 1, function(){
+                // gunner aim panda3                
+                this.gunner.force_target = panda3.position;
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 8, 1, function(){
+                // stun it!
                 this.gunner.fire();
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 12, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 9, 1, function(){
                 // then runner can safely catch both of them
-                this.runner.force_target = panda3.position;
+                this.runner.force_target = panda2.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 13, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 10, 1, function(){
                 // bring them back home
-                this.runner.force_target = new Phaser.Point(this.gunner.position.x + 50, this.gunner.position.y);
+                this.runner.force_target = new Phaser.Point(this.gunner.position.x + 50, this.gunner.position.y + 10);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 14, 1, function(){
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 11, 1, function(){
                 this.stop_demo();
             }, this);
 
