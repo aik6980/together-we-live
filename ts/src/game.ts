@@ -3,7 +3,7 @@ module SimpleGame{
     export class Game extends Phaser.Game{
 
         constructor(){
-            super(512,512, Phaser.AUTO, 'content', null);
+            super(512,512, Phaser.AUTO, 'theGame', null);
 
             // add states
             this.state.add('menu', new State.Menu_state);
