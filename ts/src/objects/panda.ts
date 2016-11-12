@@ -60,10 +60,10 @@ module Objects{
                 this.body.velocity.x *= 50 / magnitude;
                 this.body.velocity.y *= 50 / magnitude;
 
-                console.log("distx:" + (this.target.x - this.body.position.x)
-                 + " disty:" + (this.target.y - this.body.position.y));
+                //console.log("distx:" + (this.target.x - this.body.position.x)
+                // + " disty:" + (this.target.y - this.body.position.y));
 
-                 console.log("vel=" + this.body.velocity.x + "," + this.body.velocity.y);
+                // console.log("vel=" + this.body.velocity.x + "," + this.body.velocity.y);
             }
         }
     }

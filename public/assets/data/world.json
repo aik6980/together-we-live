@@ -1,0 +1,46 @@
+{ "height":10,
+ "layers":[
+        {
+         "data":[36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 0, 0, 36, 0, 0, 0, 0, 0, 36, 36, 0, 0, 36, 0, 0, 0, 0, 0, 36, 36, 0, 0, 36, 0, 0, 0, 0, 0, 36, 36, 0, 0, 0, 0, 0, 0, 0, 0, 36, 36, 0, 0, 0, 0, 0, 0, 0, 0, 36, 36, 0, 0, 36, 0, 0, 0, 0, 0, 36, 36, 0, 0, 36, 0, 0, 0, 0, 0, 36, 36, 0, 0, 36, 0, 0, 0, 0, 0, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36],
+         "height":10,
+         "name":"collision",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":10,
+         "name":"trigger",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }],
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "columns":32,
+         "firstgid":1,
+         "image":"..\/public\/assets\/img\/tiny32.png",
+         "imageheight":512,
+         "imagewidth":512,
+         "margin":0,
+         "name":"tiny32",
+         "spacing":0,
+         "tilecount":1024,
+         "tileheight":16,
+         "tilewidth":16
+        }],
+ "tilewidth":16,
+ "version":1,
+ "width":10
+}

@@ -1,7 +1,7 @@
 module State{
     export class Game_state extends Phaser.State{
 
-        unit = 12;
+        unit = 16;
         bmd_unit_white : Phaser.BitmapData;
         bmd_unit_black : Phaser.BitmapData;
         
@@ -18,7 +18,11 @@ module State{
         pandas : Phaser.Group;
 
         gray_filter : Phaser.Filter;
-        
+
+        // map test
+        map : Phaser.Tilemap;
+        collision_layer : Phaser.TilemapLayer;
+
         preload(){
             // create a bitmap data
             // http://phaser.io/examples/v2/bitmapdata/cached-bitmapdata
@@ -31,7 +35,11 @@ module State{
             this.game.load.image('bullet', 'assets/img/shmup-bullet.png');
             this.game.load.image('ship', 'assets/img/thrust_ship.png');
 
+            // grayscale shader
             this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
+
+            this.game.load.tilemap('world', 'assets/data/world.json', null, Phaser.Tilemap.TILED_JSON);
+            this.game.load.image('world_tileset', 'assets/img/tiny32.png');
         }
 
 
@@ -41,8 +49,26 @@ module State{
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
 
+            // create tile map
+            this.map = this.game.add.tilemap('world');
+            this.map.addTilesetImage('tiny32', 'world_tileset');
+
+            this.collision_layer = this.map.createLayer('collision');
+            var layer2 = this.map.createLayer('trigger');
+            
+            // setup collision tiles
+            var collision_tiles = [];
+            this.map.layers[0].data.forEach(function(data_row){
+                data_row.forEach(function(tile){
+                    if(tile.index > 0 && collision_tiles.indexOf(tile.index) === -1){
+                        collision_tiles.push(tile.index);
+                    }
+                });
+            });
+            this.map.setCollision(collision_tiles, true, this.map.layers[0].name);
+
             // create runner player
-            this.runner = new Objects.Runner(this.game, 50, 50, 150);
+            this.runner = new Objects.Runner(this.game, 35, 50, 150);
             this.game.add.existing(this.runner);
             this.game.physics.arcade.enable(this.runner);
             //this.player.filters = [this.gray_filter];
@@ -99,6 +125,7 @@ module State{
 
         update(){
             //collisions
+            this.game.physics.arcade.collide(this.runner, this.collision_layer);
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);   
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.onPandaHit, null, this);
 
