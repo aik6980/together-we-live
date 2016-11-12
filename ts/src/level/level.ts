@@ -29,12 +29,6 @@ module Level{
                     //game_state.world_objects.add(game_state.gunner.weapon);
                     game_state.world_objects.add(game_state.gunner.weapon.bullets); 
                     //this.gunner.filters = [this.gray_filter];
-                    
-                    //spawn the lives for the gunner
-                    console.log("spawn lives *3 at set position")
-                    game_state.spawnPandaInState(0,0, "rescued");
-                    game_state.spawnPandaInState(200,50, "rescued");
-                    game_state.spawnPandaInState(50,200, "rescued");
                 break;
                 case 'runner':
                     // create runner player
