@@ -5,10 +5,12 @@ module Objects{
         weapon : Phaser.Weapon;
         powerLevel: number; //based on number of recruits (i.e. the rescued pandas)
         rotateSpeed: number = settings.gameplay.gunner.baseTurnSpeed;
-
-        //bulletSpeed: number = ;
-
-        fire_angle_offset : number = -90;
+        fireAngleOffset: number = settings.gameplay.gunner.fireAngleOffset;
+        bulletSpeed: number = settings.gameplay.gunner.bulletSpeed;
+        bulletLifeSpan: number = settings.gameplay.gunner.bulletLifeSpan;
+        fireRate: number = settings.gameplay.gunner.fireRate;
+        ringMinRadius: number = settings.gameplay.gunner.ringMinRadius;
+        ringSpaceBetween: number = settings.gameplay.gunner.ringSpaceBetween;
 
         recruits : Phaser.Group;
         anchors : Phaser.Group;
@@ -46,10 +48,10 @@ module Objects{
 
             // init weapon based on powerLevel
             this.weapon = this.game.add.weapon(30, 'bullet');
-            this.weapon.bulletLifespan = 2000; //2 seconds
+            this.weapon.bulletLifespan = this.bulletLifeSpan;
             this.weapon.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
-            this.weapon.bulletSpeed = 200;
-            this.weapon.fireRate = 400;
+            this.weapon.bulletSpeed = this.bulletSpeed;
+            this.weapon.fireRate = this.fireRate;
 
             this.weapon.onFire.add(function(){
                 // play sound
@@ -79,7 +81,7 @@ module Objects{
                 var diff_y = this.force_target.y - this.y;
 
                 var target_angle = -Math.atan2(-diff_y, diff_x) * 180.0 / Math.PI;
-                var diff_angle = target_angle - (this.angle +  this.fire_angle_offset);
+                var diff_angle = target_angle - (this.angle +  this.fireAngleOffset);
 
                 if (diff_angle > 180) diff_angle -= 360;
                 else if (diff_angle < -180) diff_angle += 360;
@@ -116,7 +118,7 @@ module Objects{
 
         fire()
         {
-            var fire_angle = this.body.rotation + this.fire_angle_offset;
+            var fire_angle = this.body.rotation + this.fireAngleOffset;
 
             this.weapon.x = this.position.x;
             this.weapon.y = this.position.y;
@@ -237,12 +239,11 @@ module Objects{
         {
             if (this.recruits.total <= 4)
             {
-                this.ring_radius = 20;
+                this.ring_radius = this.ringMinRadius;
             }
             else
             {
-                var ring_space : number = 30;
-                this.ring_radius = this.recruits.total * ring_space / (2 * Math.PI);
+                this.ring_radius = this.recruits.total * this.ringSpaceBetween / (2 * Math.PI);
             }
 
             var rotation_unit = 360.0 / this.recruits.total;
