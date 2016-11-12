@@ -85,37 +85,24 @@ module State{
             //Setup Controls
             this.cursors = this.input.keyboard.createCursorKeys();
 
-
+    type pandaStates = "hostile" | "stunned" | "attached" | "rescued" | "sleepy";
             //dev controls
             ///num keys to change all the pandas states?
-            //  Here we create 3 hotkeys, keys 1-3 and bind them all to their own functions
-            //listeners not working
-            /*var key1, key2, key3;
-            key1 = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
-            key1.onDown.*/
-            //key1.onDown.add(changePandasState("hostile"), this);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+        }
 
-            /*key2 = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
-            key2.onDown.add(changePandasState("stunned"), this);
-
-            key3 = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
-            key3.onDown.add(changePandasState("rescued"), this);*/
-
-
-            function changePandasState(state: string){
-                console.log("changing all the pandas to " + state);
-
-                //this.pandas.callAllExists(changeState(state), true)
-            }
-
-
+        changeAllPandasState(args, state: string){
+            console.log("Make all the pandas " + state, state);
+            this.pandas.setAll('state', state);  
         }
 
         update(){
             //collisions
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this);         
-
-
 /*
             {
                 this.weapon.fire();

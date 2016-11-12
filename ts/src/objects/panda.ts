@@ -2,11 +2,14 @@
 
 module Objects{
 
+    type pandaStates = "hostile" | "stunned" | "attached" | "rescued" | "sleepy";
+
     export class Panda extends Phaser.Sprite{
-        state: string = "hostile"
+        //state: string = "hostile";
+        state: pandaStates;
         name: string;
 
-        constructor(game : Phaser.Game, x: number, y: number, startState: string){
+        constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){
             super(game, x, y, game.cache.getBitmapData('unit_white'));
             this.state = startState;
 
@@ -15,11 +18,11 @@ module Objects{
         }
 
         attachTo(attachee){
-            console.log("Panda should get attachd to the attache", attachee);
-            this.kill();
+            console.log("Panda should get attachd to the attachee", attachee);
+            this.changeState("attached");
         }
 
-        changeState(targetState: string){
+        changeState(targetState: pandaStates){
             this.state = targetState;
         }
 
@@ -33,12 +36,18 @@ module Objects{
                 case "stunned":
                     this.tint = Phaser.Color.getColor(0, 255, 255); //yellow
                     break;
+                case "attached":
+                    this.tint = Phaser.Color.getColor(30, 10, 250); //blue
+                    break;
                 case "rescued":
                     this.tint = Phaser.Color.getColor(0, 255, 0); //green
-                default:
+                    break;
+                case "sleepy":
                     this.tint = Phaser.Color.getColor(255, 255, 255); //white
+                    break;
+                default:
+                    this.tint = Phaser.Color.getColor(50, 50, 50); //gray
             }
-            
         }
     }
 }
