@@ -496,6 +496,8 @@ var State;
             this.pandas = this.game.add.group();
             this.colliders = this.game.add.group();
             global_colliders = this.colliders;
+            // world scaling helper
+            this.world_objects = this.game.add.group();
             //create level
             this.level = new Level.Level(this.game);
             this.level.load(this);
