@@ -8,6 +8,8 @@ module Objects{
 
         //bulletSpeed: number = ;
 
+        fire_angle_offset : number = 90;
+
         recruits : Phaser.Group;
         anchors : Phaser.Group;
 
@@ -16,6 +18,9 @@ module Objects{
         fire_button : Phaser.Key;
         left_button : Phaser.Key;
         right_button : Phaser.Key;
+
+        force_target : Phaser.Point;
+        force_not_firing : boolean;
 
         constructor(game : Phaser.Game, x: number, y: number){
             //super(game, x, y, 'ship');
@@ -48,26 +53,49 @@ module Objects{
         }
 
         update(){
-            if (this.left_button.isDown)
+            if (this.force_target == null)
             {
-                this.body.angularVelocity = -this.rotateSpeed;
-            }
-            else if (this.right_button.isDown)
-            {
-                this.body.angularVelocity = this.rotateSpeed;
+                if (this.left_button.isDown)
+                {
+                    this.body.angularVelocity = -this.rotateSpeed;
+                }
+                else if (this.right_button.isDown)
+                {
+                    this.body.angularVelocity = this.rotateSpeed;
+                }
+                else
+                {
+                    this.body.angularVelocity = 0;
+                }
             }
             else
             {
-                this.body.angularVelocity = 0;
+                var diff_x = this.force_target.x - this.x;
+                var diff_y = this.force_target.y - this.y;
+
+                var target_angle = -Math.atan2(-diff_y, diff_x) * 180.0 / Math.PI;
+                var diff_angle = target_angle - (this.angle +  this.fire_angle_offset);
+
+                if (diff_angle > 180) diff_angle -= 360;
+                else if (diff_angle < -180) diff_angle += 360;
+
+                if (diff_angle > 5)
+                {
+                    this.body.angularVelocity = this.rotateSpeed;
+                }
+                else if (diff_angle < -5)
+                {
+                    this.body.angularVelocity = -this.rotateSpeed;
+                }
+                else
+                {
+                    this.body.angularVelocity = 0;
+                }
             }
 
-            if (this.fire_button.isDown)
+            if (!this.force_not_firing && this.fire_button.isDown)
             {
-                this.weapon.x = this.position.x;
-                this.weapon.y = this.position.y;
-                this.weapon.fireAtXY(
-                    this.weapon.x + Math.cos(this.body.rotation * Math.PI / 180.0), 
-                    this.weapon.y + Math.sin(this.body.rotation * Math.PI / 180.0));
+                this.fire();
             }
 
             // rotate the ring
@@ -79,6 +107,17 @@ module Objects{
                 panda.target.x = (anchor.worldPosition.x - this.worldPosition.x) / global_game_scale + anchor.position.x;
                 panda.target.y = (anchor.worldPosition.y - this.worldPosition.y) / global_game_scale + anchor.position.y;
             }, null, true);
+        }
+
+        fire()
+        {
+            var fire_angle = this.body.rotation + this.fire_angle_offset;
+
+            this.weapon.x = this.position.x;
+            this.weapon.y = this.position.y;
+            this.weapon.fireAtXY(
+                this.weapon.x + Math.cos(fire_angle * Math.PI / 180.0), 
+                this.weapon.y + Math.sin(fire_angle * Math.PI / 180.0));
         }
 
         collidePanda(gunner, panda){
