@@ -3,7 +3,7 @@ module Objects{
     export class Gunner extends Phaser.Sprite{
 
         weapon : Phaser.Weapon;
-        powerLevel: number;
+        powerLevel: number; //based on number of recruits (i.e. the rescued pandas)
         rotateSpeed: number = 300;
 
         recruits : Phaser.Group;
@@ -34,7 +34,7 @@ module Objects{
             this.game.physics.arcade.enable(this);
 
             // init weapon            
-            this.weapon = this.game.add.weapon(30, 'bullet');
+            this.weapon = this.game.add.weapon(60, 'bullet');
             this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
             this.weapon.bulletSpeed = 200;
             this.weapon.fireRate = 200;
@@ -81,7 +81,8 @@ module Objects{
 
         die(){
             console.log("gunner is dying (lose 1 life)")
-            this.kill()
+            //this.recruits.remove()
+            //this.kill()
         }
 
         rescuePanda(panda : Panda)

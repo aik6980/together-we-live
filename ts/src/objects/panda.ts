@@ -5,13 +5,14 @@ module Objects{
     type pandaStates = "hostile" | "stunned" | "attached" | "rescued" | "sleepy";
 
     export class Panda extends Phaser.Sprite{
-        //state: string = "hostile";
         state: pandaStates;
         name: string;
         target : Phaser.Sprite;
         attachedTo: Phaser.Sprite;
         colorNum: number;
         size: number; //not implemeted yet
+        stuntime: number = 0; //stun time remaining
+        stunlockcount: number = 0; //count of sequential stuns without being unstunned. Resets to 0 when unstunned.
 
         constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){        
             super(game, x, y, 'ghosts');
@@ -67,6 +68,18 @@ module Objects{
         stun()
         {
             this.detachPanda(this);
+            switch (this.state){
+                case "hostile":
+                    this.stuntime = gameplay_panda_stunTime;
+                    this.stunlockcount = 1;
+                    break;
+                case "stunned":
+                    this.stuntime += gameplay_panda_stunTime; //increase stun time and lockout
+                    this.stunlockcount += 1;
+                    break;
+                default:
+                    break;
+            }
             this.changeState("stunned");
         }
 
@@ -85,7 +98,7 @@ module Objects{
                     this.colorNum = Phaser.Color.getColor(255,0,0); //red
                     break;
                 case "stunned":
-                    this.colorNum = Phaser.Color.getColor(0, 255, 255); //yellow
+                    this.colorNum = Phaser.Color.getColor(0, 255, 255); //yellow                   
                     break;
                 case "attached":
                     this.colorNum = Phaser.Color.getColor(30, 10, 250); //blue

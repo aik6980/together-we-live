@@ -86,7 +86,7 @@ module State{
 
             this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
             this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
         }
 
         spawn_trigger(args){
@@ -129,9 +129,15 @@ module State{
                     this.pandas.forEach(panda => {
                         this.game.debug.body(panda);                    
                     }, null, true);
-                }
 
-                this.game.debug.text("Runner: " + this.runner.state, 10, 300);
+                    this.gunner.anchor
+                }
+                
+                this.game.debug.text("object in world_objects: " + this.world_objects.total, 10, this.game.height - 60);
+                this.game.debug.text("Gunner position" + this.gunner.x + ", "+ this.gunner.y, 10, this.game.height - 40);
+  //              this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
+//                this.game.debug.text("Runner: " + this.runner.state + "with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
+
                 this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
         }
 
@@ -162,7 +168,7 @@ module State{
             this.pandas.forEachExists(function(panda) { panda.changeState(state); }, null );
             //this.pandas.setAll('state', state);
             console.log("Made all the pandas " + state);
-        }
+    }
 
         createRescuedPanda()
         {            
