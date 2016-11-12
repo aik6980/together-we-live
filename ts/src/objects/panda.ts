@@ -8,13 +8,31 @@ module Objects{
         //state: string = "hostile";
         state: pandaStates;
         name: string;
-        target : Phaser.Point;
+        target : PIXI.Point;
         attachedTo: Phaser.Sprite;
         colorNum: number;
         size: number; //not implemeted yet
 
         constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){        
-            super(game, x, y, game.cache.getBitmapData('unit_white'));
+            super(game, x, y, 'ghosts' /*game.cache.getBitmapData('unit_white')*/);
+            
+            this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
+            //animations
+            //this.key = 'ghosts';
+            this.animations.add('idle', [0,1]);
+            this.animations.add('stunned', [1,2]);
+            this.animations.add('down', [0,1,2]);
+            this.animations.add('left', [3,4,5]);
+            this.animations.add('right', [6,7,8]);
+            this.animations.add('up', [9,10,11]);
+            this.animations.play('idle', 20, true);
+
+            //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
+            this.body.setSize(24, 24, 3, 4);
+            
+            
+            
+
             this.changeState(startState);
             //this.state = startState;
 
@@ -24,7 +42,7 @@ module Objects{
             this.anchor.set(0.5,0.5);
         }
 
-        update(){       
+        update(){
             this.body.velocity.x = 0;
             this.body.velocity.y = 0;
 
@@ -49,11 +67,22 @@ module Objects{
             }
         }
         
-
         attachTo(attachee: Phaser.Sprite){
-            console.log("Panda should get attached to the attachee (which should be the runner)", attachee);
+            console.log("Panda get attached to the attachee: ", attachee);
             this.changeState("attached");
             this.attachedTo = attachee;
+        }
+
+        stun()
+        {
+            this.detachPanda(this);
+            this.changeState("stunned");
+        }
+
+        rescue()
+        {
+            this.detachPanda(this);
+            this.changeState("rescued");
         }
 
         changeState(targetState: pandaStates){
@@ -82,37 +111,44 @@ module Objects{
             }
 
                 this.tint = this.colorNum;
-
         }
 
         update_hostile()
         {            
             if (this.target != null){
-                moveToTarget(this, this.target, null);
+                moveToTarget(this, this.target, 0, null);
             }
         }
 
         update_stunned(){
             //remain stunned for X seconds
             //wobble (tween)
+            this.animations.play('stunned', 10, true);
+            this.alpha = 0.8;
         }
 
         update_attached(){
             //follow the leader! 
-            moveToTarget(this, this.attachedTo.position, null)
-
+            moveToTarget(this, this.attachedTo.position, 20, null)
         }
 
         update_rescued(){
-            //Party at the base
-            this.body.velocity = [0,0];
-            this.kill(); //and for now die but actually circle the base in a group of RescuedPandas (remember these our the lives!)
-
+            //follow the gunner's anchor position
+            moveToTarget(this, this.target, 0, 100)
         }
 
         update_sleepy(){
-            //stay perfectly still
+            //stay perfectly still (might also be hidden)
+            this.attachedTo = null; //break attachment
             this.body.velocity = [0,0];
+        }
+
+        detachPanda(panda)
+        {
+            if (this.attachedTo != null)
+            {
+                (Object)(this.attachedTo).detachPanda(panda);
+    }
         }
     }
 }

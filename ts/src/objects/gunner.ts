@@ -4,14 +4,24 @@ module Objects{
 
         weapon : Phaser.Weapon;
 
+        recruits : Phaser.Group;
+        anchors : Phaser.Group;
+
+        ring_radius : number;
+
         fire_button : Phaser.Key;
         left_button : Phaser.Key;
         right_button : Phaser.Key;
 
         constructor(game : Phaser.Game, x: number, y: number){
             super(game, x, y, 'ship');
+            this.game.physics.enable(this, Phaser.Physics.ARCADE);
+            this.body.immovable = true; //stop shoving the gunner!
 
-            this.anchor.set(0.5);
+            this.recruits = this.game.add.group();
+            this.anchors = this.game.add.group();
+
+            this.anchor.setTo(0.5, 0.5);
 
             // init inputs
             this.fire_button = this.game.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
@@ -47,7 +57,12 @@ module Objects{
             {
                 this.weapon.fire();
             }
-        }        
+
+            // rotate the ring
+            this.anchors.forEach(anchor => {
+                anchor.angle += 1;
+            }, null, true);
+        }
 
         collidePanda(gunner, panda){
             switch (panda.state){
@@ -55,8 +70,7 @@ module Objects{
                     gunner.die(); //lose 1 life
                     break;
                 case "attached":
-                    panda.attachTo(gunner);
-                    panda.changeState("rescued");
+                    gunner.rescuePanda(panda);
                     break;
                 default:
                     //nothing?
@@ -67,6 +81,58 @@ module Objects{
             console.log("gunner is dying (lose 1 life)")
             this.kill()
         }
+
+        rescuePanda(panda : Panda)
+        {
+            panda.rescue();
+            this.recruits.add(panda);
+
+            var anchor = this.game.add.sprite(0, 0);
+            this.anchors.add(anchor)
+
+            anchor.x = this.x - this.width / 2;
+            anchor.y = this.y - this.height / 2;
+            anchor.anchor.setTo(0.5);
+
+            panda.target = anchor.worldPosition;
+
+            this.refreshRing();
+        }
         
+        removePanda(panda : Panda)
+        {
+            this.recruits.remove(panda);
+            this.anchors.removeChildAt(0);
+            panda.kill();
+
+            this.refreshRing();
+        }
+
+        refreshRing()
+        {
+            var count = this.recruits.countLiving();
+
+            if (count <= 4)
+            {
+                this.ring_radius = 20;
+            }
+            else
+            {
+                var ring_space : number = 30;
+                this.ring_radius = count * ring_space / (2 * Math.PI);
+            }
+
+            console.log(this.ring_radius);
+
+            var rotation_unit = 360.0 / count;
+            var current_rotation = 0;
+
+            this.anchors.forEach(anchor => {
+                anchor.pivot.x = this.ring_radius;
+                anchor.angle = current_rotation;
+                current_rotation += rotation_unit;
+            }, null, true);
+
+        }
     }
 }

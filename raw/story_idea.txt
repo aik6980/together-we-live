@@ -1,0 +1,28 @@
+Script?
+G: Love Gunner
+R: Hat Runner
+
+G: Help Help!
+R: ...
+G: Help Help!
+R: ?!?!
+G: All of my friends have turned into SCARY ghosts!!
+R: !!!
+G: I have the antidote - my patented "Love Gun Mk 13.12 (R)"
+R: So you need me to go bust some ghosts with your Love Gun?
+G: No- I've been welded into the "Love Gun (TM)" by a fluke industrial accident
+G: I can *STUN* the mean ghosts 
+G: but I need you to bring them home so they remember their HAPPY selves
+
+R: Are you sure your "Love Gun" is up to the task?
+G: Don't worry the "Love Gun Mk 13.12 (C)" may be small but it's powerful!
+G: And I have a good feeling that surrounding my "Love Gun" with HAPPINESS will make it more powerful?
+R: OK. By the way I'm the "Hat Runner"
+G: And I'm the "Love Gunner"
+
+<show the stunning happening in game or with screenshot?>
+
+3
+2
+1
+GO!!

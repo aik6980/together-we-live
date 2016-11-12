@@ -10,6 +10,8 @@ module State{
         // world
         level : Level.Level;
 
+        devMode: boolean = true;
+
         // Players
         world_objects : Phaser.Group;
         runner : Objects.Runner;
@@ -17,6 +19,7 @@ module State{
 
         // groups
         pandas : Phaser.Group;
+        colliders: Phaser.Group;
 
         gray_filter : Phaser.Filter;
 
@@ -37,6 +40,9 @@ module State{
 
             this.game.load.tilemap('world', 'assets/data/world.json', null, Phaser.Tilemap.TILED_JSON);
             this.game.load.image('world_tileset', 'assets/img/tiny32.png');
+
+            //spritesheet
+            this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32)
         }
 
         create(){
@@ -44,23 +50,18 @@ module State{
 
             this.gray_filter = this.game.add.filter('Gray');
             //gray.gray = 1.0;
-            
+            //create pandas group
             this.pandas = this.game.add.group();
-            this.world_objects = this.game.add.group();
+            this.colliders = this.game.add.group();
+            global_colliders = this.colliders;
 
+            //create level
             this.level = new Level.Level(this.game);
             this.level.load(this);
 
-            //spawn some pandas
-            //this.pandas.add(this.spawnPanda(100, 100));
-            //this.pandas.add(this.spawnPanda(150, 100));
-            //this.pandas.add(this.spawnPanda(150, 150));
-
-            //Setup Controls
-            //Runner and Gunner now have their controls define individually
-
-
             //dev controls
+            if (this.devMode)
+                this.changeAllPandasState(null, "sleepy");
             ///num keys to change all the pandas states?
             //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
             //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
@@ -78,56 +79,126 @@ module State{
             this.level.changeWorldScale(scale, this);
         }
 
-        changeAllPandasState(args, state: string){
-            this.pandas.forEachExists(function(panda) { panda.changeState(state); }, null );
-            //this.pandas.setAll('state', state);
-            console.log("Made all the pandas " + state);
-        }
-
         update(){
             this.level.update_game_state(this);
+            ///Collisions
+            //N.b. the player when "warping" is not checked for collision;
 
-            //collisions
-            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, null, this); 
+            //character collisions
+            this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, function(){ return this.runner.state != 'warping';}, this); 
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
-            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.onPandaHit, null, this);
-            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.onRunnerHit, null, this);
+            this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
+
+            //level collisions
+            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this);
+            this.game.physics.arcade.collide(this.pandas, this.level.collision_layer);
+
+            //bullet collisions
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.shotPanda, null, this);
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, function(){ return this.runner.state != 'warping';}, this);
         }
 
         render(){
-            this.game.debug.body(this.runner);
+			
+            var debugBoundingBoxes = false;
+            if (this.devMode)
+
+                if (debugBoundingBoxes){
+                    //bounding boxes
+                    this.game.debug.body(this.gunner);
+                    this.game.debug.body(this.runner);
+
+                    this.pandas.forEach(panda => {
+                        this.game.debug.body(panda);                    
+                    }, null, true);
+                }
+
+                this.game.debug.text("Runner: " + this.runner.state, 10, 300);
         }
 
-        onPandaHit(bullet, panda)
-        {
-            bullet.kill();            
-            panda.changeState("stunned");
+        shotPanda(bullet, panda)
+        {			            
+			if (panda.state != "rescued")
+            {
+                bullet.kill();
+                panda.stun();
+            }
         }
 
-        onRunnerHit(bullet, runner){
+        shotRunner(runner, bullet){
+            //this is bizarre but documented - group vs sprite passes the callback parameters in the sprite first order.
+            //The two objects will be passed to this function in the same order in which you specified them, unless you are checking Group vs. Sprite, in which case Sprite will always be the first parameter." 
+            console.log(bullet, runner)
             bullet.kill();
-            this.runner.changeState("shot");
+            runner.changeState("shot");
         }
 
         spawnPanda(x, y){
             var obj = new Objects.Panda(this.game, x, y, "sleepy");
             //obj.name = random name
             obj.target = this.gunner.position;
-            this.game.physics.enable(obj, Phaser.Physics.ARCADE);
+            //this.game.physics.enable(obj, Phaser.Physics.ARCADE);
             return obj;
-        }        
+        }
+
+        changeAllPandasState(args, state: string){
+            this.pandas.forEachExists(function(panda) { panda.changeState(state); }, null );
+            //this.pandas.setAll('state', state);
+            console.log("Made all the pandas " + state);
+        }
+
+        createRescuedPanda()
+        {            
+            var panda = this.spawnPanda(this.gunner.x - 40, this.gunner.y);
+            this.gunner.rescuePanda(panda);
+            //this.pandas.add(panda);
+        }
+
+        removeOnPandaFromGunner()
+        {
+            var panda = this.gunner.recruits.getAt(0) as Objects.Panda;
+            this.gunner.removePanda(panda);
+        }
     }
 }
 
-
 //Global Functions
-function moveToTarget(source: Phaser.Sprite, target: Phaser.Point, speed:number){
+function moveToTarget(source: Phaser.Sprite, target: PIXI.Point, distance: number, speed: number){
     var gospeed = speed || 50
     
     source.body.velocity.x = target.x - source.body.position.x;
     source.body.velocity.y = target.y - source.body.position.y;
-
-    var magnitude = source.body.velocity.getMagnitude();
+    
+    if (distance == 0)
+    {
+        var magnitude_sqr = source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y;
+        if (magnitude_sqr > 0)
+        {
+            var magnitude = Math.sqrt(magnitude_sqr);
+            source.body.velocity.x *= gospeed / magnitude;
+            source.body.velocity.y *= gospeed / magnitude;
+        }
+    }
+    else if (source.body.velocity.x > distance || source.body.velocity.x < -distance ||
+        source.body.velocity.y > distance || source.body.velocity.y < -distance)
+    {
+    //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
+        var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y);
     source.body.velocity.x *= gospeed / magnitude;
     source.body.velocity.y *= gospeed / magnitude;
+    }
+    else
+    {
+        source.body.velocity.x = 0;
+        source.body.velocity.y = 0;
+    }
+}
+
+var global_colliders : Phaser.Group;
+function setCollisionWithWalls(entity, value : boolean)
+{
+    if (value)
+        global_colliders.add(entity);
+    else
+        global_colliders.remove(entity);
 }
