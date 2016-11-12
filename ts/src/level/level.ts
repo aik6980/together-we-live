@@ -23,6 +23,8 @@ module Level{
                 game_state.gunner = new Objects.Gunner(this.game, x, y);
                 game_state.world_objects.add(game_state.gunner);
                 this.game.physics.arcade.enable(game_state.gunner);
+                //game_state.world_objects.add(game_state.gunner.weapon);
+                game_state.world_objects.add(game_state.gunner.weapon.bullets); 
                 //this.gunner.filters = [this.gray_filter];
                 break;
                 case 'runner':
@@ -52,6 +54,14 @@ module Level{
                 //console.log(this);
                 this.collision_layer.setScale(this.current_scale);
                 game_state.world_objects.scale.setTo(this.current_scale);
+                
+                var tracker = game_state.gunner 
+                console.log(tracker.x, tracker.y);
+                //we dont offset the weapon from gunner
+                game_state.gunner.weapon.x = tracker.x
+                game_state.gunner.weapon.y = tracker.y
+
+
                 game_state.world_objects.forEach(function(sprite : Phaser.Sprite){
                     if(sprite.body != null){
                         sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);

@@ -23,7 +23,7 @@ module Objects{
             this.cursors = this.game.input.keyboard.createCursorKeys();
 
             this.linked_pandas = new Phaser.LinkedList();
-            this.linked_pandas.add(this);
+            this.linked_pandas.add(this); //add self at top of list
 
             setCollisionWithWalls(this, true);
         }

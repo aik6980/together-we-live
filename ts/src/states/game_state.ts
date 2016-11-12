@@ -57,7 +57,7 @@ module State{
 
             // world scaling helper
             this.world_objects = this.game.add.group();
-            this.world_objects.add(this.pandas); 
+            this.world_objects.add(this.pandas);
 
             //create level
             this.level = new Level.Level(this.game);
@@ -104,7 +104,7 @@ module State{
 
         render(){
 			
-            var debugBoundingBoxes = false;
+            var debugBoundingBoxes = true;
             if (this.devMode)
 
                 if (debugBoundingBoxes){
@@ -115,9 +115,15 @@ module State{
                     this.pandas.forEach(panda => {
                         this.game.debug.body(panda);                    
                     }, null, true);
-                }
 
-                this.game.debug.text("Runner: " + this.runner.state, 10, 300);
+                    this.gunner.anchor
+                }
+                
+                this.game.debug.text("object in world_objects: " + this.world_objects.total, 10, this.game.height - 60);
+                this.game.debug.text("Gunner position" + this.gunner.x + ", "+ this.gunner.y, 10, this.game.height - 40);
+  //              this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
+//                this.game.debug.text("Runner: " + this.runner.state + "with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
+
         }
 
         shotPanda(bullet, panda)
@@ -167,8 +173,8 @@ module State{
 function moveToTarget(source: Phaser.Sprite, target: PIXI.Point, distance: number, speed: number){
     var gospeed = speed || 50
     
-    source.body.velocity.x = target.x - source.body.position.x;
-    source.body.velocity.y = target.y - source.body.position.y;
+    source.body.velocity.x = target.x - source.position.x;
+    source.body.velocity.y = target.y - source.position.y;
     
     if (distance == 0)
     {
