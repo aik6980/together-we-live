@@ -14,6 +14,8 @@ module Objects{
         stuntime: number = 0; //stun time remaining
         stunlockcount: number = 0; //count of sequential stuns without being unstunned. Resets to 0 when unstunned.
 
+        idle_time : number = 0;
+
         constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){        
             super(game, x, y, 'ghosts');
 
@@ -22,13 +24,12 @@ module Objects{
             setCollisionWithWalls(this, false); //panda ghosts can float through walls.
             
             //Animations
-            this.animations.add('idle', [0,1]);
+            this.animations.add('idle', [0]);
             this.animations.add('stunned', [1,2]);
             this.animations.add('down', [0,1,2]);
             this.animations.add('left', [3,4,5]);
             this.animations.add('right', [6,7,8]);
             this.animations.add('up', [9,10,11]);
-            this.animations.play('idle', 20, true);
 
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
             //this.body.setSize(24, 24, 3, 4);
@@ -57,6 +58,135 @@ module Objects{
                     break;
                 default:
                     break;                
+            }
+
+            if (this.state == "rescued" || (this.body.velocity.x == 0 && this.body.velocity.y == 0))
+            {
+                if (this.animations.currentAnim.name != 'idle')
+                {
+                    if (this.idle_time <= 0)
+                    {
+                        this.play('idle', 20, true);
+                    }
+                    else
+                    {
+                        this.idle_time -= this.game.time.elapsedMS;
+                    }
+                }
+            }
+            else if (this.state == "stunned")
+            {
+                if (this.animations.currentAnim.name != 'stun')
+                {
+                    this.play('stun', 20, true);
+                }
+            }
+            else
+            {
+                this.idle_time = 500;
+
+                var direction = Math.atan2(this.body.velocity.x, this.body.velocity.y);
+
+                if (direction > 3 * Math.PI / 4 || direction < -3 * Math.PI / 4)
+                {                    
+                    if (this.animations.currentAnim.name != 'up')
+                    {
+                        if (this.body.velocity.x == 0 ||
+                            direction > 9 * Math.PI / 10 || direction < -9 * Math.PI / 10)
+                        {
+                            this.play('up', 20, true);
+                        }
+                        else if (this.body.velocity.x < 0)
+                        {
+                            if (this.animations.currentAnim.name != 'left')
+                            {
+                                this.play('up', 20, true);
+                            }
+                        }
+                        else
+                        {
+                            if (this.animations.currentAnim.name != 'right')
+                            {
+                                this.play('up', 20, true);
+                            }
+                        }
+                    }
+                }
+                else if (direction > Math.PI / 4)
+                {                       
+                    if (this.animations.currentAnim.name != 'right')
+                    {                        
+                        if (this.body.velocity.y == 0 ||
+                            (direction > 4 * Math.PI / 10 && direction < 6 * Math.PI / 10))
+                        {
+                            this.play('right', 20, true);
+                        }
+                        else if (this.body.velocity.y < 0)
+                        {
+                            if (this.animations.currentAnim.name != 'up')
+                            {
+                                this.play('right', 20, true);
+                            }
+                        }
+                        else
+                        {
+                            if (this.animations.currentAnim.name != 'down')
+                            {
+                                this.play('right', 20, true);
+                            }
+                        }
+                    }
+                }
+                else if (direction < -Math.PI / 4)
+                {                            
+                    if (this.animations.currentAnim.name != 'left')
+                    {                  
+                        if (this.body.velocity.y == 0 ||
+                            (direction < -4 * Math.PI / 10 && direction > -6 * Math.PI / 10))
+                        {
+                            this.play('left', 20, true);
+                        }
+                        else if (this.body.velocity.y < 0)
+                        {
+                            if (this.animations.currentAnim.name != 'up')
+                            {
+                                this.play('left', 20, true);
+                            }
+                        }
+                        else
+                        {
+                            if (this.animations.currentAnim.name != 'down')
+                            {
+                                this.play('left', 20, true);
+                            }
+                        }
+                    }
+                }
+                else
+                {    
+                    if (this.animations.currentAnim.name != 'down')
+                    {
+                        if (this.body.velocity.x == 0 ||
+                            (direction > Math.PI / -10 && direction < Math.PI / 10))
+                        {
+                            this.play('down', 20, true);
+                        }
+                        else if (this.body.velocity.x < 0)
+                        {
+                            if (this.animations.currentAnim.name != 'left')
+                            {
+                                this.play('down', 20, true);
+                            }
+                        }
+                        else
+                        {
+                            if (this.animations.currentAnim.name != 'right')
+                            {
+                                this.play('down', 20, true);
+                            }
+                        }
+                    }
+                }
             }
         }
         
@@ -134,7 +264,6 @@ module Objects{
         update_stunned(){
             //remain stunned for X seconds
             //wobble (tween)
-            this.animations.play('stunned', 10, true);
             this.alpha = 0.8;
         }
 

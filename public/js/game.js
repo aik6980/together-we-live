@@ -60,7 +60,10 @@ var Level;
             this.game.camera.follow(game_state.gunner);
         };
         Level.prototype.changeWorldScale = function (scale, game_state) {
-            var tween = this.game.add.tween(this).to({ current_scale: scale }, 2000, Phaser.Easing.Exponential.InOut, true, 0, 0, false);
+            var tween = this.game.add.tween(this).to({ current_scale: scale }, 2000, Phaser.Easing.Linear.None, true, 0, 0, false);
+            tween.onComplete.add(function () {
+                //console.log(game_state.gunner);
+            }, this);
             tween.onUpdateCallback(function () {
                 //console.log(this);
                 global_game_scale = this.current_scale;
@@ -68,13 +71,17 @@ var Level;
                 this.art_layer.setScale(this.current_scale);
                 game_state.world_objects.scale.setTo(this.current_scale);
                 var tracker = game_state.gunner;
-                console.log(tracker.x, tracker.y);
+                //console.log(tracker.x, tracker.y);
                 //we dont offset the weapon from gunner
                 game_state.gunner.weapon.x = tracker.x;
                 game_state.gunner.weapon.y = tracker.y;
                 game_state.world_objects.forEach(function (sprite) {
                     if (sprite.body != null) {
-                        sprite.body.setSize(sprite.width * game_state.world_objects.scale.x, sprite.height * game_state.world_objects.scale.y);
+                        // anchoring issue
+                        // http://www.html5gamedevs.com/topic/22695-247-248-body-anchoring-any-migration-tips/
+                        var a = sprite.width * game_state.world_objects.scale.x;
+                        var b = sprite.height * game_state.world_objects.scale.y;
+                        sprite.body.setSize(a, b, 0.5 * (sprite.width - a), 0.5 * (sprite.height - b));
                     }
                 }, this);
                 game_state.world_objects.forEach(function (group) {
@@ -82,7 +89,9 @@ var Level;
                     if (group.type == Phaser.GROUP) {
                         group.forEach(function (sprite) {
                             if (sprite.body != null) {
-                                sprite.body.setSize(sprite.width * game_state.world_objects.scale.x, sprite.height * game_state.world_objects.scale.y);
+                                var a = sprite.width * game_state.world_objects.scale.x;
+                                var b = sprite.height * game_state.world_objects.scale.y;
+                                sprite.body.setSize(a, b, 0.5 * (sprite.width - a), 0.5 * (sprite.height - b));
                             }
                         }, this);
                     }
@@ -110,6 +119,8 @@ var Level;
             });
             // collision layer is at level 0 for now
             this.map.setCollision(collision_tiles, true, this.map.layers[0].name);
+        };
+        Level.prototype.add_gameobjects = function (game_state) {
             // Setup groups
             for (var object_layer in this.map.objects) {
                 if (this.map.objects.hasOwnProperty(object_layer)) {
@@ -120,16 +131,6 @@ var Level;
                     }
                 }
             }
-            //this.collision_layer.debug = true;
-            //this.game.world.scale.setTo(1.5);
-            //this.collision_layer.setScale(1.5);
-            //game_state.world_objects.scale.setTo(1.5);
-            //game_state.world_objects.forEach(function(sprite : Phaser.Sprite){
-            //    sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
-            //});
-            ///game_state.gunner.scale.setTo(1.5);
-            //game_state.runner.scale.setTo(1.5);
-            //this.changeWorldScale(0.5, game_state);
         };
         return Level;
     }());
@@ -155,7 +156,6 @@ var Objects;
             this.right_button = this.game.input.keyboard.addKey(Phaser.KeyCode.D);
             // init physics            
             this.game.physics.arcade.enable(this);
-            this.body.syncBounds = true;
             // init weapon            
             this.weapon = this.game.add.weapon(60, 'bullet');
             this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
@@ -208,9 +208,8 @@ var Objects;
             this.recruits.add(panda);
             var anchor = this.game.add.sprite(0, 0);
             this.anchors.add(anchor);
-            anchor.x = this.x;
-            anchor.y = this.y;
-            //anchor.anchor.setTo(0.5);
+            anchor.x = this.x - this.width / 4;
+            anchor.y = this.y - this.height / 4;
             panda.target = new Phaser.Point();
             this.refreshRing();
         };
@@ -252,17 +251,17 @@ var Objects;
             _super.call(this, game, x, y, 'ghosts');
             this.stuntime = 0; //stun time remaining
             this.stunlockcount = 0; //count of sequential stuns without being unstunned. Resets to 0 when unstunned.
-            //this.anchor.set(0.5,0.5);
+            this.idle_time = 0;
+            this.anchor.set(0.5, 0.5);
             this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
             setCollisionWithWalls(this, false); //panda ghosts can float through walls.
             //Animations
-            this.animations.add('idle', [0, 1]);
+            this.animations.add('idle', [0]);
             this.animations.add('stunned', [1, 2]);
             this.animations.add('down', [0, 1, 2]);
             this.animations.add('left', [3, 4, 5]);
             this.animations.add('right', [6, 7, 8]);
             this.animations.add('up', [9, 10, 11]);
-            this.animations.play('idle', 20, true);
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
             //this.body.setSize(24, 24, 3, 4);
             this.changeState(startState);
@@ -287,6 +286,97 @@ var Objects;
                     break;
                 default:
                     break;
+            }
+            if (this.state == "rescued" || (this.body.velocity.x == 0 && this.body.velocity.y == 0)) {
+                if (this.animations.currentAnim.name != 'idle') {
+                    if (this.idle_time <= 0) {
+                        this.play('idle', 20, true);
+                    }
+                    else {
+                        this.idle_time -= this.game.time.elapsedMS;
+                    }
+                }
+            }
+            else if (this.state == "stunned") {
+                if (this.animations.currentAnim.name != 'stun') {
+                    this.play('stun', 20, true);
+                }
+            }
+            else {
+                this.idle_time = 500;
+                var direction = Math.atan2(this.body.velocity.x, this.body.velocity.y);
+                if (direction > 3 * Math.PI / 4 || direction < -3 * Math.PI / 4) {
+                    if (this.animations.currentAnim.name != 'up') {
+                        if (this.body.velocity.x == 0 ||
+                            direction > 9 * Math.PI / 10 || direction < -9 * Math.PI / 10) {
+                            this.play('up', 20, true);
+                        }
+                        else if (this.body.velocity.x < 0) {
+                            if (this.animations.currentAnim.name != 'left') {
+                                this.play('up', 20, true);
+                            }
+                        }
+                        else {
+                            if (this.animations.currentAnim.name != 'right') {
+                                this.play('up', 20, true);
+                            }
+                        }
+                    }
+                }
+                else if (direction > Math.PI / 4) {
+                    if (this.animations.currentAnim.name != 'right') {
+                        if (this.body.velocity.y == 0 ||
+                            (direction > 4 * Math.PI / 10 && direction < 6 * Math.PI / 10)) {
+                            this.play('right', 20, true);
+                        }
+                        else if (this.body.velocity.y < 0) {
+                            if (this.animations.currentAnim.name != 'up') {
+                                this.play('right', 20, true);
+                            }
+                        }
+                        else {
+                            if (this.animations.currentAnim.name != 'down') {
+                                this.play('right', 20, true);
+                            }
+                        }
+                    }
+                }
+                else if (direction < -Math.PI / 4) {
+                    if (this.animations.currentAnim.name != 'left') {
+                        if (this.body.velocity.y == 0 ||
+                            (direction < -4 * Math.PI / 10 && direction > -6 * Math.PI / 10)) {
+                            this.play('left', 20, true);
+                        }
+                        else if (this.body.velocity.y < 0) {
+                            if (this.animations.currentAnim.name != 'up') {
+                                this.play('left', 20, true);
+                            }
+                        }
+                        else {
+                            if (this.animations.currentAnim.name != 'down') {
+                                this.play('left', 20, true);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (this.animations.currentAnim.name != 'down') {
+                        if (this.body.velocity.x == 0 ||
+                            (direction > Math.PI / -10 && direction < Math.PI / 10)) {
+                            this.play('down', 20, true);
+                        }
+                        else if (this.body.velocity.x < 0) {
+                            if (this.animations.currentAnim.name != 'left') {
+                                this.play('down', 20, true);
+                            }
+                        }
+                        else {
+                            if (this.animations.currentAnim.name != 'right') {
+                                this.play('down', 20, true);
+                            }
+                        }
+                    }
+                }
             }
         };
         Panda.prototype.attachTo = function (attachee) {
@@ -354,7 +444,6 @@ var Objects;
         Panda.prototype.update_stunned = function () {
             //remain stunned for X seconds
             //wobble (tween)
-            this.animations.play('stunned', 10, true);
             this.alpha = 0.8;
         };
         Panda.prototype.update_attached = function () {
@@ -393,6 +482,7 @@ var Objects;
             this.cursors = this.game.input.keyboard.createCursorKeys();
             this.linked_pandas = new Phaser.LinkedList();
             this.linked_pandas.add(this); //add self at top of list
+            this.anchor.setTo(0.5);
         }
         Runner.prototype.update = function () {
             this.body.velocity.setTo(0, 0); //reset runner movement (if no keys pressed will stop moving)
@@ -592,6 +682,9 @@ var State;
         Game_state.prototype.create = function () {
             var obj = null; //reused lots.
             this.gray_filter = this.game.add.filter('Gray');
+            //create level
+            this.level = new Level.Level(this.game);
+            this.level.load(this);
             //gray.gray = 1.0;
             //create pandas group
             this.pandas = this.game.add.group();
@@ -606,10 +699,7 @@ var State;
             global_world_objects = this.world_objects;
             this.world_objects.add(this.pandas);
             this.world_objects.add(this.spawner);
-            this.world_objects.add(this.colliders);
-            //create level
-            this.level = new Level.Level(this.game);
-            this.level.load(this);
+            this.level.add_gameobjects(this);
             //dev controls
             if (this.devMode)
                 ///num keys to change all the pandas states?
@@ -629,6 +719,7 @@ var State;
             // TEST for gunner
             //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
             //this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 30, this.createHostilePanda, this);
+            //this.game.time.events.repeat(Phaser.Timer.SECOND, 3, this.createFollowingPanda, this);
         };
         Game_state.prototype.spawn_trigger = function (args) {
             this.spawn_system.spawn();
@@ -678,6 +769,7 @@ var State;
             //this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
         };
         Game_state.prototype.winTheGame = function () {
+            //(currently text not appearing for long though - need to change state, freeze the spawns etc)
             console.log("winTheGame()");
             var str = "YOU WON!!!!";
             this.game.debug.text(str, 250, 250);
@@ -728,9 +820,14 @@ var State;
             this.gunner.rescuePanda(panda);
         };
         Game_state.prototype.createHostilePanda = function () {
-            var panda = this.spawnPanda(this.world.width * this.world.scale.x, this.world.height);
+            var panda = this.spawnPanda(this.gunner.position.x + 300, this.gunner.position.y + 300);
             this.pandas.add(panda);
             panda.changeState("hostile");
+        };
+        Game_state.prototype.createFollowingPanda = function () {
+            var panda = this.spawnPanda(this.runner.position.x, this.runner.position.y);
+            this.pandas.add(panda);
+            this.runner.attachPanda(panda);
         };
         Game_state.prototype.removeOnePandaFromGunner = function () {
             var panda = this.gunner.recruits.getAt(0);
@@ -751,6 +848,10 @@ function moveToTarget(source, target, distance, speed) {
             var magnitude = Math.sqrt(magnitude_sqr);
             source.body.velocity.x *= gospeed / magnitude;
             source.body.velocity.y *= gospeed / magnitude;
+        }
+        else {
+            source.body.velocity.x = 0;
+            source.body.velocity.y = 0;
         }
     }
     else if (source.body.velocity.x > distance || source.body.velocity.x < -distance ||

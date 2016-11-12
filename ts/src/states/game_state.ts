@@ -78,7 +78,6 @@ module State{
             
             this.world_objects.add(this.pandas);
             this.world_objects.add(this.spawner);
-            this.world_objects.add(this.colliders);
 
             this.level.add_gameobjects(this);
 
@@ -106,6 +105,7 @@ module State{
             // TEST for gunner
             //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
             //this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 30, this.createHostilePanda, this);
+            //this.game.time.events.repeat(Phaser.Timer.SECOND, 3, this.createFollowingPanda, this);
         }
 
         spawn_trigger(args){
@@ -236,9 +236,16 @@ module State{
 
         createHostilePanda()
         {            
-            var panda = this.spawnPanda(this.world.width * this.world.scale.x, this.world.height);
+            var panda = this.spawnPanda(this.gunner.position.x + 300, this.gunner.position.y + 300);
             this.pandas.add(panda);
             panda.changeState("hostile");
+        }
+
+        createFollowingPanda()
+        {            
+            var panda = this.spawnPanda(this.runner.position.x, this.runner.position.y);
+            this.pandas.add(panda);
+            this.runner.attachPanda(panda);
         }
 
         removeOnePandaFromGunner()
@@ -265,14 +272,19 @@ function moveToTarget(source: Phaser.Sprite, target: PIXI.Point, distance: numbe
             source.body.velocity.x *= gospeed / magnitude;
             source.body.velocity.y *= gospeed / magnitude;
         }
+        else
+        {
+            source.body.velocity.x = 0;
+            source.body.velocity.y = 0;
+        }
     }
     else if (source.body.velocity.x > distance || source.body.velocity.x < -distance ||
         source.body.velocity.y > distance || source.body.velocity.y < -distance)
     {
-    //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
+        //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
         var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y);
-    source.body.velocity.x *= gospeed / magnitude;
-    source.body.velocity.y *= gospeed / magnitude;
+        source.body.velocity.x *= gospeed / magnitude;
+        source.body.velocity.y *= gospeed / magnitude;
     }
     else
     {
