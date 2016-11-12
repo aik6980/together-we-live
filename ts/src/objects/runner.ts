@@ -6,11 +6,13 @@ module Objects{
 
     export class Runner extends Phaser.Sprite{
         speed: number = 100;
+
         state:  runnerStates = "alive";
+
+        linked_pandas : Phaser.LinkedList;
+
         cursors: Phaser.CursorKeys;
         myGunner: Gunner;
-
-        
 
         constructor(game : Phaser.Game, x: number, y: number, speed: number){
             super(game, x, y, game.cache.getBitmapData('unit_white'));
@@ -19,6 +21,11 @@ module Objects{
             this.changeState(this.state);
 
             this.cursors = this.game.input.keyboard.createCursorKeys();
+
+            this.linked_pandas = new Phaser.LinkedList();
+            this.linked_pandas.add(this);
+
+            setCollisionWithWalls(this, true);
         }
 
         update(){
@@ -40,8 +47,8 @@ module Objects{
                     break;
                 case "warping":
                     //blue and fly to turret home.
-                    //moveToTarget(this, new Phaser.Point(200, 200), 300)
-                    moveToTarget(this, this.myGunner.position, 300)
+
+                    moveToTarget(this, this.myGunner.position, 0, 300)
                     break;
                 default:
                     break;
@@ -49,7 +56,6 @@ module Objects{
             
 
         }     
-
 
         movement(){
             //Runner Movement
@@ -86,10 +92,13 @@ module Objects{
                         break;
                     case "alive":
                         this.tint = Phaser.Color.getColor(100,50,0); //brown??
+                        setCollisionWithWalls(this, true);
                         this.alpha = 1.0;
+                        break;
                     case "warping":
                         //blue and fly to turret home.
                         this.tint = Phaser.Color.getColor(0, 0, 200); //blueish
+                        setCollisionWithWalls(this, false);
                         break;
                     default:
                         break;
@@ -112,11 +121,32 @@ module Objects{
                     runner.changeState("scared");
                     break;
                 case "stunned":
-                    panda.attachTo(runner)
+                    runner.attachPanda(panda);
                     break;
                 default:
                     //nothing?
             }
+        }
+
+        attachPanda(panda : Panda)
+        {
+            panda.attachTo(this.linked_pandas.last);
+            this.linked_pandas.add(panda);
+    }
+
+        detachPanda(panda)
+        {
+            if (panda.next != null)
+            {
+                panda.next.attachTo(panda.prev);
+            }
+
+            this.linked_pandas.remove(panda);
+        }
+
+        die(){
+            console.log("runner is dying")
+            this.kill()
         }
     }
 }

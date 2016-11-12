@@ -24,7 +24,7 @@ module Level{
 
         public update_game_state(game_state : State.Game_state){
             // collision with world
-            //this.game.physics.arcade.collide(game_state.runner, this.collision_layer);
+            this.game.physics.arcade.collide(game_state.colliders, this.collision_layer);
         }
 
         public load(game_state : State.Game_state){

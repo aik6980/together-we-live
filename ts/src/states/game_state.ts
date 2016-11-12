@@ -18,7 +18,7 @@ module State{
 
         // groups
         pandas : Phaser.Group;
-        united: Phaser.Group;
+        colliders: Phaser.Group;
 
         gray_filter : Phaser.Filter;
 
@@ -78,6 +78,11 @@ module State{
                 this.game.input.keyboard.addKey(Phaser.Keyboard.NINE).onUp.add(this.changeAllPandasState, this, null, "rescued");
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+
+                this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnPandaFromGunner, this);
+
+            // TEST for gunner
+            //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
         }
 
         update(){
@@ -118,9 +123,14 @@ module State{
 
         shotPanda(bullet, panda)
         {
-            console.log(bullet, panda)
+			            
+			if (panda.state != "rescued")
+            {
+                bullet.kill();
+                panda.stun();
             bullet.kill();        
-            panda.changeState("stunned");
+
+        }
         }
 
         shotRunner(runner, bullet){
@@ -143,23 +153,60 @@ module State{
             this.pandas.forEachExists(function(panda) { panda.changeState(state); }, null );
             //this.pandas.setAll('state', state);
             console.log("Made all the pandas " + state);
-        }        
+    }
+
+        createRescuedPanda()
+        {            
+            var panda = this.spawnPanda(this.gunner.x - 40, this.gunner.y);
+            this.gunner.rescuePanda(panda);
+            //this.pandas.add(panda);
+        }
+
+        removeOnPandaFromGunner()
+        {
+            var panda = this.gunner.recruits.getAt(0) as Objects.Panda;
+            this.gunner.removePanda(panda);
+        }
     }
 }
 
-
 //Global Functions
-function moveToTarget(source: Phaser.Sprite, target: Phaser.Point, speed:number){
+function moveToTarget(source: Phaser.Sprite, target: PIXI.Point, distance: number, speed: number){
     var gospeed = speed || 50
-
     
     source.body.velocity.x = target.x - source.body.position.x;
     source.body.velocity.y = target.y - source.body.position.y;
     
+    if (distance == 0)
+    {
+        var magnitude_sqr = source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y;
+        if (magnitude_sqr > 0)
+        {
+            var magnitude = Math.sqrt(magnitude_sqr);
+            source.body.velocity.x *= gospeed / magnitude;
+            source.body.velocity.y *= gospeed / magnitude;
+        }
+    }
+    else if (source.body.velocity.x > distance || source.body.velocity.x < -distance ||
+        source.body.velocity.y > distance || source.body.velocity.y < -distance)
+    {
     //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
-    var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y)
-    
+        var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y);
     source.body.velocity.x *= gospeed / magnitude;
     source.body.velocity.y *= gospeed / magnitude;
-    
+    }
+    else
+    {
+        source.body.velocity.x = 0;
+        source.body.velocity.y = 0;
+    }
+}
+
+var global_colliders : Phaser.Group;
+function setCollisionWithWalls(entity, value : boolean)
+{
+    if (value)
+        global_colliders.add(entity);
+    else
+        global_colliders.remove(entity);
 }
