@@ -62,7 +62,9 @@ var Level;
                 this.collision_layer.setScale(this.current_scale);
                 game_state.world_objects.scale.setTo(this.current_scale);
                 game_state.world_objects.forEach(function (sprite) {
-                    sprite.body.setSize(sprite.width * game_state.world_objects.scale.x, sprite.height * game_state.world_objects.scale.y);
+                    if (sprite.body != null) {
+                        sprite.body.setSize(sprite.width * game_state.world_objects.scale.x, sprite.height * game_state.world_objects.scale.y);
+                    }
                 }, this);
             }, this);
         };
@@ -498,6 +500,7 @@ var State;
             global_colliders = this.colliders;
             // world scaling helper
             this.world_objects = this.game.add.group();
+            this.world_objects.add(this.pandas);
             //create level
             this.level = new Level.Level(this.game);
             this.level.load(this);
