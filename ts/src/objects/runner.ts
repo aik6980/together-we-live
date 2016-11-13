@@ -40,7 +40,14 @@ module Objects{
         }
 
         update(){
+            //this.game.debug.cameraInfo(this.game.camera, 32, 32);
+            //this.game.debug.spriteInfo(this, 20, 200);
+
             this.body.velocity.setTo(0, 0) //reset runner movement (if no keys pressed will stop moving)
+
+            if(!this.inCamera){
+                this.changeState('warping');
+            }
 
             switch (this.state){
                 case "dead":

@@ -181,7 +181,7 @@ module State{
             //character collisions
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, function(){ return this.runner.state != 'warping';}, this); 
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
-            this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
+            this.game.physics.arcade.overlap(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
 
             //level collisions
             this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this);
