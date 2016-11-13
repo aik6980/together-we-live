@@ -7,6 +7,8 @@ module Objects{
 
             this.tint = Phaser.Color.getColor(0,0,64);
             //this.alpha = 0;
+
+            this.visible = false;
         }
 
         update(){

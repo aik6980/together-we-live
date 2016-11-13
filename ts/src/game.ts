@@ -6,8 +6,9 @@ module SimpleGame{
             super(512,512, Phaser.AUTO, 'content', null);
 
             // add states
+            this.state.add('menu', new State.Menu_state);
             this.state.add('game', new State.Game_state);
-            this.state.start('game');
+            this.state.start('menu');
         }
     }
 }
