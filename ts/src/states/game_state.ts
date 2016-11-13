@@ -248,6 +248,10 @@ module State{
             //ended
         }
 
+        update_demo(){
+            
+        }
+
         stop_demo(){
             //this.game.time.events.removeAll();
             this.gunner.force_not_firing = false;
@@ -276,7 +280,7 @@ module State{
             }
 
             if (this.playState == "demo"){
-
+                this.update_demo();
             }
             
             if (this.playState=="play"){
