@@ -25,6 +25,9 @@ module State{
 
         gray_filter : Phaser.Filter;
 
+        // music
+        music : Phaser.Sound;
+
         preload(){
             //settings data file
             this.game.load.json('settings', 'assets/data/settings.json');
@@ -60,6 +63,13 @@ module State{
         }
 
         create(){
+            // play background music
+            this.music = game.add.audio('Music_Together');
+            this.music.loop = true;
+            this.music.volume = global_music_volume;
+            this.music.play();
+
+
             //load the settingsJSON and which is now referenced throughout instead of using global_variables.
             settings = this.game.cache.getJSON('settings');
             

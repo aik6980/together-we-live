@@ -50,6 +50,11 @@ module Objects{
             this.weapon.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
             this.weapon.bulletSpeed = 200;
             this.weapon.fireRate = 400;
+
+            this.weapon.onFire.add(function(){
+                // play sound
+                this.game.add.audio('Turret_Fire').play(null,null,global_sfx_volume);
+            }, this);
         }
 
         update(){

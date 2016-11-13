@@ -15,6 +15,10 @@ module SimpleGame{
 
 // the game
 var google_font_active = false;
+
+var global_music_volume = 0.3;
+var global_sfx_volume = 0.5
+
 var game;
 // The Google WebFont Loader will look for this object, so create it before loading the script.
 var WebFontConfig = {

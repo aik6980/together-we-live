@@ -128,6 +128,7 @@ module Objects{
                         break;
                     case "shot": //shot or scared
                         //play sound "ARRRRGH"
+                        this.game.add.audio('Turret_HitsHatter1').play(null,null,global_sfx_volume);
                         this.tint = Phaser.Color.getColor(255, 10, 0); //dirty red)
                         break;
                     case "scared":
