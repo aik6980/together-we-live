@@ -11,7 +11,6 @@ module State{
         // world
         level : Level.Level;
         world_objects : Phaser.Group;
-        devMode: boolean = global_devMode;
 
         // Players
         runner : Objects.Runner;
@@ -27,6 +26,9 @@ module State{
         gray_filter : Phaser.Filter;
 
         preload(){
+            //settings data file
+            this.game.load.json('settings', 'assets/data/settings.json');
+
             // create a bitmap data
             // http://phaser.io/examples/v2/bitmapdata/cached-bitmapdata
             this.bmd_unit_white = this.game.add.bitmapData(this.unit, this.unit);
@@ -37,6 +39,7 @@ module State{
 
             this.game.load.image('bullet', 'assets/img/shmup-bullet.png');
             this.game.load.image('ship', 'assets/img/thrust_ship.png');
+            this.game.load.image('gunner_turret', 'assets/img/gunner_turret_40.png');
 
             // grayscale shader
             this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
@@ -46,6 +49,10 @@ module State{
 
             //spritesheet
             this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32)
+            this.game.load.spritesheet('runner', 'assets/img/runner_spritesheet.png', 22, 30);
+            //this.game.load.spritesheet('ghosts', 'assets/img/runner_spritesheet.png', 22, 30);
+
+
 
             //Sounds
 
@@ -53,6 +60,9 @@ module State{
         }
 
         create(){
+            //load the settingsJSON and which is now referenced throughout instead of using global_variables.
+            settings = this.game.cache.getJSON('settings');
+            
             var obj = null; //reused lots.
 
             this.gray_filter = this.game.add.filter('Gray');
@@ -89,7 +99,8 @@ module State{
             this.level.add_gameobjects(this);
 
             //dev controls
-            if (this.devMode){
+            if (settings.devMode){
+                console.log("dev mode enabled")
                 ///num keys to change all the pandas states?
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
@@ -113,6 +124,8 @@ module State{
                 this.game.input.keyboard.addKey(Phaser.Keyboard.END).onUp.add(function(){ this.spawn_system.spawnEnabled = false; }, this);
             //this.game.time.events.repeat(Phaser.Timer.SECOND, 3, this.createFollowingPanda, this);
             
+            } else {
+                console.log("dev mode disabled")
             }
         }
 
@@ -136,9 +149,8 @@ module State{
             }
 
             ////DID YOU WIN YET??
-            if (this.gunner.recruits.length >= gameplay_gunner_winRecruits){
+            if (this.gunner.recruits.length >= settings.gameplay.gunner.winRecruits){
                 this.winTheGame();
-                this.game.paused = true;
             }
             
 
@@ -167,13 +179,13 @@ module State{
         render(){
 
             //Progress
-            var progressText = "Rescued: " + this.gunner.recruits.length + " / " + gameplay_gunner_winRecruits
+            var progressText = "Rescued: " + this.gunner.recruits.length + " / " + settings.gameplay.gunner.winRecruits
             this.game.debug.text(progressText, 20, 0+20); //progress Text in top left
 			
             var debugBoundingBoxes = false;
-            if (this.devMode){
+            if (settings.devMode){
 
-                if (debugBoundingBoxes){
+                if (settings.debugBoundingBoxes){
                     //bounding boxes
                     this.game.debug.body(this.gunner);
                     this.game.debug.body(this.runner);
@@ -199,6 +211,9 @@ module State{
         winTheGame(){
             //(currently text not appearing for long though - need to change state, freeze the spawns etc)
             console.log("winTheGame()");
+            this.spawn_system.spawnEnabled = false; //disable spawns
+            this.changeAllPandasState(null, "rescued"); //rescue all remaining pandas
+
             var str = "YOU WON!!!!";
             this.game.debug.text(str, 250, 250);
             //this.game.add.text(this.game.width/2, this.game.height/2, winText);
@@ -346,26 +361,4 @@ function randomIntFromInterval(min,max)
 }
 
 ////Global Gameplay variables (Time units should be ms as the functions will divide by 1000)
-var global_devMode: boolean = true;
-
-//Gunner Gameplay
-var gameplay_gunner_baseTurnSpeed: number = 300;
-var gameplay_gunner_startingRecruits: number = 3;
-var gameplay_gunner_winRecruits: number = 10; //number of pandas required to win
-
-//Runner Gameplay
-var gameplay_runner_baseSpeed: number = 150;
-var gameplay_runner_chainLengthSlowDown: number = 5;
-var gameplay_runner_chainMaxSlowDown: number = 0.7;
-var gameplay_runner_prewarpTime: number = 1000; //how long to wait in shot/scared state before warping 
-
-//Panda Gameplay
-var gameplay_panda_baseSpeed: number = 100;
-var gameplay_panda_stunTime: number = 5000;
-var gameplay_panda_stunLockCount: number = 4; //if stunlocked x times without a break will be respawned elsewhere
-
-var gameplay_pandas_spawnRateMin: number = 500;
-var gameplay_pandas_spawnRateMax: number = 3000;
-var gameplay_pandas_spawnLimit: number = 50; //max number of pandas spawned (should be >= the winRecruits)
-var gameplay_pandas_hostileLimit: number = 20; //NOT IMPLEMENTED YET - would be a way to do pandas - recruits = hostiles and not too many spawned (though we don't despawn)
-var gameplay_pandas_spawnQuantity: number = 1; //how many to spawn at once
+var settings; //object loaded via json

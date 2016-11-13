@@ -5,7 +5,7 @@ module Objects{
     type runnerStates = "alive" | "shot" | "scared" | "warping" | "dead";
 
     export class Runner extends Phaser.Sprite{
-        speed: number =  gameplay_runner_baseSpeed;
+        speed: number =  settings.gameplay.runner.baseSpeed;
 
         state:  runnerStates = "alive";
 
@@ -17,7 +17,7 @@ module Objects{
         preWarpCountdown: number;
 
         constructor(game : Phaser.Game, x: number, y: number){
-            super(game, x, y, game.cache.getBitmapData('unit_white'));
+            super(game, x, y, 'runner');
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
             this.changeState(this.state);
 
@@ -26,6 +26,15 @@ module Objects{
             this.linked_pandas = new Phaser.LinkedList();
             this.linked_pandas.add(this); //add self at top of list
             this.anchor.setTo(0.5);
+
+            //Animations
+            this.animations.add('idle', [0]);
+            this.animations.add('left', [1]);
+            this.animations.add('right', [2]);
+            this.animations.add('down', [3]);
+            this.animations.add('up', [0]);
+            this.animations.add('idle', [0]);
+
         }
 
         update(){
@@ -50,13 +59,46 @@ module Objects{
         }     
 
         movement(){
-            var chainSlowDown = (1 - (this.linked_pandas.total-1) / gameplay_runner_chainLengthSlowDown)
-            if (chainSlowDown > gameplay_runner_chainMaxSlowDown) //don't get too slow
-                chainSlowDown = gameplay_runner_chainMaxSlowDown;
+            var chainSlowDown = (1 - (this.linked_pandas.total-1) / settings.gameplay.runner.chainLengthSlowDown)
+            if (chainSlowDown > settings.gameplay.runner.chainMaxSlowDown) //don't get too slow
+                chainSlowDown = settings.gameplay.runner.chainMaxSlowDown;
 
             chainSlowDown = 1; //overwrite for now
             var gospeed = this.speed * chainSlowDown;
 
+            //Runner movement
+            var leftOrRight: number = 0; //-1 = left, 0 =none, +1 = right
+            var upOrDown: number = 0; //-1 = Up, 0= none, +1 = down
+            if (this.cursors.left.isDown) {
+                leftOrRight = -1;
+            } else if (this.cursors.right.isDown) {
+                leftOrRight = +1;
+            }
+
+            if (this.cursors.up.isDown) {
+                upOrDown = -1;
+            } else if (this.cursors.down.isDown) {
+                upOrDown = +1;
+            }
+
+            this.body.velocity.x = gospeed * leftOrRight;
+            this.body.velocity.y = gospeed * upOrDown;
+
+            if (upOrDown == +1){ //up and diagonal up
+                this.animations.play("up");
+            } else if (upOrDown == -1 && leftOrRight == 0){ //directly down
+                this.animations.play("down");
+            } else if (leftOrRight == -1){ //left and diagnonal down left
+                this.animations.play("left");
+            } else if (leftOrRight == 1){ //right and diagnonal down right
+                this.animations.play("right");
+            } else {
+                this.animations.play("idle");
+            }
+
+
+
+/*
             //Runner Movement
             //horizontal movement
             if (this.cursors.left.isDown) 
@@ -69,6 +111,7 @@ module Objects{
                 this.body.velocity.y = -gospeed;
             else if (this.cursors.down.isDown)
                 this.body.velocity.y = gospeed;
+*/                
         }   
 
         changeState(targetState: runnerStates){
@@ -89,9 +132,9 @@ module Objects{
                         this.alpha = 0.6;
                         break;
                     case "alive":
-                        this.tint = Phaser.Color.getColor(100,50,0); //brown??
+                        this.tint = 0xFFFFFF //removes tint
                         //setCollisionWithWalls(this, true); //see note below toggling this on runner had bizarre consequences!
-                        this.speed = gameplay_runner_baseSpeed;
+                        this.speed = settings.gameplay.runner.baseSpeed;
                         this.alpha = 1;
                         break;
                     case "warping":
@@ -106,7 +149,7 @@ module Objects{
 
                 if (targetState == "shot" || targetState == "scared"){
                     //console.log("prepare to warp!!!");
-                    this.game.time.events.add(gameplay_runner_prewarpTime, this.changeState, this, "warping"); //timer works but 2nd time runner dies stays dead
+                    this.game.time.events.add(settings.gameplay.runner.prewarpTime, this.changeState, this, "warping"); //timer works but 2nd time runner dies stays dead
                 }
             }        
 

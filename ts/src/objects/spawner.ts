@@ -17,10 +17,10 @@ module Objects{
     export class Spawn_System
     {
         game_state : State.Game_state;
-        spawnRateMin: number = gameplay_pandas_spawnRateMin;
-        spawnRateMax: number = gameplay_pandas_spawnRateMax;
-        spawnLimit: number = gameplay_pandas_spawnLimit;
-        spawnQuantity: number = gameplay_pandas_spawnQuantity; //how many to spawn at once (e.g. rush waves)
+        spawnRateMin: number = settings.gameplay.spawnsystem.spawnRateMin;
+        spawnRateMax: number = settings.gameplay.spawnsystem.spawnRateMax;
+        spawnLimit: number = settings.gameplay.spawnsystem.spawnLimit;
+        spawnQuantity: number = settings.gameplay.spawnsystem.spawnQuantity; //how many to spawn at once (e.g. rush waves)
         spawnEnabled: boolean = false;//true;
 
        
@@ -49,7 +49,7 @@ module Objects{
         }
 
         public spawnInState(state){
-            if (this.game_state.pandas.total < gameplay_pandas_spawnLimit){ //check got room to spawn 1 more
+            if (this.game_state.pandas.total < settings.gameplay.spawnsystem.spawnLimit){ //check got room to spawn 1 more
                 var spawn_point : Objects.Spawner = this.game_state.spawner.getRandom(); //pick a random spawnpoint
                 this.game_state.pandas.add(this.game_state.spawnPandaInState(spawn_point.x, spawn_point.y, state));
             }

@@ -200,14 +200,14 @@ module Objects{
             this.detachPanda(this);
             switch (this.state){ //check curernt state
                 case "hostile":
-                    this.stuntime = gameplay_panda_stunTime;
+                    this.stuntime = settings.gameplay.panda.stunTime;
                     this.stunlockcount = 1;
                     //this.game.time.events.add(this.stuntime, WRITEAfunc(), this)
                     //game
                     break;
                 case "stunned": //increase stun but if passed the max stunlock we should respawn the panda as hostile
-                    this.stuntime += gameplay_panda_stunTime; //increase stun time and lockout
-                    if (this.stunlockcount > gameplay_panda_stunLockCount){
+                    this.stuntime += settings.gameplay.panda.stunTime; //increase stun time and lockout
+                    if (this.stunlockcount > settings.gameplay.panda.stunLockCount){
                         console.log("why would you stun lock a panda??")
                         console.log("DESPAWN THE PANDA and maybe respawn one?")
                     } else {
