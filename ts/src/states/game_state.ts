@@ -56,6 +56,11 @@ module State{
             var obj = null; //reused lots.
 
             this.gray_filter = this.game.add.filter('Gray');
+
+            //create level
+            this.level = new Level.Level(this.game);
+            this.level.load(this);
+
             //gray.gray = 1.0;
             //create pandas group
             this.pandas = this.game.add.group();
@@ -75,9 +80,7 @@ module State{
             this.world_objects.add(this.spawner);
             this.world_objects.add(this.colliders);
 
-            //create level
-            this.level = new Level.Level(this.game);
-            this.level.load(this);
+            this.level.add_gameobjects(this);
 
             //dev controls
             if (this.devMode)
@@ -170,6 +173,7 @@ module State{
         }
 
         winTheGame(){
+            //(currently text not appearing for long though - need to change state, freeze the spawns etc)
             console.log("winTheGame()");
             var str = "YOU WON!!!!";
             this.game.debug.text(str, 250, 250);

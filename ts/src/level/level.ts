@@ -51,7 +51,11 @@ module Level{
         }
 
         changeWorldScale(scale: number, game_state: State.Game_state){
-            var tween = this.game.add.tween(this).to( { current_scale: scale }, 2000, Phaser.Easing.Exponential.InOut, true, 0, 0, false);
+            var tween = this.game.add.tween(this).to( { current_scale: scale }, 2000, Phaser.Easing.Linear.None, true, 0, 0, false);
+
+            tween.onComplete.add(function(){
+                //console.log(game_state.gunner);
+            }, this);
 
             tween.onUpdateCallback(function(){
                 //console.log(this);
@@ -61,15 +65,18 @@ module Level{
                 game_state.world_objects.scale.setTo(this.current_scale);
                 
                 var tracker = game_state.gunner 
-                console.log(tracker.x, tracker.y);
+                //console.log(tracker.x, tracker.y);
                 //we dont offset the weapon from gunner
-                game_state.gunner.weapon.x = tracker.x
-                game_state.gunner.weapon.y = tracker.y
-
+                game_state.gunner.weapon.x = tracker.x;
+                game_state.gunner.weapon.y = tracker.y;
 
                 game_state.world_objects.forEach(function(sprite : Phaser.Sprite){
                     if(sprite.body != null){
-                        sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
+                        // anchoring issue
+                        // http://www.html5gamedevs.com/topic/22695-247-248-body-anchoring-any-migration-tips/
+                        var a = sprite.width * game_state.world_objects.scale.x;
+                        var b = sprite.height * game_state.world_objects.scale.y;
+                        sprite.body.setSize(a,b,0.5*(sprite.width-a), 0.5*(sprite.height-b));
                     }
                 }, this);
                 
@@ -79,7 +86,9 @@ module Level{
                     {
                         group.forEach(function(sprite: Phaser.Sprite){
                             if(sprite.body != null){
-                                sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
+                                var a = sprite.width * game_state.world_objects.scale.x;
+                                var b = sprite.height * game_state.world_objects.scale.y;
+                                sprite.body.setSize(a,b,0.5*(sprite.width-a), 0.5*(sprite.height-b));
                             }
                         }, this);
                     }
@@ -112,7 +121,9 @@ module Level{
             });
             // collision layer is at level 0 for now
             this.map.setCollision(collision_tiles, true, this.map.layers[0].name);
+        }
 
+        public add_gameobjects(game_state: State.Game_state){
             // Setup groups
             for (let object_layer in this.map.objects) {
                 if (this.map.objects.hasOwnProperty(object_layer)) {
@@ -123,18 +134,6 @@ module Level{
                     }
                 }
             }
-            //this.collision_layer.debug = true;
-
-            //this.game.world.scale.setTo(1.5);
-            //this.collision_layer.setScale(1.5);
-            //game_state.world_objects.scale.setTo(1.5);
-            //game_state.world_objects.forEach(function(sprite : Phaser.Sprite){
-            //    sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
-            //});
-            ///game_state.gunner.scale.setTo(1.5);
-            //game_state.runner.scale.setTo(1.5);
-
-            //this.changeWorldScale(0.5, game_state);
         }
     }
 }

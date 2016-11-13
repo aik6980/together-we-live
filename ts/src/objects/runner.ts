@@ -25,6 +25,7 @@ module Objects{
 
             this.linked_pandas = new Phaser.LinkedList();
             this.linked_pandas.add(this); //add self at top of list
+            this.anchor.setTo(0.5);
         }
 
         update(){
