@@ -51,10 +51,10 @@ module Level{
         }
 
         changeWorldScale(scale: number, game_state: State.Game_state){
-            var tween = this.game.add.tween(this).to( { current_scale: scale }, 2000, Phaser.Easing.Exponential.InOut, true, 0, 0, false);
+            var tween = this.game.add.tween(this).to( { current_scale: scale }, 2000, Phaser.Easing.Linear.None, true, 0, 0, false);
 
             tween.onComplete.add(function(){
-                console.log(game_state.gunner);
+                //console.log(game_state.gunner);
             }, this);
 
             tween.onUpdateCallback(function(){
@@ -65,7 +65,7 @@ module Level{
                 game_state.world_objects.scale.setTo(this.current_scale);
                 
                 var tracker = game_state.gunner 
-                console.log(tracker.x, tracker.y);
+                //console.log(tracker.x, tracker.y);
                 //we dont offset the weapon from gunner
                 game_state.gunner.weapon.x = tracker.x;
                 game_state.gunner.weapon.y = tracker.y;
