@@ -72,14 +72,13 @@ module Objects{
                 case "hostile":
                     this.stuntime = gameplay_panda_stunTime;
                     this.stunlockcount = 1;
-                    //this.game.time.events.add(Phaser.Timer.SECOND * this.stuntime / 1000, WRITEAfunc(), this)   
-                    //game.time.events.add(Phaser.Timer.SECOND * 4, fadePicture, this);
+                    //this.game.time.events.add(this.stuntime, WRITEAfunc(), this)
                     //game
                     break;
                 case "stunned": //increase stun but if passed the max stunlock we should respawn the panda as hostile
                     this.stuntime += gameplay_panda_stunTime; //increase stun time and lockout
                     if (this.stunlockcount > gameplay_panda_stunLockCount){
-                        console.log("why you stun lock a panda??")
+                        console.log("why would you stun lock a panda??")
                         console.log("DESPAWN THE PANDA and maybe respawn one?")
                     } else {
                         this.stunlockcount += 1;

@@ -11,7 +11,7 @@ module State{
         // world
         level : Level.Level;
         world_objects : Phaser.Group;
-        devMode: boolean = true;
+        devMode: boolean = global_devMode;
 
         // Players
         runner : Objects.Runner;
@@ -81,7 +81,6 @@ module State{
 
             //dev controls
             if (this.devMode)
-                this.changeAllPandasState(null, "sleepy");
             ///num keys to change all the pandas states?
             //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
             //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
@@ -92,11 +91,14 @@ module State{
 
             this.game.input.keyboard.addKey(Phaser.Keyboard.SIX).onUp.add(this.spawn_trigger, this, null);
 
-            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.SEVEN).onUp.add(this.changeAllPandasState, this, null, "rescued");
             this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
-                this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
 
             this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnePandaFromGunner, this);
+
+            this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_UP).onUp.add(this.winTheGame, this);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_DOWN).onUp.add(this.loseTheGame, this);
 
             // TEST for gunner
             //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
@@ -116,13 +118,19 @@ module State{
             ///Collisions
             //N.b. the player when "warping" is not checked for collision;
 
+            ////DID YOU WIN YET??
+            if (this.gunner.recruits.length >= gameplay_gunner_winRecruits){
+                this.winTheGame();
+            }
+            
+
             //character collisions
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, function(){ return this.runner.state != 'warping';}, this); 
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
             this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
 
             //level collisions
-            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this);
+            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this); 
             this.game.physics.arcade.collide(this.pandas, this.level.collision_layer);
 
             //bullet collisions
@@ -137,7 +145,7 @@ module State{
             var progressText = "Rescued: " + this.gunner.recruits.length + " / " + gameplay_gunner_winRecruits
             this.game.debug.text(progressText, 20, 0+20); //progress Text in top left
 			
-            var debugBoundingBoxes = true;
+            var debugBoundingBoxes = false;
             if (this.devMode)
 
                 if (debugBoundingBoxes){
@@ -155,9 +163,30 @@ module State{
                 this.game.debug.text("object in world_objects: " + this.world_objects.total, 10, this.game.height - 60);
                 //this.game.debug.text("Gunner position" + this.gunner.x + ", "+ this.gunner.y, 10, this.game.height - 40);
                 this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
-                this.game.debug.text("Runner: " + this.runner.state + " with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
+                this.game.debug.text("Runner: " + this.runner.alive + " " + this.runner.state + " with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
 
                 //this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
+
+        }
+
+        winTheGame(){
+            console.log("winTheGame()");
+            var str = "YOU WON!!!!";
+            this.game.debug.text(str, 250, 250);
+            //this.game.add.text(this.game.width/2, this.game.height/2, winText);
+            var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
+            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            text.anchor.set(0.5);
+        }
+
+        loseTheGame(){
+            console.log("loseTheGame()");
+            var str = "YOU\nBOTH\nLOST";
+            this.game.debug.text(str, 250, 250);
+            //this.game.add.text(this.game.width/2, this.game.height/2, winText);
+            var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
+            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            text.anchor.set(0.5);
         }
 
         shotPanda(bullet, panda)
@@ -185,8 +214,7 @@ module State{
             var pobj = new Objects.Panda(this.game, x, y, state);
             pobj.body.height = pobj.body.height * this.level.current_scale;
             pobj.body.width = pobj.body.width * this.level.current_scale;
-            
-            pobj.target = this.gunner; //pandas target the Gunner by default
+            pobj.target = this.gunner.position; //pandas target the Gunner by default
             return pobj;
         }
 
@@ -277,8 +305,8 @@ function randomIntFromInterval(min,max)
     return Math.floor(Math.random()*(max-min+1)+min);
 }
 
-////Global Gameplay variables
-//Time units should be ms
+////Global Gameplay variables (Time units should be ms as the functions will divide by 1000)
+var global_devMode: boolean = true;
 
 //Gunner Gameplay
 var gameplay_gunner_baseTurnSpeed: number = 300;

@@ -29,9 +29,9 @@ module Objects{
         }
 
         public spawnCountdownStart(){
-            var howlong = randomIntFromInterval(this.spawnRateMin, this.spawnRateMax)/1000; //ms to seconds
+            var howlong = randomIntFromInterval(this.spawnRateMin, this.spawnRateMax);
             //console.log("spawnCountdown will start for " + howlong + " which is from the range " + this.spawnRateMin + "-" + this.spawnRateMax);
-            this.game_state.time.events.add(Phaser.Timer.SECOND * howlong, this.spawnCountdownComplete, this);
+            this.game_state.time.events.add(howlong, this.spawnCountdownComplete, this);
         }
 
         public spawnCountdownComplete(){
