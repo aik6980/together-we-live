@@ -28,6 +28,9 @@ module State{
         //winState
         playState: string = "load";
 
+        progressPercent: number = 0;
+        peakProgressPercent: number = 0;
+
         preload(){
             //settings data file
             this.game.load.json('settings', 'assets/data/settings.json');
@@ -126,8 +129,8 @@ module State{
                 this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_UP).onUp.add(this.winTheGame, this);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_DOWN).onUp.add(this.loseTheGame, this);
 
-                this.game.input.keyboard.addKey(Phaser.Keyboard.HOME).onUp.add(function(){ this.spawn_system.spawnEnabled = true; }, this);
-                this.game.input.keyboard.addKey(Phaser.Keyboard.END).onUp.add(function(){ this.spawn_system.spawnEnabled = false; }, this);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.HOME).onUp.add(function(){ this.spawn_system.autoSpawn = true; }, this);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.END).onUp.add(function(){ this.spawn_system.autoSpawn = false; }, this);
             //this.game.time.events.repeat(Phaser.Timer.SECOND, 3, this.createFollowingPanda, this);
             }
         }
@@ -143,22 +146,28 @@ module State{
         update(){
             this.level.update_game_state(this);
             ///Collisions
-            //N.b. the player when "warping" is not checked for collision;
+            //N.b. the player when "warping" is not checked for collision;        
 
-            if (this.playState == "win" || this.playState =="lost"){
-                this.spawn_system.spawnEnabled = false; //disable spawns
+            if (this.playState == "won" || this.playState =="lost"){
+                this.spawn_system.autoSpawn = false; //disable spawns
             }
 
+            if (this.playState == "tutorial"){
+
+            }
+            
             if (this.playState=="play"){
+                this.updateProgress()
+
                 ///DID YOU LOSE YET?
-                if (this.gunner.recruits.length == 0){
-                    this.loseTheGame();
+                if (this.progressPercent == 0){
+                    /*this.loseTheGame();
                     this.changeAllPandasState(null, "sleepy");
-                    this.game.paused = true;
+                    this.game.paused = true;*/
                 }
 
                 ////DID YOU WIN YET??
-                if (this.gunner.recruits.length >= settings.gameplay.gunner.winRecruits){
+                if (this.progressPercent == 100){
                     this.winTheGame();
                 }
             };
@@ -193,7 +202,7 @@ module State{
         render(){
 
             //Progress
-            var progressText = "Rescued: " + this.gunner.recruits.length + " / " + settings.gameplay.gunner.winRecruits
+            var progressText = "Love: " + this.progressPercent + "%"
             this.game.debug.text(progressText, 20, 0+20); //progress Text in top left
 			
             var debugBoundingBoxes = false;
@@ -211,8 +220,10 @@ module State{
                     this.gunner.anchor
                 }
                 
+                this.game.debug.text(this.playState, this.game.width - 40, 10) //top right playstate;
+
                 //this.game.debug.text("object in world_objects: " + this.world_objects.total, 10, this.game.height - 60);
-                this.game.debug.text("Spawner enabled: " + this.spawn_system.spawnEnabled, 10, this.game.height - 60);
+                this.game.debug.text("Spawner enabled: " + this.spawn_system.autoSpawn, 10, this.game.height - 60);
                 //this.game.debug.text("Gunner position" + this.gunner.x + ", "+ this.gunner.y, 10, this.game.height - 40);
                 this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
                 this.game.debug.text("Runner: " + this.runner.alive + " " + this.runner.state + " with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
@@ -227,6 +238,7 @@ module State{
             var str = "YOU\nBOTH\nWON!!!!";
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
             var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
+            text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
             text.anchor.set(0.5);
             AddToWorldObjects(text);
         }
@@ -236,6 +248,7 @@ module State{
             var str = "YOU\nBOTH\nLOST";
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
             var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
+            text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
             text.anchor.set(0.5);
             AddToWorldObjects(text);
         }
@@ -323,6 +336,37 @@ module State{
                 }, this);
             }
         }
+
+        startPlay(){
+            //start playing the game after tutorial
+            this.playState = "play";
+            this.spawn_system.autoSpawn = true;
+        }
+
+        updateProgress(){
+            ///Update progress
+            var prevProgressPercent = this.progressPercent;
+            var newProgressPercent = Math.floor(this.gunner.recruits.length / settings.gameplay.gunner.winRecruits * 100);
+            newProgressPercent = clamp(newProgressPercent, 0, 100); //clamp it 0-100
+            this.progressPercent = newProgressPercent;
+            
+            this.peakProgressPercent = clamp(newProgressPercent, this.peakProgressPercent, 100) //increase (never decrease the peakProgressPercent);
+
+            if (newProgressPercent > prevProgressPercent){ //only call when it increased
+                console.log("you progressed from " + prevProgressPercent + " to " + newProgressPercent + " AND YOUR PEAK is " + this.peakProgressPercent);
+                if (this.peakProgressPercent >= 70){
+                    this.changeWorldScale(this, 0.5);
+                } else if (this.peakProgressPercent >= 50) {
+                    this.changeWorldScale(this, 0.66);
+                } else if (this.peakProgressPercent >= 40){
+                    this.changeWorldScale(this, 1.0);
+                }
+            }
+                
+            
+
+            
+        }
     }
 }
 
@@ -393,3 +437,7 @@ function randomIntFromInterval(min,max)
 
 ////Global Gameplay variables (Time units should be ms as the functions will divide by 1000)
 var settings; //object loaded via json
+
+function clamp(num, min, max){
+    return Math.min(Math.max(num, 0), 100);
+}

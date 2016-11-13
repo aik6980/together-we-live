@@ -9,7 +9,7 @@ module Objects{
 
         state:  runnerStates = "alive";
 
-        linked_pandas : Phaser.LinkedList;
+        linked_pandas : Phaser.LinkedList; //when checking total 1 means just the runner is in the chain
 
         cursors: Phaser.CursorKeys;
         myGunner: Gunner;
@@ -166,7 +166,12 @@ module Objects{
         collidePanda(runner: Runner, panda: Panda){
             switch (panda.state){
                 case "hostile":
-                    runner.changeState("scared");
+                    if (runner.linked_pandas.total-1 == 0) {
+                        runner.changeState("scared");
+                    } else {
+                        console.log(runner.linked_pandas.last);
+                        runner.detachPanda(runner.linked_pandas.last);
+                    }
                     break;
                 case "stunned":
                     runner.attachPanda(panda);

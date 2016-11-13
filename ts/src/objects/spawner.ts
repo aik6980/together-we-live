@@ -23,7 +23,7 @@ module Objects{
         spawnRateMax: number = settings.gameplay.spawnsystem.spawnRateMax;
         spawnLimit: number = settings.gameplay.spawnsystem.spawnLimit;
         spawnQuantity: number = settings.gameplay.spawnsystem.spawnQuantity; //how many to spawn at once (e.g. rush waves)
-        spawnEnabled: boolean = false;//true;
+        autoSpawn: boolean = false;//true;
 
        
 
@@ -38,7 +38,7 @@ module Objects{
         }
 
         public spawnCountdownComplete(){
-            if (this.spawnEnabled){ this.spawnMany(this.spawnQuantity); }
+            if (this.autoSpawn){ this.spawnMany(this.spawnQuantity); }
             this.spawnCountdownStart();
         }
 

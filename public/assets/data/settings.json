@@ -5,7 +5,7 @@
 	  "gunner": {
 		  "baseTurnSpeed": 300
 		, "startingRecruits": 3
-		, "winRecruits": 4
+		, "winRecruits": 10
 		}
 	, "runner": {
 		  "baseSpeed": 150

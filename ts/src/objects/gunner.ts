@@ -157,6 +157,9 @@ module Objects{
             panda.target = new Phaser.Point();
 
             this.refreshRing();
+
+            //when Panda rescued recall the setPowerLevel
+            
         }
 
         kidnapPandaWith(kidnapper : Panda)
