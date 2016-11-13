@@ -103,7 +103,6 @@ module State{
 
             this.spawner = this.game.add.group();
             this.spawn_system = new Objects.Spawn_System(this);
-            console.log("this.spawn_system created ", this.spawn_system);
             
             /*//make 3 lives
             this.spawn_system.spawnInState("rescued");
@@ -130,8 +129,8 @@ module State{
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeWorldScale, this, null, 2.0);
-            this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeWorldScale, this, null, 1.0);
-            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeWorldScale, this, null, 0.66);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeWorldScale, this, null, 1.0);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeWorldScale, this, null, 0.66);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR).onUp.add(this.changeWorldScale, this, null, 0.5);
 
                 this.game.input.keyboard.addKey(Phaser.Keyboard.SIX).onUp.add(this.spawn_trigger, this, null);
@@ -286,7 +285,6 @@ module State{
                 if (this.progressPercent == 0){
                     this.loseTheGame();
                     this.changeAllPandasState(null, "sleepy");
-                    this.game.paused = true;
                 }
 
                 ////DID YOU WIN YET??
@@ -324,8 +322,13 @@ module State{
         render(){
 
             //Progress
-            var progressText = "Love: " + this.progressPercent + "%"
-            this.game.debug.text(progressText, 20, 0+20); //progress Text in top left
+            var progressText = "LOVE: " + this.progressPercent + "%"
+            //this.game.debug.text(progressText, 20, 0+20); //progress Text in top left
+            
+            var thefont;
+                thefont = "bold 30px Arial";
+
+            this.game.debug.text(progressText, 20, 35, "#ff66ff", thefont);
 			
             if (settings.devMode){
 
@@ -355,19 +358,38 @@ module State{
         }
 
         winTheGame(){
+            var thefont;
+            if (google_font_active){
+                thefont = "20px Press Start 2P"
+            } else {
+                thefont = "bold 20px Arial"
+            }
             this.playState="won";
-            var str = "YOU\nBOTH\nWON!!!!";
-            var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
-            var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
+            var str = "YOU\nBOTH WON!!";
+            
+            this.changeWorldScale(null, 2.0); //zoom in to see the party!
+            var style = { font: thefont, fill: "#ddd", align: "center" };
+            var text = this.add.text(this.gunner.position.x, this.gunner.position.y - 80, str, style);
             text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
             text.anchor.set(0.5);
             AddToWorldObjects(text);
+
+            //spawn more pandas (who will now be friendly)
+            this.spawn_system.spawnMany(10);
         }
 
         loseTheGame(){
             this.playState="lost";
+
+            var thefont;
+            if (google_font_active){
+                thefont = "60px Press Start 2P"
+            } else {
+                thefont = "bold 60px Arial"
+            }
+
             var str = "YOU\nBOTH\nLOST";
-            var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
+            var style = { font: thefont, fill: "#ff0044", align: "center" };
             var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
             text.anchor.set(0.5);

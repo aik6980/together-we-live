@@ -183,7 +183,7 @@ var Objects;
             this.right_button = this.game.input.keyboard.addKey(Phaser.KeyCode.D);
             // init physics            
             this.game.physics.arcade.enable(this);
-            // init weapon based on powerLevel
+            // init weapon
             this.weapon = this.game.add.weapon(30, 'bullet');
             this.weapon.bulletLifespan = 2000; //2 seconds
             this.weapon.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
@@ -272,7 +272,6 @@ var Objects;
             anchor.y = this.y; // - this.height / 2;
             panda.target = new Phaser.Point();
             this.refreshRing();
-            //when Panda rescued recall the setPowerLevel
         };
         Gunner.prototype.kidnapPandaWith = function (kidnapper) {
             var panda = this.getClosestRecruit(kidnapper.position);
@@ -351,21 +350,14 @@ var Objects;
             this.anchor.set(0.5, 0.5);
             this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
             setCollisionWithWalls(this, false); //panda ghosts can float through walls.
-            /*
             //Animations
-            this.animations.add('idle', [0]);
-            this.animations.add('stunned', [1,2]);
-            this.animations.add('down', [0,1,2]);
-            this.animations.add('left', [3,4,5]);
-            this.animations.add('right', [6,7,8]);
-            this.animations.add('up', [9,10,11]);
-            */
             this.animations.add('idle', [0]);
             this.animations.add('stunned', [0, 1]);
             this.animations.add('down', [2, 3, 4]);
             this.animations.add('left', [5, 6, 7]);
             this.animations.add('right', [8, 9, 10]);
             this.animations.add('up', [0, 1]);
+            this.animations.add('dancing', [2, 3, 4, 5, 6, 8, 9, 7, 6, 9, 10]);
             //add the dancing animation;
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
             //this.body.setSize(24, 24, 3, 4);
@@ -399,7 +391,12 @@ var Objects;
                 || (this.body.velocity.x == 0 && this.body.velocity.y == 0)) {
                 if (true || this.animations.currentAnim.name != 'idle') {
                     if (this.idle_time <= 0) {
-                        this.play('idle', 20, true);
+                        if (this.state == "rescued") {
+                            this.play('dancing', 10, true);
+                        }
+                        else {
+                            this.play('idle', 10, true);
+                        }
                     }
                     else {
                         this.idle_time -= this.game.time.elapsedMS;
@@ -534,7 +531,7 @@ var Objects;
                 case "rescued":
                     this.loadTexture("panda_happy", 0, false);
                     this.idle_time = 0.0;
-                    this.colorNum = Phaser.Color.getColor(0, 200, 0); //green
+                    this.colorNum = Phaser.Color.getColor(0, 150, 0); //green
                     break;
                 case "released":
                     this.idle_time = 0.0;
@@ -634,11 +631,13 @@ var Objects;
             }
         };
         Runner.prototype.movement = function () {
-            var chainSlowDown = (1 - (this.linked_pandas.total - 1) / settings.gameplay.runner.chainLengthSlowDown);
-            if (chainSlowDown > settings.gameplay.runner.chainMaxSlowDown)
-                chainSlowDown = settings.gameplay.runner.chainMaxSlowDown;
-            chainSlowDown = 1; //overwrite for now
-            var gospeed = this.speed * chainSlowDown;
+            /*            var chainSlowDown = (1 - (this.linked_pandas.total-1) / settings.gameplay.runner.chainLengthSlowDown)
+                        if (chainSlowDown > settings.gameplay.runner.chainMaxSlowDown) //don't get too slow
+                            chainSlowDown = settings.gameplay.runner.chainMaxSlowDown;
+            
+                        chainSlowDown = 1; //overwrite for now
+                        var gospeed = this.speed * chainSlowDown;*/
+            var gospeed = this.speed;
             var leftOrRight = 0; //-1 = left, 0 =none, +1 = right
             var upOrDown = 0; //-1 = Up, 0= none, +1 = down
             if (this.force_target == null) {
@@ -895,7 +894,6 @@ var State;
             global_colliders = this.colliders;
             this.spawner = this.game.add.group();
             this.spawn_system = new Objects.Spawn_System(this);
-            console.log("this.spawn_system created ", this.spawn_system);
             /*//make 3 lives
             this.spawn_system.spawnInState("rescued");
             this.spawn_system.spawnInState("rescued");
@@ -1046,7 +1044,6 @@ var State;
                 if (this.progressPercent == 0) {
                     this.loseTheGame();
                     this.changeAllPandasState(null, "sleepy");
-                    this.game.paused = true;
                 }
                 ////DID YOU WIN YET??
                 if (this.progressPercent == 100) {
@@ -1079,8 +1076,11 @@ var State;
         Game_state.prototype.render = function () {
             var _this = this;
             //Progress
-            var progressText = "Love: " + this.progressPercent + "%";
-            this.game.debug.text(progressText, 20, 0 + 20); //progress Text in top left
+            var progressText = "LOVE: " + this.progressPercent + "%";
+            //this.game.debug.text(progressText, 20, 0+20); //progress Text in top left
+            var thefont;
+            thefont = "bold 30px Arial";
+            this.game.debug.text(progressText, 20, 35, "#ff66ff", thefont);
             if (settings.devMode) {
                 if (settings.debugBoundingBoxes) {
                     //bounding boxes
@@ -1101,18 +1101,35 @@ var State;
             //this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
         };
         Game_state.prototype.winTheGame = function () {
+            var thefont;
+            if (google_font_active) {
+                thefont = "20px Press Start 2P";
+            }
+            else {
+                thefont = "bold 20px Arial";
+            }
             this.playState = "won";
-            var str = "YOU\nBOTH\nWON!!!!";
-            var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
-            var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
+            var str = "YOU\nBOTH WON!!";
+            this.changeWorldScale(null, 2.0); //zoom in to see the party!
+            var style = { font: thefont, fill: "#ddd", align: "center" };
+            var text = this.add.text(this.gunner.position.x, this.gunner.position.y - 80, str, style);
             text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
             text.anchor.set(0.5);
             AddToWorldObjects(text);
+            //spawn more pandas (who will now be friendly)
+            this.spawn_system.spawnMany(10);
         };
         Game_state.prototype.loseTheGame = function () {
             this.playState = "lost";
+            var thefont;
+            if (google_font_active) {
+                thefont = "60px Press Start 2P";
+            }
+            else {
+                thefont = "bold 60px Arial";
+            }
             var str = "YOU\nBOTH\nLOST";
-            var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
+            var style = { font: thefont, fill: "#ff0044", align: "center" };
             var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
             text.anchor.set(0.5);
@@ -1186,7 +1203,24 @@ var State;
         Game_state.prototype.startPlay = function () {
             //start playing the game after tutorial
             this.playState = "play";
-            this.spawn_system.autoSpawn = true;
+            var ready_text;
+            // start spawning
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 0.5, 1, function () {
+                this.spawn_system.autoSpawn = true;
+            }, this);
+            // draw text
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 1, 1, function () {
+                var str = "Be ready\nThey're coming...";
+                var style = { font: "30px Arial", fill: "#ff0044", align: "center" };
+                ready_text = this.add.text(this.gunner.position.x, this.gunner.position.y - 80, str, style);
+                ready_text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+                ready_text.anchor.set(0.5);
+                AddToWorldObjects(ready_text);
+            }, this);
+            // remove text
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function () {
+                ready_text.kill();
+            }, this);
         };
         Game_state.prototype.updateProgress = function () {
             ///Update progress
