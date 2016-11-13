@@ -94,8 +94,8 @@ module State{
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeWorldScale, this, null, 2.0);
-                this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeWorldScale, this, null, 1.5);
-                this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeWorldScale, this, null, 1.0);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeWorldScale, this, null, 1.0);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeWorldScale, this, null, 0.66);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR).onUp.add(this.changeWorldScale, this, null, 0.5);
 
                 this.game.input.keyboard.addKey(Phaser.Keyboard.SIX).onUp.add(this.spawn_trigger, this, null);
@@ -150,15 +150,13 @@ module State{
             //level collisions
             this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this);
             //this.game.physics.arcade.collide(this.pandas, this.level.collision_layer); 
-            if (this.pandas.length > 0){
-                this.game.physics.arcade.collide(this.pandas, this.level.collision_layer, null, function(panda, layer){  
-                        if (panda.state == 'rescued'){
-                            return false; //don't colide
-                        } else { 
-                            return true; 
-                        }   
-                    }, this);
-            }
+            this.game.physics.arcade.collide(this.pandas, this.level.collision_layer, null, function(panda, layer){  
+                    if (panda.state == 'rescued'){
+                        return false; //don't colide
+                    } else { 
+                        return true; 
+                    }   
+                }, this);
 
             //bullet collisions
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.shotPanda, null, this);
