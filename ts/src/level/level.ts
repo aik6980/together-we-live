@@ -72,7 +72,11 @@ module Level{
 
                 game_state.world_objects.forEach(function(sprite : Phaser.Sprite){
                     if(sprite.body != null){
-                        //sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
+                        // anchoring issue
+                        // http://www.html5gamedevs.com/topic/22695-247-248-body-anchoring-any-migration-tips/
+                        var a = sprite.width * game_state.world_objects.scale.x;
+                        var b = sprite.height * game_state.world_objects.scale.y;
+                        sprite.body.setSize(a,b,0.5*(sprite.width-a), 0.5*(sprite.height-b));
                     }
                 }, this);
                 
@@ -82,7 +86,9 @@ module Level{
                     {
                         group.forEach(function(sprite: Phaser.Sprite){
                             if(sprite.body != null){
-                                //sprite.body.setSize(sprite.width * game_state.world_objects.scale.x,  sprite.height * game_state.world_objects.scale.y);
+                                var a = sprite.width * game_state.world_objects.scale.x;
+                                var b = sprite.height * game_state.world_objects.scale.y;
+                                sprite.body.setSize(a,b,0.5*(sprite.width-a), 0.5*(sprite.height-b));
                             }
                         }, this);
                     }
