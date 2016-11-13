@@ -18,8 +18,25 @@ var SimpleGame;
     }(Phaser.Game));
     SimpleGame.Game = Game;
 })(SimpleGame || (SimpleGame = {}));
+// the game
+var google_font_active = false;
+var game;
+// The Google WebFont Loader will look for this object, so create it before loading the script.
+var WebFontConfig = {
+    //  'active' means all requested fonts have finished loading
+    //  We set a 1 second delay before calling 'createText'.
+    //  For some reason if we don't the browser cannot render the text the first time it's created.
+    active: function () {
+        //console.log(game); 
+        game.time.events.add(Phaser.Timer.SECOND, function () { google_font_active = true; }, this);
+    },
+    //  The Google Fonts we want to load (specify as many as you like in the array)
+    google: {
+        families: ['Press Start 2P']
+    }
+};
 window.onload = function () {
-    var game = new SimpleGame.Game();
+    game = new SimpleGame.Game();
 };
 var Level;
 (function (Level_1) {
@@ -46,9 +63,6 @@ var Level;
                     game_state.spawnPandaInState(0, 0, "rescued");
                     game_state.spawnPandaInState(200, 50, "rescued");
                     game_state.spawnPandaInState(50, 200, "rescued");
-                    console.log("lives Spawned *3 through game_state but not added to pandas group?");
-                    //game_state.spawn_system.spawnInState("rescued"); //errors on missing property.
-                    //console.log("spawn one through system");
                     break;
                 case 'runner':
                     // create runner player
@@ -329,20 +343,28 @@ var Objects;
     var Panda = (function (_super) {
         __extends(Panda, _super);
         function Panda(game, x, y, startState) {
-            _super.call(this, game, x, y, 'ghosts');
+            _super.call(this, game, x, y, 'panda_happy');
             this.stuntime = 0; //stun time remaining
             this.stunlockcount = 0; //count of sequential stuns without being unstunned. Resets to 0 when unstunned.
             this.idle_time = 0;
             this.anchor.set(0.5, 0.5);
             this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
             setCollisionWithWalls(this, false); //panda ghosts can float through walls.
+            /*
             //Animations
             this.animations.add('idle', [0]);
-            this.animations.add('stunned', [1, 2]);
-            this.animations.add('down', [0, 1, 2]);
-            this.animations.add('left', [3, 4, 5]);
-            this.animations.add('right', [6, 7, 8]);
-            this.animations.add('up', [9, 10, 11]);
+            this.animations.add('stunned', [1,2]);
+            this.animations.add('down', [0,1,2]);
+            this.animations.add('left', [3,4,5]);
+            this.animations.add('right', [6,7,8]);
+            this.animations.add('up', [9,10,11]);
+            */
+            this.animations.add('idle', [0]);
+            this.animations.add('stunned', [0, 1]);
+            this.animations.add('down', [2, 3, 4]);
+            this.animations.add('left', [5, 6, 7]);
+            this.animations.add('right', [8, 9, 10]);
+            this.animations.add('up', [0, 1]);
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
             //this.body.setSize(24, 24, 3, 4);
             this.changeState(startState);
@@ -796,6 +818,8 @@ var State;
             _super.apply(this, arguments);
             this.unit = 16;
             this.starty = 50;
+            //winState
+            this.playState = "load";
         }
         Game_state.prototype.preload = function () {
             //settings data file
@@ -812,9 +836,11 @@ var State;
             // grayscale shader
             this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
             this.game.load.tilemap('world', 'assets/data/world.json', null, Phaser.Tilemap.TILED_JSON);
-            this.game.load.image('world_tileset', 'assets/img/tiny32.png');
+            //this.game.load.image('world_tileset', 'assets/img/tiny32.png');
+            this.game.load.image('world_tileset', 'assets/img/tiny32_coloured.png');
             //spritesheet
-            this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32);
+            //this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32)
+            this.game.load.spritesheet('panda_happy', 'assets/img/panda_happy32.png', 32, 32);
             this.game.load.spritesheet('runner', 'assets/img/runner_spritesheet.png', 22, 30);
             //this.game.load.spritesheet('ghosts', 'assets/img/runner_spritesheet.png', 22, 30);
             //Sounds
@@ -823,6 +849,7 @@ var State;
         Game_state.prototype.create = function () {
             //load the settingsJSON and which is now referenced throughout instead of using global_variables.
             settings = this.game.cache.getJSON('settings');
+            this.playState = "play";
             var obj = null; //reused lots.
             this.gray_filter = this.game.add.filter('Gray');
             //create level
@@ -850,7 +877,6 @@ var State;
             this.level.add_gameobjects(this);
             //dev controls
             if (settings.devMode) {
-                console.log("dev mode enabled");
                 ///num keys to change all the pandas states?
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
@@ -859,7 +885,7 @@ var State;
                 this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeWorldScale, this, null, 0.66);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR).onUp.add(this.changeWorldScale, this, null, 0.5);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.SIX).onUp.add(this.spawn_trigger, this, null);
-                this.game.input.keyboard.addKey(Phaser.Keyboard.SEVEN).onUp.add(this.changeAllPandasState, this, null, "rescued");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.SEVEN).onUp.add(this.rescueAllPandas, this, null);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnePandaFromGunner, this);
@@ -867,9 +893,6 @@ var State;
                 this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_DOWN).onUp.add(this.loseTheGame, this);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.HOME).onUp.add(function () { this.spawn_system.spawnEnabled = true; }, this);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.END).onUp.add(function () { this.spawn_system.spawnEnabled = false; }, this);
-            }
-            else {
-                console.log("dev mode disabled");
             }
         };
         Game_state.prototype.spawn_trigger = function (args) {
@@ -882,13 +905,30 @@ var State;
             this.level.update_game_state(this);
             ///Collisions
             //N.b. the player when "warping" is not checked for collision;
+<<<<<<< HEAD
+            if (this.playState == "win" || this.playState == "lost") {
+                this.spawn_system.spawnEnabled = false; //disable spawns
+            }
+            if (this.playState == "play") {
+                ///DID YOU LOSE YET?
+                if (this.gunner.recruits.length == 0) {
+                    this.loseTheGame();
+                    this.changeAllPandasState(null, "sleepy");
+                    this.game.paused = true;
+                }
+                ////DID YOU WIN YET??
+                if (this.gunner.recruits.length >= settings.gameplay.gunner.winRecruits) {
+                    this.winTheGame();
+                }
+=======
             ///DID YOU LOSE YET?
             if (this.gunner.recruits.length == 0) {
                 this.loseTheGame();
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
             }
-            ////DID YOU WIN YET??
-            if (this.gunner.recruits.length >= settings.gameplay.gunner.winRecruits) {
-                this.winTheGame();
+            ;
+            if (this.playState == "won") {
+                this.rescueAllPandas();
             }
             //character collisions
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, function () { return this.runner.state != 'warping'; }, this);
@@ -934,23 +974,16 @@ var State;
             //this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
         };
         Game_state.prototype.winTheGame = function () {
-            //(currently text not appearing for long though - need to change state, freeze the spawns etc)
-            console.log("winTheGame()");
-            this.spawn_system.spawnEnabled = false; //disable spawns
-            this.changeAllPandasState(null, "rescued"); //rescue all remaining pandas
-            var str = "YOU WON!!!!";
-            this.game.debug.text(str, 250, 250);
-            //this.game.add.text(this.game.width/2, this.game.height/2, winText);
+            this.playState = "won";
+            var str = "YOU\nBOTH\nWON!!!!";
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
             var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
             AddToWorldObjects(text);
         };
         Game_state.prototype.loseTheGame = function () {
-            console.log("loseTheGame()");
+            this.playState = "lost";
             var str = "YOU\nBOTH\nLOST";
-            this.game.debug.text(str, 250, 250);
-            //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
             var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
@@ -1011,6 +1044,18 @@ var State;
             var panda = this.gunner.recruits.getAt(0);
             this.gunner.removePanda(panda);
             panda.kill();
+<<<<<<< HEAD
+        };
+        Game_state.prototype.rescueAllPandas = function () {
+            //rescue all remaining pandas
+            if (this.pandas.length > 0) {
+                this.pandas.forEach(function (panda) {
+                    console.log("rescuing panda " + panda);
+                    this.gunner.rescuePanda(panda);
+                }, this);
+            }
+=======
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
         };
         return Game_state;
     }(Phaser.State));
@@ -1072,12 +1117,24 @@ var State;
         function Menu_state() {
             _super.apply(this, arguments);
             this.timer = 0;
+<<<<<<< HEAD
+            this.title_init = false;
         }
         Menu_state.prototype.preload = function () {
+            //  Load the Google WebFont Loader script
+            this.game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
+=======
+        }
+        Menu_state.prototype.preload = function () {
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
             // load all character pictures
             for (var i = 0; i < 6; ++i) {
                 this.game.load.image('logo' + i, 'assets/img/logo' + i + '.png');
             }
+<<<<<<< HEAD
+            this.title_init = false;
+=======
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
         };
         Menu_state.prototype.create = function () {
             this.game.stage.backgroundColor = "#4488AA";
@@ -1102,11 +1159,30 @@ var State;
             this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onUp.add(this.changeState, this, null);
         };
         Menu_state.prototype.update = function () {
+<<<<<<< HEAD
+            // text blink
+=======
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
             this.timer += this.game.time.elapsed;
             if (this.timer > 400) {
                 this.timer = 0;
                 this.text.visible = !this.text.visible;
             }
+<<<<<<< HEAD
+            // add title
+            if (google_font_active && !this.title_init) {
+                this.title_init = true;
+                //  You can either set the tab size in the style object:
+                var style = { font: "42px Press Start 2P", fill: "#ddd" };
+                var text = game.add.text(game.world.centerX, game.world.centerY * 0.2, "Love Gunner\n &\n Hat Runner", style);
+                text.anchor.setTo(0.5);
+                text.setShadow(-3, 3, 'rgba(0,0,0,0.5)', 0);
+                text.align = 'center';
+                //  We'll set the bounds to be from x0, y100 and be 800px wide by 100px high
+                text.setTextBounds(0, this.game.height * 0.2, this.game.width, 200);
+            }
+=======
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
         };
         Menu_state.prototype.render = function () {
         };

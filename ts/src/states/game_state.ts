@@ -25,6 +25,9 @@ module State{
 
         gray_filter : Phaser.Filter;
 
+        //winState
+        playState: string = "load";
+
         // music
         music : Phaser.Sound;
 
@@ -48,10 +51,12 @@ module State{
             this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
 
             this.game.load.tilemap('world', 'assets/data/world.json', null, Phaser.Tilemap.TILED_JSON);
-            this.game.load.image('world_tileset', 'assets/img/tiny32.png');
+            //this.game.load.image('world_tileset', 'assets/img/tiny32.png');
+            this.game.load.image('world_tileset', 'assets/img/tiny32_coloured.png');
 
             //spritesheet
-            this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32)
+            //this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32)
+            this.game.load.spritesheet('panda_happy', 'assets/img/panda_happy32.png', 32, 32)
             this.game.load.spritesheet('runner', 'assets/img/runner_spritesheet.png', 22, 30);
             //this.game.load.spritesheet('ghosts', 'assets/img/runner_spritesheet.png', 22, 30);
 
@@ -72,6 +77,8 @@ module State{
 
             //load the settingsJSON and which is now referenced throughout instead of using global_variables.
             settings = this.game.cache.getJSON('settings');
+
+            this.playState = "play";
             
             var obj = null; //reused lots.
 
@@ -120,7 +127,7 @@ module State{
 
                 this.game.input.keyboard.addKey(Phaser.Keyboard.SIX).onUp.add(this.spawn_trigger, this, null);
 
-                this.game.input.keyboard.addKey(Phaser.Keyboard.SEVEN).onUp.add(this.changeAllPandasState, this, null, "rescued");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.SEVEN).onUp.add(this.rescueAllPandas, this, null);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
                 this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
 
@@ -148,15 +155,26 @@ module State{
             ///Collisions
             //N.b. the player when "warping" is not checked for collision;
 
-            ///DID YOU LOSE YET?
-            if (this.gunner.recruits.length == 0){
-                this.loseTheGame();
-                this.game.paused = true;
+            if (this.playState == "win" || this.playState =="lost"){
+                this.spawn_system.spawnEnabled = false; //disable spawns
             }
 
-            ////DID YOU WIN YET??
-            if (this.gunner.recruits.length >= settings.gameplay.gunner.winRecruits){
-                this.winTheGame();
+            if (this.playState=="play"){
+                ///DID YOU LOSE YET?
+                if (this.gunner.recruits.length == 0){
+                    this.loseTheGame();
+                    this.changeAllPandasState(null, "sleepy");
+                    this.game.paused = true;
+                }
+
+                ////DID YOU WIN YET??
+                if (this.gunner.recruits.length >= settings.gameplay.gunner.winRecruits){
+                    this.winTheGame();
+                }
+            };
+
+            if (this.playState=="won"){
+                this.rescueAllPandas();
             }
             
 
@@ -215,14 +233,8 @@ module State{
         }
 
         winTheGame(){
-            //(currently text not appearing for long though - need to change state, freeze the spawns etc)
-            console.log("winTheGame()");
-            this.spawn_system.spawnEnabled = false; //disable spawns
-            this.changeAllPandasState(null, "rescued"); //rescue all remaining pandas
-
+            this.playState="won";
             var str = "YOU\nBOTH\nWON!!!!";
-            this.game.debug.text(str, 250, 250);
-            //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
             var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
@@ -230,10 +242,8 @@ module State{
         }
 
         loseTheGame(){
-            console.log("loseTheGame()");
+            this.playState="lost";
             var str = "YOU\nBOTH\nLOST";
-            this.game.debug.text(str, 250, 250);
-            //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
             var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
@@ -312,6 +322,16 @@ module State{
             var panda = this.gunner.recruits.getAt(0) as Objects.Panda;
             this.gunner.removePanda(panda);
             panda.kill();
+        }
+
+        rescueAllPandas(){
+            //rescue all remaining pandas
+            if (this.pandas.length>0){
+                this.pandas.forEach(function(panda: Phaser.Sprite){
+                    console.log("rescuing panda " + panda);
+                    this.gunner.rescuePanda(panda);
+                }, this);
+            }
         }
     }
 }

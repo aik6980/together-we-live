@@ -35,10 +35,6 @@ module Level{
                     game_state.spawnPandaInState(0,0, "rescued");
                     game_state.spawnPandaInState(200,50, "rescued");
                     game_state.spawnPandaInState(50,200, "rescued");
-                    console.log("lives Spawned *3 through game_state but not added to pandas group?")
-
-                    //game_state.spawn_system.spawnInState("rescued"); //errors on missing property.
-                    //console.log("spawn one through system");
                 break;
                 case 'runner':
                     // create runner player

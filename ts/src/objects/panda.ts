@@ -17,12 +17,13 @@ module Objects{
         idle_time : number = 0;
 
         constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){        
-            super(game, x, y, 'ghosts');
+            super(game, x, y, 'panda_happy');
 
             this.anchor.set(0.5,0.5);
             this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
             setCollisionWithWalls(this, false); //panda ghosts can float through walls.
             
+            /*
             //Animations
             this.animations.add('idle', [0]);
             this.animations.add('stunned', [1,2]);
@@ -30,6 +31,13 @@ module Objects{
             this.animations.add('left', [3,4,5]);
             this.animations.add('right', [6,7,8]);
             this.animations.add('up', [9,10,11]);
+            */
+            this.animations.add('idle', [0]);
+            this.animations.add('stunned', [0,1]);
+            this.animations.add('down', [2,3,4]);
+            this.animations.add('left', [5,6,7]);
+            this.animations.add('right', [8,9,10]);
+            this.animations.add('up', [0,1]);
 
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
             //this.body.setSize(24, 24, 3, 4);
