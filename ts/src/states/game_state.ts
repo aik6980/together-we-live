@@ -149,7 +149,7 @@ module State{
         }
 
         start_demo(){
-            var skip_demo = false;
+            var skip_demo = settings.skipDemo;
             if (skip_demo)
             {
                 this.spawnPandaInState(0,0, "rescued");
@@ -475,7 +475,7 @@ module State{
             this.peakProgressPercent = clamp(newProgressPercent, this.peakProgressPercent, 100) //increase (never decrease the peakProgressPercent);
 
             if (newProgressPercent > prevProgressPercent){ //only call when it increased
-                console.log("you progressed from " + prevProgressPercent + " to " + newProgressPercent + " AND YOUR PEAK is " + this.peakProgressPercent);
+                //console.log("you progressed from " + prevProgressPercent + " to " + newProgressPercent + " AND YOUR PEAK is " + this.peakProgressPercent);
                 if (this.peakProgressPercent >= 70){
                     this.changeWorldScale(this, 0.5);
                 } else if (this.peakProgressPercent >= 50) {

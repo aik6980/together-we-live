@@ -169,7 +169,7 @@ var Objects;
             _super.call(this, game, x, y, 'gunner_turret');
             this.rotateSpeed = settings.gameplay.gunner.baseTurnSpeed;
             //bulletSpeed: number = ;
-            this.fire_angle_offset = 90;
+            this.fire_angle_offset = -90;
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
             this.body.immovable = true; //stop shoving the gunner!
             this.recruits = this.game.add.group();
@@ -927,7 +927,7 @@ var State;
             }
         };
         Game_state.prototype.start_demo = function () {
-            var skip_demo = false;
+            var skip_demo = settings.skipDemo;
             if (skip_demo) {
                 this.spawnPandaInState(0, 0, "rescued");
                 this.spawnPandaInState(200, 50, "rescued");
@@ -947,62 +947,66 @@ var State;
             var panda3 = this.spawnPandaInState(this.gunner.x + 100, this.gunner.y - 400, "hostile");
             this.pandas.add(panda3);
             // shot them            
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function () {
                 // aim panda1
                 this.gunner.force_target = panda1.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 4, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function () {
                 // stun it!
                 this.gunner.fire();
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 4.6, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 3.6, 1, function () {
                 // the runner try to catch it
                 this.runner.force_target = new Phaser.Point(panda1.x, this.runner.y);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 4, 1, function () {
                 // runner keep going and catch it
                 this.runner.force_target = panda1.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 6, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 4.2, 1, function () {
                 // the runner starts to  bring it back
                 this.runner.force_target = new Phaser.Point(this.gunner.x, this.gunner.y + 50);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.5, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 1, function () {
                 // bring it back safe
                 this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 8.8, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 5.8, 1, function () {
                 // panda2 is coming, aim it!
                 this.gunner.force_target = panda2.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 9.5, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 6.2, 1, function () {
                 // stun it!
                 this.gunner.fire();
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 9.8, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 6.8, 1, function () {
                 // runner try to catch it
                 this.runner.force_target = panda2.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 10.1, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.2, 1, function () {
                 // but wait.. panda3 is coming
                 this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 11, 1, function () {
-                // gunner stun panda3 anyway
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.5, 1, function () {
+                // gunner aim panda3                
+                this.gunner.force_target = panda3.position;
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 8, 1, function () {
+                // stun it!
                 this.gunner.fire();
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 12, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 9, 1, function () {
                 // then runner can safely catch both of them
-                this.runner.force_target = panda3.position;
+                this.runner.force_target = panda2.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 13, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 10, 1, function () {
                 // bring them back home
-                this.runner.force_target = new Phaser.Point(this.gunner.position.x + 50, this.gunner.position.y);
+                this.runner.force_target = new Phaser.Point(this.gunner.position.x + 50, this.gunner.position.y + 10);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 14, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 11, 1, function () {
                 this.stop_demo();
             }, this);
             //ended
@@ -1023,17 +1027,11 @@ var State;
         Game_state.prototype.update = function () {
             this.level.update_game_state(this);
             ///Collisions
-<<<<<<< HEAD
             //N.b. the player when "warping" is not checked for collision;        
             if (this.playState == "won" || this.playState == "lost") {
                 this.spawn_system.autoSpawn = false; //disable spawns
             }
             if (this.playState == "tutorial") {
-=======
-            //N.b. the player when "warping" is not checked for collision;
-            if (this.playState == "win" || this.playState == "lost") {
-                this.spawn_system.spawnEnabled = false; //disable spawns
->>>>>>> 0af5585166bd18af72c53352e0107bd25a890c31
             }
             if (this.playState == "play") {
                 this.updateProgress();
@@ -1175,7 +1173,6 @@ var State;
                     this.gunner.rescuePanda(panda);
                 }, this);
             }
-<<<<<<< HEAD
         };
         Game_state.prototype.startPlay = function () {
             //start playing the game after tutorial
@@ -1190,7 +1187,7 @@ var State;
             this.progressPercent = newProgressPercent;
             this.peakProgressPercent = clamp(newProgressPercent, this.peakProgressPercent, 100); //increase (never decrease the peakProgressPercent);
             if (newProgressPercent > prevProgressPercent) {
-                console.log("you progressed from " + prevProgressPercent + " to " + newProgressPercent + " AND YOUR PEAK is " + this.peakProgressPercent);
+                //console.log("you progressed from " + prevProgressPercent + " to " + newProgressPercent + " AND YOUR PEAK is " + this.peakProgressPercent);
                 if (this.peakProgressPercent >= 70) {
                     this.changeWorldScale(this, 0.5);
                 }
@@ -1201,8 +1198,6 @@ var State;
                     this.changeWorldScale(this, 1.0);
                 }
             }
-=======
->>>>>>> 0af5585166bd18af72c53352e0107bd25a890c31
         };
         return Game_state;
     }(Phaser.State));
@@ -1277,8 +1272,6 @@ var State;
                 this.game.load.image('logo' + i, 'assets/img/logo' + i + '.png');
             }
             this.title_init = false;
-<<<<<<< HEAD
-=======
             // preload all sfx and music
             //  Firefox doesn't support mp3 files, so use ogg
             this.game.load.audio('Generic_ShortSpit_SFX', ['assets/snd/Generic_ShortSpit_SFX.ogg']);
@@ -1291,7 +1284,6 @@ var State;
             this.game.load.audio('Turret_HitsHatter1', ['assets/snd/Turret_HitsHatter1.ogg']);
             this.game.load.audio('Turret_HitsHatter2', ['assets/snd/Turret_HitsHatter2.ogg']);
             this.game.load.audio('Turret_HitsNothing', ['assets/snd/Turret_HitsNothing.ogg']);
->>>>>>> 0af5585166bd18af72c53352e0107bd25a890c31
         };
         Menu_state.prototype.create = function () {
             this.game.stage.backgroundColor = "#4488AA";
