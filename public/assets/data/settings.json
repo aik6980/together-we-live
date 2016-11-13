@@ -1,7 +1,7 @@
 { 
   "devMode": true
 , "debugBoundingBoxes": false
-, "skipDemo": false
+, "skipDemo": true
 , "gameplay": {
 	  "gunner": {
 		  "baseTurnSpeed": 300

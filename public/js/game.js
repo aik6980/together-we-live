@@ -347,7 +347,6 @@ var Objects;
         function Panda(game, x, y, startState) {
             _super.call(this, game, x, y, 'panda_happy');
             this.stuntime = 0; //stun time remaining
-            this.stunlockcount = 0; //count of sequential stuns without being unstunned. Resets to 0 when unstunned.
             this.idle_time = 0;
             this.anchor.set(0.5, 0.5);
             this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
@@ -494,27 +493,20 @@ var Objects;
         };
         Panda.prototype.stun = function () {
             this.detachPanda(this);
-            switch (this.state) {
-                case "hostile":
-                    this.stuntime = settings.gameplay.panda.stunTime;
-                    this.stunlockcount = 1;
-                    //this.game.time.events.add(this.stuntime, WRITEAfunc(), this)
-                    //game
-                    break;
-                case "stunned":
-                    this.stuntime += settings.gameplay.panda.stunTime; //increase stun time and lockout
-                    if (this.stunlockcount > settings.gameplay.panda.stunLockCount) {
-                        console.log("why would you stun lock a panda??");
-                        console.log("DESPAWN THE PANDA and maybe respawn one?");
-                    }
-                    else {
-                        this.stunlockcount += 1;
-                    }
-                    break;
-                default:
-                    break;
-            }
+            /*switch (this.state){ //check curernt state
+                case "hostile":*/
+            this.stuntime = settings.gameplay.panda.stunTime;
+            this.game.time.events.add(this.stuntime, this.stunTimeEnd, this);
+            /*break;
+        default:
+            break;
+    }*/
             this.changeState("stunned");
+        };
+        Panda.prototype.stunTimeEnd = function () {
+            if (this.state == "stunned") {
+                this.changeState("hostile");
+            }
         };
         Panda.prototype.rescue = function () {
             this.detachPanda(this);
@@ -732,12 +724,12 @@ var Objects;
         Runner.prototype.collidePanda = function (runner, panda) {
             switch (panda.state) {
                 case "hostile":
-                    if (runner.linked_pandas.total - 1 == 0) {
-                        runner.changeState("scared");
+                    if (runner.linked_pandas.total > 1) {
+                        var lastPanda = runner.linked_pandas.last;
+                        lastPanda.stun();
                     }
                     else {
-                        console.log(runner.linked_pandas.last);
-                        runner.detachPanda(runner.linked_pandas.last);
+                        runner.changeState("scared");
                     }
                     break;
                 case "stunned":
@@ -932,9 +924,11 @@ var State;
                 this.spawnPandaInState(0, 0, "rescued");
                 this.spawnPandaInState(200, 50, "rescued");
                 this.spawnPandaInState(50, 200, "rescued");
+                this.startPlay();
                 return;
             }
             this.playState = "demo";
+            this.changeWorldScale(null, 2.0);
             //init
             this.gunner.force_not_firing = true;
             this.gunner.force_target = new Phaser.Point(this.gunner.position.x, this.gunner.position.y - 100);
@@ -1016,7 +1010,7 @@ var State;
             this.gunner.force_not_firing = false;
             this.gunner.force_target = null;
             this.runner.force_target = null;
-            this.playState = "play";
+            this.startPlay();
         };
         Game_state.prototype.spawn_trigger = function (args) {
             this.spawn_system.spawn();
@@ -1031,12 +1025,15 @@ var State;
             if (this.playState == "won" || this.playState == "lost") {
                 this.spawn_system.autoSpawn = false; //disable spawns
             }
-            if (this.playState == "tutorial") {
+            if (this.playState == "demo") {
             }
             if (this.playState == "play") {
                 this.updateProgress();
                 ///DID YOU LOSE YET?
                 if (this.progressPercent == 0) {
+                    this.loseTheGame();
+                    this.changeAllPandasState(null, "sleepy");
+                    this.game.paused = true;
                 }
                 ////DID YOU WIN YET??
                 if (this.progressPercent == 100) {
@@ -1087,7 +1084,7 @@ var State;
                 this.game.debug.text("Spawner enabled: " + this.spawn_system.autoSpawn, 10, this.game.height - 60);
                 //this.game.debug.text("Gunner position" + this.gunner.x + ", "+ this.gunner.y, 10, this.game.height - 40);
                 this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
-                this.game.debug.text("Runner: " + this.runner.alive + " " + this.runner.state + " with " + (this.runner.linked_pandas.total - 1) + " pandas in tow.", 10, this.game.height - 20);
+                this.game.debug.text("Runner: " + this.runner.alive + " " + this.runner.state + " with " + (this.runner.linked_pandas.total) + " pandas in tow.", 10, this.game.height - 20);
             }
             //this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
         };
@@ -1110,7 +1107,7 @@ var State;
             AddToWorldObjects(text);
         };
         Game_state.prototype.shotPanda = function (bullet, panda) {
-            if (panda.state != "rescued") {
+            if (!(panda.state == "rescued" || panda.state == "stunned")) {
                 bullet.kill();
                 panda.stun();
             }

@@ -268,7 +268,7 @@ module State{
                 this.spawn_system.autoSpawn = false; //disable spawns
             }
 
-            if (this.playState == "tutorial"){
+            if (this.playState == "demo"){
 
             }
             
@@ -277,9 +277,9 @@ module State{
 
                 ///DID YOU LOSE YET?
                 if (this.progressPercent == 0){
-                    /*this.loseTheGame();
+                    this.loseTheGame();
                     this.changeAllPandasState(null, "sleepy");
-                    this.game.paused = true;*/
+                    this.game.paused = true;
                 }
 
                 ////DID YOU WIN YET??
@@ -320,7 +320,6 @@ module State{
             var progressText = "Love: " + this.progressPercent + "%"
             this.game.debug.text(progressText, 20, 0+20); //progress Text in top left
 			
-            var debugBoundingBoxes = false;
             if (settings.devMode){
 
                 if (settings.debugBoundingBoxes){
@@ -341,7 +340,7 @@ module State{
                 this.game.debug.text("Spawner enabled: " + this.spawn_system.autoSpawn, 10, this.game.height - 60);
                 //this.game.debug.text("Gunner position" + this.gunner.x + ", "+ this.gunner.y, 10, this.game.height - 40);
                 this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
-                this.game.debug.text("Runner: " + this.runner.alive + " " + this.runner.state + " with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
+                this.game.debug.text("Runner: " + this.runner.alive + " " + this.runner.state + " with " + (this.runner.linked_pandas.total) + " pandas in tow." , 10, this.game.height - 20);
             }
 
                 //this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
@@ -370,7 +369,7 @@ module State{
 
         shotPanda(bullet, panda)
         {			            
-			if (panda.state != "rescued")
+			if (!(panda.state == "rescued" || panda.state == "stunned")) //still hit the attached ones for chaos in multiplayer :)
             {
                 bullet.kill();
                 panda.stun();

@@ -12,7 +12,6 @@ module Objects{
         colorNum: number;
         size: number; //not implemeted yet
         stuntime: number = 0; //stun time remaining
-        stunlockcount: number = 0; //count of sequential stuns without being unstunned. Resets to 0 when unstunned.
 
         idle_time : number = 0;
 
@@ -209,27 +208,23 @@ module Objects{
         stun()
         {
             this.detachPanda(this);
-            switch (this.state){ //check curernt state
-                case "hostile":
+            /*switch (this.state){ //check curernt state
+                case "hostile":*/
                     this.stuntime = settings.gameplay.panda.stunTime;
-                    this.stunlockcount = 1;
-                    //this.game.time.events.add(this.stuntime, WRITEAfunc(), this)
-                    //game
-                    break;
-                case "stunned": //increase stun but if passed the max stunlock we should respawn the panda as hostile
-                    this.stuntime += settings.gameplay.panda.stunTime; //increase stun time and lockout
-                    if (this.stunlockcount > settings.gameplay.panda.stunLockCount){
-                        console.log("why would you stun lock a panda??")
-                        console.log("DESPAWN THE PANDA and maybe respawn one?")
-                    } else {
-                        this.stunlockcount += 1;
-                    }
-                    break;
+                    this.game.time.events.add(this.stuntime, this.stunTimeEnd, this);
+                    /*break;
                 default:
                     break;
-            }
+            }*/
             this.changeState("stunned");
         }
+
+        stunTimeEnd(){
+            if (this.state == "stunned"){ //check that panda is still stunned - don't want attached or rescued ones going hostile.
+                this.changeState("hostile");
+            }
+        }
+
 
         rescue()
         {

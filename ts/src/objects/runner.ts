@@ -174,11 +174,11 @@ module Objects{
         collidePanda(runner: Runner, panda: Panda){
             switch (panda.state){
                 case "hostile":
-                    if (runner.linked_pandas.total-1 == 0) {
-                        runner.changeState("scared");
+                    if (runner.linked_pandas.total > 1) {
+                        var lastPanda = runner.linked_pandas.last;
+                        lastPanda.stun();
                     } else {
-                        console.log(runner.linked_pandas.last);
-                        runner.detachPanda(runner.linked_pandas.last);
+                        runner.changeState("scared");
                     }
                     break;
                 case "stunned":
@@ -195,7 +195,7 @@ module Objects{
             this.linked_pandas.add(panda);
         }
 
-        detachPanda(panda)
+        detachPanda(panda) //don't remove it's called in a chain
         {
             if (panda.next != null)
             {
