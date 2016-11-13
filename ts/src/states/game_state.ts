@@ -86,6 +86,7 @@ module State{
             var obj = null; //reused lots.
 
             this.gray_filter = this.game.add.filter('Gray');
+            this.gray_filter.gray = 0.5;
 
             //create level
             this.level = new Level.Level(this.game);
@@ -155,12 +156,15 @@ module State{
                 this.spawnPandaInState(200,50, "rescued");
                 this.spawnPandaInState(50,200, "rescued");
 
+                this.game.stage.filters = null;
                 this.startPlay();
                 return;
             }
 
             this.playState = "demo";
+            
             this.changeWorldScale(null, 2.0);
+            this.game.stage.filters = [this.gray_filter];
 
             //init
             this.gunner.force_not_firing = true ;
@@ -248,6 +252,7 @@ module State{
             this.gunner.force_target = null;
             this.runner.force_target = null;
 
+            this.game.stage.filters = null;
             this.startPlay();
         }
 
