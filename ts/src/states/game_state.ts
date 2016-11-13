@@ -154,10 +154,13 @@ module State{
                 this.spawnPandaInState(0,0, "rescued");
                 this.spawnPandaInState(200,50, "rescued");
                 this.spawnPandaInState(50,200, "rescued");
+
+                this.startPlay();
                 return;
             }
 
             this.playState = "demo";
+            this.changeWorldScale(null, 2.0);
 
             //init
             this.gunner.force_not_firing = true ;
@@ -245,7 +248,7 @@ module State{
             this.gunner.force_target = null;
             this.runner.force_target = null;
 
-            this.playState = "play";
+            this.startPlay();
         }
 
         spawn_trigger(args){
