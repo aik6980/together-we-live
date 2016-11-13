@@ -3,7 +3,7 @@ module Objects{
     export class Gunner extends Phaser.Sprite{
 
         weapon : Phaser.Weapon;
-        powerLevel: number; //based on number of recruits (i.e. the rescued pandas)
+
         rotateSpeed: number = settings.gameplay.gunner.baseTurnSpeed;
         fireAngleOffset: number = settings.gameplay.gunner.fireAngleOffset;
         bulletSpeed: number = settings.gameplay.gunner.bulletSpeed;
@@ -53,7 +53,7 @@ module Objects{
             this.sound_fire = this.game.add.audio('Turret_Fire');
             this.sound_kidnap = this.game.add.audio('Ghost_Merges_To_Turret');
 
-            // init weapon based on powerLevel
+            // init weapon
             this.weapon = this.game.add.weapon(30, 'bullet');
             this.weapon.bulletLifespan = this.bulletLifeSpan;
             this.weapon.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
@@ -172,7 +172,7 @@ module Objects{
 
             this.refreshRing();
 
-            //when Panda rescued recall the setPowerLevel
+            
             
         }
 

@@ -24,21 +24,14 @@ module Objects{
             this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
             setCollisionWithWalls(this, false); //panda ghosts can float through walls.
             
-            /*
             //Animations
-            this.animations.add('idle', [0]);
-            this.animations.add('stunned', [1,2]);
-            this.animations.add('down', [0,1,2]);
-            this.animations.add('left', [3,4,5]);
-            this.animations.add('right', [6,7,8]);
-            this.animations.add('up', [9,10,11]);
-            */
             this.animations.add('idle', [0]);
             this.animations.add('stunned', [0,1]);
             this.animations.add('down', [2,3,4]);
             this.animations.add('left', [5,6,7]);
             this.animations.add('right', [8,9,10]);
             this.animations.add('up', [0,1]);
+            this.animations.add('dancing', [2,3,4,5,6,8,9,7,6,9,10])
             //add the dancing animation;
 
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
@@ -77,11 +70,15 @@ module Objects{
             if (this.state == "rescued" || this.state == "released"
                 || (this.body.velocity.x == 0 && this.body.velocity.y == 0))
             {
-                if (true || this.animations.currentAnim.name != 'idle') //temporarily true
+                if (true || this.animations.currentAnim.name != 'idle') //override to true
                 {
                     if (this.idle_time <= 0)
                     {
-                        this.play('idle', 20, true);
+                        if (this.state=="rescued"){
+                            this.play('dancing', 10, true);
+                        } else {
+                            this.play('idle', 10, true);
+                        }
                     }
                     else
                     {
@@ -91,7 +88,7 @@ module Objects{
             }
             else if (this.state == "stunned")
             {
-                if (true || this.animations.currentAnim.name != 'stun') //temporarily true
+                if (true || this.animations.currentAnim.name != 'stun') //override true
                 {
                     this.play('stun', 20, true);
                 }
@@ -260,7 +257,7 @@ module Objects{
                 case "rescued":
                     this.loadTexture("panda_happy", 0, false);
                     this.idle_time = 0.0;
-                    this.colorNum = Phaser.Color.getColor(0, 200, 0); //green
+                    this.colorNum = Phaser.Color.getColor(0, 150, 0); //green
                     break;
                 case "released":
                     this.idle_time = 0.0;

@@ -73,12 +73,13 @@ module Objects{
         }     
 
         movement(){
-            var chainSlowDown = (1 - (this.linked_pandas.total-1) / settings.gameplay.runner.chainLengthSlowDown)
+/*            var chainSlowDown = (1 - (this.linked_pandas.total-1) / settings.gameplay.runner.chainLengthSlowDown)
             if (chainSlowDown > settings.gameplay.runner.chainMaxSlowDown) //don't get too slow
                 chainSlowDown = settings.gameplay.runner.chainMaxSlowDown;
 
             chainSlowDown = 1; //overwrite for now
-            var gospeed = this.speed * chainSlowDown;
+            var gospeed = this.speed * chainSlowDown;*/
+            var gospeed = this.speed;
 
             var leftOrRight: number = 0; //-1 = left, 0 =none, +1 = right
             var upOrDown: number = 0; //-1 = Up, 0= none, +1 = down

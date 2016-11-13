@@ -25,8 +25,6 @@ module Objects{
         spawnQuantity: number = settings.gameplay.spawnsystem.spawnQuantity; //how many to spawn at once (e.g. rush waves)
         autoSpawn: boolean = false;//true;
 
-       
-
         constructor(game_state: State.Game_state){
             this.game_state = game_state;
         }
