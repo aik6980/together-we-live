@@ -144,7 +144,7 @@ module State{
 
             ///DID YOU LOSE YET?
             if (this.gunner.recruits.length == 0){
-                //this.loseTheGame();
+                this.loseTheGame();
                 //this.game.paused = true;
             }
 
@@ -218,8 +218,9 @@ module State{
             this.game.debug.text(str, 250, 250);
             //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
-            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
+            AddToWorldObjects(text);
         }
 
         loseTheGame(){
@@ -228,8 +229,9 @@ module State{
             this.game.debug.text(str, 250, 250);
             //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
-            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
+            AddToWorldObjects(text);
         }
 
         shotPanda(bullet, panda)
@@ -254,11 +256,23 @@ module State{
         }
 
         spawnPandaInState(x, y, state: pandaStates){
-            var pobj = new Objects.Panda(this.game, x, y, state);
-            pobj.body.height = pobj.body.height * this.level.current_scale;
-            pobj.body.width = pobj.body.width * this.level.current_scale;
-            pobj.target = this.gunner.position; //pandas target the Gunner by default
-            return pobj;
+
+            if (state == "rescued")
+            {
+                var pobj = new Objects.Panda(this.game, x, y, "sleepy");
+                pobj.body.height = pobj.body.height * this.level.current_scale;
+                pobj.body.width = pobj.body.width * this.level.current_scale;
+                this.gunner.rescuePanda(pobj);
+                return pobj;
+            }
+            else
+            {
+                var pobj = new Objects.Panda(this.game, x, y, state);
+                pobj.body.height = pobj.body.height * this.level.current_scale;
+                pobj.body.width = pobj.body.width * this.level.current_scale;
+                pobj.target = this.gunner.position; //pandas target the Gunner by default
+                return pobj;
+            }
         }
 
         changeAllPandasState(args, state: string){
@@ -291,6 +305,7 @@ module State{
         {
             var panda = this.gunner.recruits.getAt(0) as Objects.Panda;
             this.gunner.removePanda(panda);
+            panda.kill();
         }
     }
 }
