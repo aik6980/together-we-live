@@ -21,6 +21,7 @@ module Objects{
         spawnRateMax: number = gameplay_pandas_spawnRateMax;
         spawnLimit: number = gameplay_pandas_spawnLimit;
         spawnQuantity: number = gameplay_pandas_spawnQuantity; //how many to spawn at once (e.g. rush waves)
+        spawnEnabled: boolean = false;//true;
 
        
 
@@ -35,7 +36,7 @@ module Objects{
         }
 
         public spawnCountdownComplete(){
-            this.spawnMany(this.spawnQuantity);
+            if (this.spawnEnabled){ this.spawnMany(this.spawnQuantity); }
             this.spawnCountdownStart();
         }
 

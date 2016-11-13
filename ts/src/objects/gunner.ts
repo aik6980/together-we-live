@@ -39,8 +39,8 @@ module Objects{
             // init weapon based on powerLevel
             this.weapon = this.game.add.weapon(30, 'bullet');
             this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
-            this.weapon.bulletSpeed = 100;
-            this.weapon.fireRate = 100;
+            this.weapon.bulletSpeed = 200;
+            this.weapon.fireRate = 400;
         }
 
         update(){

@@ -108,7 +108,11 @@ module State{
 
                 this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_UP).onUp.add(this.winTheGame, this);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_DOWN).onUp.add(this.loseTheGame, this);
+
+                this.game.input.keyboard.addKey(Phaser.Keyboard.HOME).onUp.add(function(){ this.spawn_system.spawnEnabled = true; }, this);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.END).onUp.add(function(){ this.spawn_system.spawnEnabled = false; }, this);
             //this.game.time.events.repeat(Phaser.Timer.SECOND, 3, this.createFollowingPanda, this);
+            
             }
         }
 
@@ -127,7 +131,7 @@ module State{
 
             ///DID YOU LOSE YET?
             if (this.gunner.recruits.length == 0){
-                this.loseTheGame();
+                //this.loseTheGame();
                 //this.game.paused = true;
             }
 
@@ -144,9 +148,16 @@ module State{
             this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
 
             //level collisions
-            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this); 
+            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this);
+            //this.game.physics.arcade.collide(this.pandas, this.level.collision_layer); 
             if (this.pandas.length > 0){
-                this.game.physics.arcade.collide(this.pandas, this.level.collision_layer, null, function(){  console.log(this); return this.panda.state != 'rescued'}, this.pandas);
+                this.game.physics.arcade.collide(this.pandas, this.level.collision_layer, null, function(panda, layer){  
+                        if (panda.state == 'rescued'){
+                            return false; //don't colide
+                        } else { 
+                            return true; 
+                        }   
+                    }, this);
             }
 
             //bullet collisions
@@ -162,7 +173,7 @@ module State{
             this.game.debug.text(progressText, 20, 0+20); //progress Text in top left
 			
             var debugBoundingBoxes = false;
-            if (this.devMode)
+            if (this.devMode){
 
                 if (debugBoundingBoxes){
                     //bounding boxes
@@ -176,10 +187,12 @@ module State{
                     this.gunner.anchor
                 }
                 
-                this.game.debug.text("object in world_objects: " + this.world_objects.total, 10, this.game.height - 60);
+                //this.game.debug.text("object in world_objects: " + this.world_objects.total, 10, this.game.height - 60);
+                this.game.debug.text("Spawner enabled: " + this.spawn_system.spawnEnabled, 10, this.game.height - 60);
                 //this.game.debug.text("Gunner position" + this.gunner.x + ", "+ this.gunner.y, 10, this.game.height - 40);
                 this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
                 this.game.debug.text("Runner: " + this.runner.alive + " " + this.runner.state + " with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
+            }
 
                 //this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
 
