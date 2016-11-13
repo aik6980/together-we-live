@@ -874,6 +874,8 @@ var State;
             this.playState = "play";
             var obj = null; //reused lots.
             this.gray_filter = this.game.add.filter('Gray');
+            this.gray_filter.gray = 1.0;
+            this.game.stage.filters = [this.gray_filter];
             //create level
             this.level = new Level.Level(this.game);
             this.level.load(this);
@@ -924,6 +926,7 @@ var State;
                 this.spawnPandaInState(0, 0, "rescued");
                 this.spawnPandaInState(200, 50, "rescued");
                 this.spawnPandaInState(50, 200, "rescued");
+                //this.game.stage.filters = null;
                 this.startPlay();
                 return;
             }
@@ -934,7 +937,7 @@ var State;
             this.gunner.force_target = new Phaser.Point(this.gunner.position.x, this.gunner.position.y - 100);
             this.runner.force_target = new Phaser.Point(this.runner.position.x, this.runner.position.y);
             //spawn the lives for the gunner
-            var panda1 = this.spawnPandaInState(this.gunner.x - 260, this.gunner.y, "hostile");
+            var panda1 = this.spawnPandaInState(this.gunner.x - 230, this.gunner.y, "hostile");
             this.pandas.add(panda1);
             var panda2 = this.spawnPandaInState(this.gunner.x - 50, this.gunner.y - 400, "hostile");
             this.pandas.add(panda2);
@@ -1010,6 +1013,7 @@ var State;
             this.gunner.force_not_firing = false;
             this.gunner.force_target = null;
             this.runner.force_target = null;
+            //this.game.stage.filters = null;
             this.startPlay();
         };
         Game_state.prototype.spawn_trigger = function (args) {
@@ -1068,7 +1072,6 @@ var State;
             //Progress
             var progressText = "Love: " + this.progressPercent + "%";
             this.game.debug.text(progressText, 20, 0 + 20); //progress Text in top left
-            var debugBoundingBoxes = false;
             if (settings.devMode) {
                 if (settings.debugBoundingBoxes) {
                     //bounding boxes
@@ -1182,6 +1185,7 @@ var State;
             var newProgressPercent = Math.floor(this.gunner.recruits.length / settings.gameplay.gunner.winRecruits * 100);
             newProgressPercent = clamp(newProgressPercent, 0, 100); //clamp it 0-100
             this.progressPercent = newProgressPercent;
+            this.gray_filter.gray = clamp(1.0 - newProgressPercent / 100.0, 0.0, 0.8);
             this.peakProgressPercent = clamp(newProgressPercent, this.peakProgressPercent, 100); //increase (never decrease the peakProgressPercent);
             if (newProgressPercent > prevProgressPercent) {
                 //console.log("you progressed from " + prevProgressPercent + " to " + newProgressPercent + " AND YOUR PEAK is " + this.peakProgressPercent);

@@ -172,7 +172,7 @@ module State{
             this.runner.force_target = new Phaser.Point(this.runner.position.x, this.runner.position.y);
             
             //spawn the lives for the gunner
-            var panda1 = this.spawnPandaInState(this.gunner.x - 260, this.gunner.y, "hostile");
+            var panda1 = this.spawnPandaInState(this.gunner.x - 230, this.gunner.y, "hostile");
             this.pandas.add(panda1);
             var panda2 = this.spawnPandaInState(this.gunner.x - 50, this.gunner.y - 400, "hostile");
             this.pandas.add(panda2);
