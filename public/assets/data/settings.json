@@ -1,7 +1,7 @@
 { 
   "devMode": true
 , "debugBoundingBoxes": false
-, "skipDemo": false
+, "skipDemo": true
 , "gameplay": {
 	  "gunner": {
 		  "baseTurnSpeed": 300
@@ -20,8 +20,8 @@
 		, "stunLockCount": 4
 		}
 	, "spawnsystem": {
-		  "spawnRateMin": 500
-		, "spawnRateMax": 3000
+		  "spawnRateMin": 1500
+		, "spawnRateMax": 4000
 		, "spawnLimit": 30
 		, "spawnQuantity": 1
 		}

@@ -16,7 +16,7 @@ module Objects{
         idle_time : number = 0;
 
         constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){        
-            super(game, x, y, 'panda_happy');
+            super(game, x, y, 'panda_sad');
 
             this.anchor.set(0.5,0.5);
             this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
@@ -37,6 +37,7 @@ module Objects{
             this.animations.add('left', [5,6,7]);
             this.animations.add('right', [8,9,10]);
             this.animations.add('up', [0,1]);
+            //add the dancing animation;
 
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
             //this.body.setSize(24, 24, 3, 4);
@@ -72,7 +73,7 @@ module Objects{
             if (this.state == "rescued" || this.state == "released"
                 || (this.body.velocity.x == 0 && this.body.velocity.y == 0))
             {
-                if (this.animations.currentAnim.name != 'idle')
+                if (true || this.animations.currentAnim.name != 'idle') //temporarily true
                 {
                     if (this.idle_time <= 0)
                     {
@@ -86,7 +87,7 @@ module Objects{
             }
             else if (this.state == "stunned")
             {
-                if (this.animations.currentAnim.name != 'stun')
+                if (true || this.animations.currentAnim.name != 'stun') //temporarily true
                 {
                     this.play('stun', 20, true);
                 }
@@ -238,24 +239,30 @@ module Objects{
 
             switch (targetState){ //update colour and sprite?
                 case "hostile":
+                    this.loadTexture("panda_sad", 0, false);
                     this.colorNum = Phaser.Color.getColor(255,0,0); //red
                     break;
                 case "stunned":
+                    this.loadTexture("panda_stun", 0, false);
+                    console.log("we have stunnd panda so the key is now " + this.key);
                     this.idle_time = 0.0;
                     this.colorNum = Phaser.Color.getColor(0, 255, 255); //yellow                   
                     break;
                 case "attached":
+                    this.loadTexture("panda_stun", 0, false);
                     this.colorNum = Phaser.Color.getColor(30, 10, 250); //blue
                     break;
                 case "rescued":
+                    this.loadTexture("panda_happy", 0, false);
                     this.idle_time = 0.0;
-                    this.colorNum = Phaser.Color.getColor(0, 255, 0); //green
+                    this.colorNum = Phaser.Color.getColor(0, 200, 0); //green
                     break;
                 case "released":
                     this.idle_time = 0.0;
                     // keep color from previous state
                     break;
                 case "sleepy":
+                    this.key="panda_stun"
                     this.colorNum = Phaser.Color.getColor(255, 255, 255); //white
                     break;
                 default:

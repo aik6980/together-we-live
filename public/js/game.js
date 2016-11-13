@@ -345,7 +345,7 @@ var Objects;
     var Panda = (function (_super) {
         __extends(Panda, _super);
         function Panda(game, x, y, startState) {
-            _super.call(this, game, x, y, 'panda_happy');
+            _super.call(this, game, x, y, 'panda_sad');
             this.stuntime = 0; //stun time remaining
             this.idle_time = 0;
             this.anchor.set(0.5, 0.5);
@@ -366,6 +366,7 @@ var Objects;
             this.animations.add('left', [5, 6, 7]);
             this.animations.add('right', [8, 9, 10]);
             this.animations.add('up', [0, 1]);
+            //add the dancing animation;
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
             //this.body.setSize(24, 24, 3, 4);
             this.changeState(startState);
@@ -396,7 +397,7 @@ var Objects;
             }
             if (this.state == "rescued" || this.state == "released"
                 || (this.body.velocity.x == 0 && this.body.velocity.y == 0)) {
-                if (this.animations.currentAnim.name != 'idle') {
+                if (true || this.animations.currentAnim.name != 'idle') {
                     if (this.idle_time <= 0) {
                         this.play('idle', 20, true);
                     }
@@ -406,7 +407,7 @@ var Objects;
                 }
             }
             else if (this.state == "stunned") {
-                if (this.animations.currentAnim.name != 'stun') {
+                if (true || this.animations.currentAnim.name != 'stun') {
                     this.play('stun', 20, true);
                 }
             }
@@ -517,24 +518,30 @@ var Objects;
             this.state = targetState;
             switch (targetState) {
                 case "hostile":
+                    this.loadTexture("panda_sad", 0, false);
                     this.colorNum = Phaser.Color.getColor(255, 0, 0); //red
                     break;
                 case "stunned":
+                    this.loadTexture("panda_stun", 0, false);
+                    console.log("we have stunnd panda so the key is now " + this.key);
                     this.idle_time = 0.0;
                     this.colorNum = Phaser.Color.getColor(0, 255, 255); //yellow                   
                     break;
                 case "attached":
+                    this.loadTexture("panda_stun", 0, false);
                     this.colorNum = Phaser.Color.getColor(30, 10, 250); //blue
                     break;
                 case "rescued":
+                    this.loadTexture("panda_happy", 0, false);
                     this.idle_time = 0.0;
-                    this.colorNum = Phaser.Color.getColor(0, 255, 0); //green
+                    this.colorNum = Phaser.Color.getColor(0, 200, 0); //green
                     break;
                 case "released":
                     this.idle_time = 0.0;
                     // keep color from previous state
                     break;
                 case "sleepy":
+                    this.key = "panda_stun";
                     this.colorNum = Phaser.Color.getColor(255, 255, 255); //white
                     break;
                 default:
@@ -858,6 +865,8 @@ var State;
             //spritesheet
             //this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32)
             this.game.load.spritesheet('panda_happy', 'assets/img/panda_happy32.png', 32, 32);
+            this.game.load.spritesheet('panda_sad', 'assets/img/panda_sad32.png', 32, 32);
+            this.game.load.spritesheet('panda_stun', 'assets/img/panda_stun32.png', 32, 32);
             this.game.load.spritesheet('runner', 'assets/img/runner_spritesheet.png', 22, 30);
             //this.game.load.spritesheet('ghosts', 'assets/img/runner_spritesheet.png', 22, 30);
             //Sounds

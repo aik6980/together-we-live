@@ -60,6 +60,8 @@ module State{
             //spritesheet
             //this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32)
             this.game.load.spritesheet('panda_happy', 'assets/img/panda_happy32.png', 32, 32)
+            this.game.load.spritesheet('panda_sad', 'assets/img/panda_sad32.png', 32, 32)
+            this.game.load.spritesheet('panda_stun', 'assets/img/panda_stun32.png', 32, 32)
             this.game.load.spritesheet('runner', 'assets/img/runner_spritesheet.png', 22, 30);
             //this.game.load.spritesheet('ghosts', 'assets/img/runner_spritesheet.png', 22, 30);
 
