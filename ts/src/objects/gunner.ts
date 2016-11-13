@@ -36,11 +36,11 @@ module Objects{
             // init physics            
             this.game.physics.arcade.enable(this);
 
-            // init weapon            
-            this.weapon = this.game.add.weapon(60, 'bullet');
+            // init weapon based on powerLevel
+            this.weapon = this.game.add.weapon(30, 'bullet');
             this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
-            this.weapon.bulletSpeed = 200;
-            this.weapon.fireRate = 200;
+            this.weapon.bulletSpeed = 100;
+            this.weapon.fireRate = 100;
         }
 
         update(){
@@ -80,7 +80,7 @@ module Objects{
         collidePanda(gunner, panda){
             switch (panda.state){
                 case "hostile":
-                    gunner.die(); //lose 1 life
+                    //release 1 recruit or gameover
                     break;
                 case "attached":
                     gunner.rescuePanda(panda);
@@ -92,7 +92,7 @@ module Objects{
 
         die(){
             console.log("gunner is dying (lose 1 life)")
-            //this.recruits.remove()
+            //
             //this.kill()
         }
 

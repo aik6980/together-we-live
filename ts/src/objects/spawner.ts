@@ -47,11 +47,15 @@ module Objects{
             }
         }
 
-        public spawn(){
+        public spawnInState(state){
             if (this.game_state.pandas.total < gameplay_pandas_spawnLimit){ //check got room to spawn 1 more
                 var spawn_point : Objects.Spawner = this.game_state.spawner.getRandom(); //pick a random spawnpoint
-                this.game_state.pandas.add(this.game_state.spawnPanda(spawn_point.x, spawn_point.y));
+                this.game_state.pandas.add(this.game_state.spawnPandaInState(spawn_point.x, spawn_point.y, state));
             }
+        }
+
+        public spawn(){
+            this.spawnInState("hostile");
         }
     }
 }
