@@ -31,6 +31,9 @@ module State{
         progressPercent: number = 0;
         peakProgressPercent: number = 0;
 
+        // music
+        music : Phaser.Sound;
+
         preload(){
             //settings data file
             this.game.load.json('settings', 'assets/data/settings.json');
@@ -68,6 +71,13 @@ module State{
         }
 
         create(){
+            // play background music
+            this.music = game.add.audio('Music_Together');
+            this.music.loop = true;
+            this.music.volume = global_music_volume;
+            this.music.play();
+
+
             //load the settingsJSON and which is now referenced throughout instead of using global_variables.
             settings = this.game.cache.getJSON('settings');
 
@@ -108,6 +118,8 @@ module State{
 
             this.level.add_gameobjects(this);
 
+            this.start_demo();
+
             //dev controls
             if (settings.devMode){
                 ///num keys to change all the pandas states?
@@ -133,6 +145,107 @@ module State{
                 this.game.input.keyboard.addKey(Phaser.Keyboard.END).onUp.add(function(){ this.spawn_system.autoSpawn = false; }, this);
             //this.game.time.events.repeat(Phaser.Timer.SECOND, 3, this.createFollowingPanda, this);
             }
+        }
+
+        start_demo(){
+            var skip_demo = false;
+            if (skip_demo)
+            {
+                this.spawnPandaInState(0,0, "rescued");
+                this.spawnPandaInState(200,50, "rescued");
+                this.spawnPandaInState(50,200, "rescued");
+                return;
+            }
+
+            this.playState = "demo";
+
+            //init
+            this.gunner.force_not_firing = true ;
+            this.gunner.force_target = new Phaser.Point(this.gunner.position.x, this.gunner.position.y - 100);
+            this.runner.force_target = new Phaser.Point(this.runner.position.x, this.runner.position.y);
+            
+            //spawn the lives for the gunner
+            var panda1 = this.spawnPandaInState(this.gunner.x - 260, this.gunner.y, "hostile");
+            this.pandas.add(panda1);
+            var panda2 = this.spawnPandaInState(this.gunner.x - 50, this.gunner.y - 400, "hostile");
+            this.pandas.add(panda2);
+            var panda3 = this.spawnPandaInState(this.gunner.x + 100, this.gunner.y - 400, "hostile");
+            this.pandas.add(panda3);
+
+            // shot them            
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function(){
+                // aim panda1
+                this.gunner.force_target = panda1.position;
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function(){
+                // stun it!
+                this.gunner.fire();
+                this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 3.6, 1, function(){
+                // the runner try to catch it
+                this.runner.force_target = new Phaser.Point(panda1.x, this.runner.y);
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 4, 1, function(){
+                // runner keep going and catch it
+                this.runner.force_target = panda1.position;
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 4.2, 1, function(){
+                // the runner starts to  bring it back
+                this.runner.force_target = new Phaser.Point(this.gunner.x, this.gunner.y + 50);
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 1, function(){
+                // bring it back safe
+                this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 5.8, 1, function(){
+                // panda2 is coming, aim it!
+                this.gunner.force_target = panda2.position;
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 6.2, 1, function(){
+                // stun it!
+                this.gunner.fire();   
+                this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 6.8, 1, function(){
+                // runner try to catch it
+                this.runner.force_target = panda2.position;
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.2, 1, function(){
+                // but wait.. panda3 is coming
+                this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.5, 1, function(){
+                // gunner aim panda3                
+                this.gunner.force_target = panda3.position;
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 8, 1, function(){
+                // stun it!
+                this.gunner.fire();
+                this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 9, 1, function(){
+                // then runner can safely catch both of them
+                this.runner.force_target = panda2.position;
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 10, 1, function(){
+                // bring them back home
+                this.runner.force_target = new Phaser.Point(this.gunner.position.x + 50, this.gunner.position.y + 10);
+            }, this);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 11, 1, function(){
+                this.stop_demo();
+            }, this);
+
+            //ended
+        }
+
+        stop_demo(){
+            //this.game.time.events.removeAll();
+            this.gunner.force_not_firing = false;
+            this.gunner.force_target = null;
+            this.runner.force_target = null;
+
+            this.playState = "play";
         }
 
         spawn_trigger(args){
@@ -175,12 +288,11 @@ module State{
             if (this.playState=="won"){
                 this.rescueAllPandas();
             }
-            
 
             //character collisions
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, function(){ return this.runner.state != 'warping';}, this); 
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
-            this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
+            this.game.physics.arcade.overlap(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
 
             //level collisions
             this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this);
@@ -276,23 +388,25 @@ module State{
 
         spawnPandaInState(x, y, state: pandaStates){
 
+            var pobj : Objects.Panda;
             if (state == "rescued")
             {
-                var pobj = new Objects.Panda(this.game, x, y, "sleepy");
-                pobj.body.height = pobj.body.height * this.level.current_scale;
-                pobj.body.width = pobj.body.width * this.level.current_scale;
+                pobj = new Objects.Panda(this.game, x, y, "sleepy");
                 this.gunner.rescuePanda(pobj);
-                return pobj;
             }
             else
             {
-                var pobj = new Objects.Panda(this.game, x, y, state);
-                pobj.body.height = pobj.body.height * this.level.current_scale;
-                pobj.body.width = pobj.body.width * this.level.current_scale;
+                pobj = new Objects.Panda(this.game, x, y, state);
                 pobj.target = this.gunner.position; //pandas target the Gunner by default
+            }
+
+            // recalculate bounding box
+            var a = pobj.width * this.world_objects.scale.x;
+            var b = pobj.height * this.world_objects.scale.y;
+            pobj.body.setSize(a,b,0.5*(pobj.width-a), 0.5*(pobj.height-b));
+
                 return pobj;
             }
-        }
 
         changeAllPandasState(args, state: string){
             this.pandas.forEachExists(function(panda) { panda.changeState(state); }, null );

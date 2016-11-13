@@ -8,7 +8,7 @@ module Objects{
 
         //bulletSpeed: number = ;
 
-        fire_angle_offset : number = 90;
+        fire_angle_offset : number = -90;
 
         recruits : Phaser.Group;
         anchors : Phaser.Group;
@@ -50,6 +50,11 @@ module Objects{
             this.weapon.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
             this.weapon.bulletSpeed = 200;
             this.weapon.fireRate = 400;
+
+            this.weapon.onFire.add(function(){
+                // play sound
+                this.game.add.audio('Turret_Fire').play(null,null,global_sfx_volume);
+            }, this);
         }
 
         update(){

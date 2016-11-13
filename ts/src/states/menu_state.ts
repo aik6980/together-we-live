@@ -5,7 +5,9 @@ module State{
         text : Phaser.Text;
 
         title_init = false;
-        
+
+        music : Phaser.Sound;
+
         preload(){
             //  Load the Google WebFont Loader script
             this.game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
@@ -16,10 +18,29 @@ module State{
             }
 
             this.title_init = false;
+
+            // preload all sfx and music
+            //  Firefox doesn't support mp3 files, so use ogg
+            this.game.load.audio('Generic_ShortSpit_SFX', ['assets/snd/Generic_ShortSpit_SFX.ogg']);
+            this.game.load.audio('Ghost_Merges_To_Turret', ['assets/snd/Ghost_Merges_To_Turret.ogg']);
+            this.game.load.audio('Music_LayerBuildUp', ['assets/snd/Music_LayerBuildUp.ogg']);
+            this.game.load.audio('Music_PrimaryLayerLoop', ['assets/snd/Music_PrimaryLayerLoop.ogg']);
+            this.game.load.audio('Music_Together', ['assets/snd/Music_Together.ogg']);
+            this.game.load.audio('Turret_Fire', ['assets/snd/Turret_Fire.ogg']);
+            this.game.load.audio('Turret_HitsGhost2', ['assets/snd/Turret_HitsGhost2.ogg']);
+            this.game.load.audio('Turret_HitsHatter1', ['assets/snd/Turret_HitsHatter1.ogg']);
+            this.game.load.audio('Turret_HitsHatter2', ['assets/snd/Turret_HitsHatter2.ogg']);
+            this.game.load.audio('Turret_HitsNothing', ['assets/snd/Turret_HitsNothing.ogg']);
         }
 
         create(){
             this.game.stage.backgroundColor = "#4488AA";
+
+            // play background music
+            this.music = game.add.audio('Music_LayerBuildUp');
+            this.music.loop = true;
+            this.music.volume = global_music_volume;
+            this.music.play();
 
             // add character image
             for (var i = 0; i < 12; i++)
@@ -46,6 +67,10 @@ module State{
 
             // press space bar to start the game
             this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onUp.add(this.changeState, this, null);
+        }
+
+        shutdown(){
+            this.music.stop();
         }
 
         update(){

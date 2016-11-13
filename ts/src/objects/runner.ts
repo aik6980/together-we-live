@@ -40,7 +40,14 @@ module Objects{
         }
 
         update(){
+            //this.game.debug.cameraInfo(this.game.camera, 32, 32);
+            //this.game.debug.spriteInfo(this, 20, 200);
+
             this.body.velocity.setTo(0, 0) //reset runner movement (if no keys pressed will stop moving)
+
+            if(!this.inCamera){
+                this.changeState('warping');
+            }
 
             switch (this.state){
                 case "dead":
@@ -128,6 +135,7 @@ module Objects{
                         break;
                     case "shot": //shot or scared
                         //play sound "ARRRRGH"
+                        this.game.add.audio('Turret_HitsHatter1').play(null,null,global_sfx_volume);
                         this.tint = Phaser.Color.getColor(255, 10, 0); //dirty red)
                         break;
                     case "scared":
