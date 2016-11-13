@@ -13,6 +13,27 @@ module SimpleGame{
     }
 }
 
+// the game
+var google_font_active = false;
+var game;
+// The Google WebFont Loader will look for this object, so create it before loading the script.
+var WebFontConfig = {
+
+    //  'active' means all requested fonts have finished loading
+    //  We set a 1 second delay before calling 'createText'.
+    //  For some reason if we don't the browser cannot render the text the first time it's created.
+    active: function() {
+        //console.log(game); 
+        game.time.events.add(Phaser.Timer.SECOND, function(){ google_font_active = true; }, this); 
+    },
+
+    //  The Google Fonts we want to load (specify as many as you like in the array)
+    google: {
+      families: ['Press Start 2P']
+    }
+
+};
+
 window.onload = function(){
-    var game = new SimpleGame.Game();
+    game = new SimpleGame.Game();
 }

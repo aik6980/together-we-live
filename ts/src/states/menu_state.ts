@@ -3,12 +3,19 @@ module State{
 
         timer = 0;
         text : Phaser.Text;
+
+        title_init = false;
         
         preload(){
+            //  Load the Google WebFont Loader script
+            this.game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
+
             // load all character pictures
             for(var i=0; i<6; ++i){
                 this.game.load.image('logo'+ i, 'assets/img/logo'+ i + '.png');
             }
+
+            this.title_init = false;
         }
 
         create(){
@@ -42,11 +49,27 @@ module State{
         }
 
         update(){
+            // text blink
             this.timer += this.game.time.elapsed;
             if(this.timer > 400)
             {
                 this.timer = 0;
                 this.text.visible = !this.text.visible;
+            }
+
+            // add title
+            if(google_font_active && !this.title_init){
+                this.title_init = true;
+                
+                //  You can either set the tab size in the style object:
+                var style = { font: "42px Press Start 2P", fill: "#ddd" };
+                var text = game.add.text(game.world.centerX, game.world.centerY * 0.2, "Love Gunner\n &\n Hat Runner", style);
+                text.anchor.setTo(0.5);
+                text.setShadow(-3, 3, 'rgba(0,0,0,0.5)', 0);
+                text.align = 'center';
+
+                //  We'll set the bounds to be from x0, y100 and be 800px wide by 100px high
+                text.setTextBounds(0, this.game.height * 0.2, this.game.width, 200);
             }
         }
 
