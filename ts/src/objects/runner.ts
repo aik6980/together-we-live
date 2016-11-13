@@ -16,6 +16,8 @@ module Objects{
 
         preWarpCountdown: number;
 
+        force_target : Phaser.Point;
+
         constructor(game : Phaser.Game, x: number, y: number){
             super(game, x, y, 'runner');
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
@@ -66,19 +68,38 @@ module Objects{
             chainSlowDown = 1; //overwrite for now
             var gospeed = this.speed * chainSlowDown;
 
-            //Runner movement
             var leftOrRight: number = 0; //-1 = left, 0 =none, +1 = right
             var upOrDown: number = 0; //-1 = Up, 0= none, +1 = down
-            if (this.cursors.left.isDown) {
-                leftOrRight = -1;
-            } else if (this.cursors.right.isDown) {
-                leftOrRight = +1;
-            }
+            
+            if (this.force_target == null)
+            {
+                //Runner movement
+                if (this.cursors.left.isDown) {
+                    leftOrRight = -1;
+                } else if (this.cursors.right.isDown) {
+                    leftOrRight = +1;
+                }
 
-            if (this.cursors.up.isDown) {
-                upOrDown = -1;
-            } else if (this.cursors.down.isDown) {
-                upOrDown = +1;
+                if (this.cursors.up.isDown) {
+                    upOrDown = -1;
+                } else if (this.cursors.down.isDown) {
+                    upOrDown = +1;
+                }
+            }
+            else
+            {
+                var diff_x = this.force_target.x - this.x;
+                var diff_y = this.force_target.y - this.y;
+
+                if (diff_x > 10)
+                    leftOrRight = 1;
+                else if (diff_x < -10)
+                    leftOrRight = -1;
+
+                if (diff_y > 10)
+                    upOrDown = 1;
+                else if (diff_y < -10)
+                    upOrDown = -1;
             }
 
             this.body.velocity.x = gospeed * leftOrRight;
@@ -95,23 +116,6 @@ module Objects{
             } else {
                 this.animations.play("idle");
             }
-
-
-
-/*
-            //Runner Movement
-            //horizontal movement
-            if (this.cursors.left.isDown) 
-                this.body.velocity.x = -gospeed;
-            else if (this.cursors.right.isDown) 
-                this.body.velocity.x = gospeed;
-
-            //vertical movement
-            if (this.cursors.up.isDown)
-                this.body.velocity.y = -gospeed;
-            else if (this.cursors.down.isDown)
-                this.body.velocity.y = gospeed;
-*/                
         }   
 
         changeState(targetState: runnerStates){
@@ -176,7 +180,7 @@ module Objects{
         {
             panda.attachTo(this.linked_pandas.last);
             this.linked_pandas.add(panda);
-    }
+        }
 
         detachPanda(panda)
         {

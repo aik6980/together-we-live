@@ -171,6 +171,8 @@ var Objects;
             //super(game, x, y, 'ship');
             _super.call(this, game, x, y, 'gunner_turret');
             this.rotateSpeed = settings.gameplay.gunner.baseTurnSpeed;
+            //bulletSpeed: number = ;
+            this.fire_angle_offset = 90;
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
             this.body.immovable = true; //stop shoving the gunner!
             this.recruits = this.game.add.group();
@@ -193,19 +195,38 @@ var Objects;
         }
         Gunner.prototype.update = function () {
             var _this = this;
-            if (this.left_button.isDown) {
-                this.body.angularVelocity = -this.rotateSpeed;
-            }
-            else if (this.right_button.isDown) {
-                this.body.angularVelocity = this.rotateSpeed;
+            if (this.force_target == null) {
+                if (this.left_button.isDown) {
+                    this.body.angularVelocity = -this.rotateSpeed;
+                }
+                else if (this.right_button.isDown) {
+                    this.body.angularVelocity = this.rotateSpeed;
+                }
+                else {
+                    this.body.angularVelocity = 0;
+                }
             }
             else {
-                this.body.angularVelocity = 0;
+                var diff_x = this.force_target.x - this.x;
+                var diff_y = this.force_target.y - this.y;
+                var target_angle = -Math.atan2(-diff_y, diff_x) * 180.0 / Math.PI;
+                var diff_angle = target_angle - (this.angle + this.fire_angle_offset);
+                if (diff_angle > 180)
+                    diff_angle -= 360;
+                else if (diff_angle < -180)
+                    diff_angle += 360;
+                if (diff_angle > 5) {
+                    this.body.angularVelocity = this.rotateSpeed;
+                }
+                else if (diff_angle < -5) {
+                    this.body.angularVelocity = -this.rotateSpeed;
+                }
+                else {
+                    this.body.angularVelocity = 0;
+                }
             }
-            if (this.fire_button.isDown) {
-                this.weapon.x = this.position.x;
-                this.weapon.y = this.position.y;
-                this.weapon.fireAtXY(this.weapon.x + Math.cos(this.body.rotation * Math.PI / 180.0), this.weapon.y + Math.sin(this.body.rotation * Math.PI / 180.0));
+            if (!this.force_not_firing && this.fire_button.isDown) {
+                this.fire();
             }
             // rotate the ring
             var index = 0;
@@ -215,6 +236,12 @@ var Objects;
                 panda.target.x = (anchor.worldPosition.x - _this.worldPosition.x) / global_game_scale + anchor.position.x;
                 panda.target.y = (anchor.worldPosition.y - _this.worldPosition.y) / global_game_scale + anchor.position.y;
             }, null, true);
+        };
+        Gunner.prototype.fire = function () {
+            var fire_angle = this.body.rotation + this.fire_angle_offset;
+            this.weapon.x = this.position.x;
+            this.weapon.y = this.position.y;
+            this.weapon.fireAtXY(this.weapon.x + Math.cos(fire_angle * Math.PI / 180.0), this.weapon.y + Math.sin(fire_angle * Math.PI / 180.0));
         };
         Gunner.prototype.collidePanda = function (gunner, panda) {
             switch (panda.state) {
@@ -606,52 +633,43 @@ var Objects;
                 chainSlowDown = settings.gameplay.runner.chainMaxSlowDown;
             chainSlowDown = 1; //overwrite for now
             var gospeed = this.speed * chainSlowDown;
-            //Runner movement
-            var leftOrRight = 0; //-1 = left, 0 =none, +1 = right
-            var upOrDown = 0; //-1 = Up, 0= none, +1 = down
-            if (this.cursors.left.isDown) {
-                leftOrRight = -1;
-            }
-            else if (this.cursors.right.isDown) {
-                leftOrRight = +1;
-            }
-            if (this.cursors.up.isDown) {
-                upOrDown = -1;
-            }
-            else if (this.cursors.down.isDown) {
-                upOrDown = +1;
-            }
-            this.body.velocity.x = gospeed * leftOrRight;
-            this.body.velocity.y = gospeed * upOrDown;
-            if (upOrDown == +1) {
-                this.animations.play("up");
-            }
-            else if (upOrDown == -1 && leftOrRight == 0) {
-                this.animations.play("down");
-            }
-            else if (leftOrRight == -1) {
-                this.animations.play("left");
-            }
-            else if (leftOrRight == 1) {
-                this.animations.play("right");
+            if (this.force_target == null) {
+                //Runner movement
+                var leftOrRight = 0; //-1 = left, 0 =none, +1 = right
+                var upOrDown = 0; //-1 = Up, 0= none, +1 = down
+                if (this.cursors.left.isDown) {
+                    leftOrRight = -1;
+                }
+                else if (this.cursors.right.isDown) {
+                    leftOrRight = +1;
+                }
+                if (this.cursors.up.isDown) {
+                    upOrDown = -1;
+                }
+                else if (this.cursors.down.isDown) {
+                    upOrDown = +1;
+                }
+                this.body.velocity.x = gospeed * leftOrRight;
+                this.body.velocity.y = gospeed * upOrDown;
+                if (upOrDown == +1) {
+                    this.animations.play("up");
+                }
+                else if (upOrDown == -1 && leftOrRight == 0) {
+                    this.animations.play("down");
+                }
+                else if (leftOrRight == -1) {
+                    this.animations.play("left");
+                }
+                else if (leftOrRight == 1) {
+                    this.animations.play("right");
+                }
+                else {
+                    this.animations.play("idle");
+                }
             }
             else {
-                this.animations.play("idle");
+                moveToTarget(this, this.force_target, 0, gospeed);
             }
-            /*
-                        //Runner Movement
-                        //horizontal movement
-                        if (this.cursors.left.isDown)
-                            this.body.velocity.x = -gospeed;
-                        else if (this.cursors.right.isDown)
-                            this.body.velocity.x = gospeed;
-            
-                        //vertical movement
-                        if (this.cursors.up.isDown)
-                            this.body.velocity.y = -gospeed;
-                        else if (this.cursors.down.isDown)
-                            this.body.velocity.y = gospeed;
-            */
         };
         Runner.prototype.changeState = function (targetState) {
             var prevState = this.state;
@@ -887,6 +905,7 @@ var State;
             this.level.update_game_state(this);
             ///Collisions
             //N.b. the player when "warping" is not checked for collision;
+<<<<<<< HEAD
             if (this.playState == "win" || this.playState == "lost") {
                 this.spawn_system.spawnEnabled = false; //disable spawns
             }
@@ -901,6 +920,11 @@ var State;
                 if (this.gunner.recruits.length >= settings.gameplay.gunner.winRecruits) {
                     this.winTheGame();
                 }
+=======
+            ///DID YOU LOSE YET?
+            if (this.gunner.recruits.length == 0) {
+                this.loseTheGame();
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
             }
             ;
             if (this.playState == "won") {
@@ -1020,6 +1044,7 @@ var State;
             var panda = this.gunner.recruits.getAt(0);
             this.gunner.removePanda(panda);
             panda.kill();
+<<<<<<< HEAD
         };
         Game_state.prototype.rescueAllPandas = function () {
             //rescue all remaining pandas
@@ -1029,6 +1054,8 @@ var State;
                     this.gunner.rescuePanda(panda);
                 }, this);
             }
+=======
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
         };
         return Game_state;
     }(Phaser.State));
@@ -1090,16 +1117,24 @@ var State;
         function Menu_state() {
             _super.apply(this, arguments);
             this.timer = 0;
+<<<<<<< HEAD
             this.title_init = false;
         }
         Menu_state.prototype.preload = function () {
             //  Load the Google WebFont Loader script
             this.game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
+=======
+        }
+        Menu_state.prototype.preload = function () {
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
             // load all character pictures
             for (var i = 0; i < 6; ++i) {
                 this.game.load.image('logo' + i, 'assets/img/logo' + i + '.png');
             }
+<<<<<<< HEAD
             this.title_init = false;
+=======
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
         };
         Menu_state.prototype.create = function () {
             this.game.stage.backgroundColor = "#4488AA";
@@ -1124,12 +1159,16 @@ var State;
             this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onUp.add(this.changeState, this, null);
         };
         Menu_state.prototype.update = function () {
+<<<<<<< HEAD
             // text blink
+=======
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
             this.timer += this.game.time.elapsed;
             if (this.timer > 400) {
                 this.timer = 0;
                 this.text.visible = !this.text.visible;
             }
+<<<<<<< HEAD
             // add title
             if (google_font_active && !this.title_init) {
                 this.title_init = true;
@@ -1142,6 +1181,8 @@ var State;
                 //  We'll set the bounds to be from x0, y100 and be 800px wide by 100px high
                 text.setTextBounds(0, this.game.height * 0.2, this.game.width, 200);
             }
+=======
+>>>>>>> 2e4a16d666a90a0ead6cf02a601105fc3d7313ba
         };
         Menu_state.prototype.render = function () {
         };
