@@ -104,9 +104,8 @@ module Objects{
             var anchor = this.game.add.sprite(0, 0);
             this.anchors.add(anchor)
 
-            anchor.x = this.x
-            anchor.y = this.y
-            //anchor.anchor.setTo(0.5);
+            anchor.x = this.x - this.width / 4;
+            anchor.y = this.y - this.height / 4;
 
             panda.target = new Phaser.Point();
 
