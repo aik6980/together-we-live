@@ -239,7 +239,8 @@ module Objects{
                     this.loadTexture("panda_sad", 0, false);
                     this.colorNum = Phaser.Color.getColor(255,0,0); //red
                     break;
-                case "stunned":
+                case "stunned":                    
+                    this.game.add.audio('Turret_HitsGhost2').play(null,null,global_sfx_volume);
                     this.loadTexture("panda_stun", 0, false);
                     console.log("we have stunnd panda so the key is now " + this.key);
                     this.idle_time = 0.0;

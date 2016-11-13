@@ -21,16 +21,16 @@ module State{
 
             // preload all sfx and music
             //  Firefox doesn't support mp3 files, so use ogg
-            this.game.load.audio('Generic_ShortSpit_SFX', ['assets/snd/Generic_ShortSpit_SFX.ogg']);
+            //this.game.load.audio('Generic_ShortSpit_SFX', ['assets/snd/Generic_ShortSpit_SFX.ogg']);
             this.game.load.audio('Ghost_Merges_To_Turret', ['assets/snd/Ghost_Merges_To_Turret.ogg']);
             this.game.load.audio('Music_LayerBuildUp', ['assets/snd/Music_LayerBuildUp.ogg']);
-            this.game.load.audio('Music_PrimaryLayerLoop', ['assets/snd/Music_PrimaryLayerLoop.ogg']);
+            //this.game.load.audio('Music_PrimaryLayerLoop', ['assets/snd/Music_PrimaryLayerLoop.ogg']);
             this.game.load.audio('Music_Together', ['assets/snd/Music_Together.ogg']);
             this.game.load.audio('Turret_Fire', ['assets/snd/Turret_Fire.ogg']);
             this.game.load.audio('Turret_HitsGhost2', ['assets/snd/Turret_HitsGhost2.ogg']);
             this.game.load.audio('Turret_HitsHatter1', ['assets/snd/Turret_HitsHatter1.ogg']);
             this.game.load.audio('Turret_HitsHatter2', ['assets/snd/Turret_HitsHatter2.ogg']);
-            this.game.load.audio('Turret_HitsNothing', ['assets/snd/Turret_HitsNothing.ogg']);
+            //this.game.load.audio('Turret_HitsNothing', ['assets/snd/Turret_HitsNothing.ogg']);
         }
 
         create(){
