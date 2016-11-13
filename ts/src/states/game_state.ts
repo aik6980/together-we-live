@@ -463,7 +463,28 @@ module State{
         startPlay(){
             //start playing the game after tutorial
             this.playState = "play";
-            this.spawn_system.autoSpawn = true;
+
+            var ready_text : Phaser.Text;
+
+            // start spawning
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 0.5, 1, function(){
+                this.spawn_system.autoSpawn = true;
+            }, this);
+
+            // draw text
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 1, 1, function(){
+                var str = "Be ready\nThey're coming...";
+                var style = { font: "30px Arial", fill: "#ff0044", align: "center" };
+                ready_text = this.add.text(this.gunner.position.x, this.gunner.position.y - 80, str, style);
+                ready_text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+                ready_text.anchor.set(0.5);
+                AddToWorldObjects(ready_text);
+            }, this);
+
+            // remove text
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function(){
+                ready_text.kill();
+            }, this);
         }
 
         updateProgress(){
