@@ -8,7 +8,7 @@ var SimpleGame;
     var Game = (function (_super) {
         __extends(Game, _super);
         function Game() {
-            _super.call(this, 512, 512, Phaser.AUTO, 'content', null);
+            _super.call(this, 512, 512, Phaser.AUTO, 'theGame', null);
             // add states
             this.state.add('menu', new State.Menu_state);
             this.state.add('game', new State.Game_state);
@@ -168,8 +168,12 @@ var Objects;
             //super(game, x, y, 'ship');
             _super.call(this, game, x, y, 'gunner_turret');
             this.rotateSpeed = settings.gameplay.gunner.baseTurnSpeed;
-            //bulletSpeed: number = ;
-            this.fire_angle_offset = -90;
+            this.fireAngleOffset = settings.gameplay.gunner.fireAngleOffset;
+            this.bulletSpeed = settings.gameplay.gunner.bulletSpeed;
+            this.bulletLifeSpan = settings.gameplay.gunner.bulletLifeSpan;
+            this.fireRate = settings.gameplay.gunner.fireRate;
+            this.ringMinRadius = settings.gameplay.gunner.ringMinRadius;
+            this.ringSpaceBetween = settings.gameplay.gunner.ringSpaceBetween;
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
             this.body.immovable = true; //stop shoving the gunner!
             this.recruits = this.game.add.group();
@@ -183,15 +187,18 @@ var Objects;
             this.right_button = this.game.input.keyboard.addKey(Phaser.KeyCode.D);
             // init physics            
             this.game.physics.arcade.enable(this);
+            // init audio
+            this.sound_fire = this.game.add.audio('Turret_Fire');
+            this.sound_kidnap = this.game.add.audio('Ghost_Merges_To_Turret');
             // init weapon
             this.weapon = this.game.add.weapon(30, 'bullet');
-            this.weapon.bulletLifespan = 2000; //2 seconds
+            this.weapon.bulletLifespan = this.bulletLifeSpan;
             this.weapon.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
-            this.weapon.bulletSpeed = 200;
-            this.weapon.fireRate = 400;
+            this.weapon.bulletSpeed = this.bulletSpeed;
+            this.weapon.fireRate = this.fireRate;
             this.weapon.onFire.add(function () {
                 // play sound
-                this.game.add.audio('Turret_Fire').play(null, null, global_sfx_volume);
+                this.sound_fire.play(null, null, global_sfx_volume);
             }, this);
         }
         Gunner.prototype.update = function () {
@@ -211,7 +218,7 @@ var Objects;
                 var diff_x = this.force_target.x - this.x;
                 var diff_y = this.force_target.y - this.y;
                 var target_angle = -Math.atan2(-diff_y, diff_x) * 180.0 / Math.PI;
-                var diff_angle = target_angle - (this.angle + this.fire_angle_offset);
+                var diff_angle = target_angle - (this.angle + this.fireAngleOffset);
                 if (diff_angle > 180)
                     diff_angle -= 360;
                 else if (diff_angle < -180)
@@ -239,7 +246,7 @@ var Objects;
             }, null, true);
         };
         Gunner.prototype.fire = function () {
-            var fire_angle = this.body.rotation + this.fire_angle_offset;
+            var fire_angle = this.body.rotation + this.fireAngleOffset;
             this.weapon.x = this.position.x;
             this.weapon.y = this.position.y;
             this.weapon.fireAtXY(this.weapon.x + Math.cos(fire_angle * Math.PI / 180.0), this.weapon.y + Math.sin(fire_angle * Math.PI / 180.0));
@@ -274,6 +281,7 @@ var Objects;
             this.refreshRing();
         };
         Gunner.prototype.kidnapPandaWith = function (kidnapper) {
+            this.sound_kidnap.play(null, null, global_sfx_volume);
             var panda = this.getClosestRecruit(kidnapper.position);
             this.removePanda(panda);
             // pick offscreen direction
@@ -320,11 +328,10 @@ var Objects;
         Gunner.prototype.refreshRing = function () {
             var _this = this;
             if (this.recruits.total <= 4) {
-                this.ring_radius = 20;
+                this.ring_radius = this.ringMinRadius;
             }
             else {
-                var ring_space = 30;
-                this.ring_radius = this.recruits.total * ring_space / (2 * Math.PI);
+                this.ring_radius = this.recruits.total * this.ringSpaceBetween / (2 * Math.PI);
             }
             var rotation_unit = 360.0 / this.recruits.total;
             var current_rotation = 0;
@@ -362,6 +369,7 @@ var Objects;
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
             //this.body.setSize(24, 24, 3, 4);
             this.changeState(startState);
+            this.sound_stunned = this.game.add.audio('Turret_HitsGhost2');
         }
         Panda.prototype.update = function () {
             this.body.velocity = [0, 0]; //stop moving (there is no momentum)
@@ -519,6 +527,7 @@ var Objects;
                     this.colorNum = Phaser.Color.getColor(255, 0, 0); //red
                     break;
                 case "stunned":
+                    this.sound_stunned.play(null, null, global_sfx_volume);
                     this.loadTexture("panda_stun", 0, false);
                     console.log("we have stunnd panda so the key is now " + this.key);
                     this.idle_time = 0.0;
@@ -559,7 +568,9 @@ var Objects;
         };
         Panda.prototype.update_attached = function () {
             //follow the leader! 
-            moveToTarget(this, this.attachedTo.position, 20, null);
+            if (this.attachedTo != null) {
+                moveToTarget(this, this.attachedTo.position, 20, null);
+            }
         };
         Panda.prototype.update_rescued = function () {
             //follow the gunner's anchor position
@@ -607,6 +618,8 @@ var Objects;
             this.animations.add('down', [3]);
             this.animations.add('up', [0]);
             this.animations.add('idle', [0]);
+            this.sound_shot = this.game.add.audio('Turret_HitsHatter2');
+            this.sound_scared = this.game.add.audio('Turret_HitsHatter1');
         }
         Runner.prototype.update = function () {
             //this.game.debug.cameraInfo(this.game.camera, 32, 32);
@@ -694,11 +707,14 @@ var Objects;
                     break;
                 case "shot":
                     //play sound "ARRRRGH"
-                    this.game.add.audio('Turret_HitsHatter1').play(null, null, global_sfx_volume);
+                    this.sound_shot.play(null, null, global_sfx_volume);
                     this.tint = Phaser.Color.getColor(255, 10, 0); //dirty red)
                     break;
                 case "scared":
                     //play sound "EEEEEEEK"
+                    if (prevState != "scared") {
+                        this.sound_scared.play(null, null, global_sfx_volume);
+                    }
                     this.tint = Phaser.Color.getColor(0, 30, 200); //light blue-green (pale with fright?)
                     this.alpha = 0.6;
                     break;
@@ -749,7 +765,7 @@ var Objects;
             this.linked_pandas.add(panda);
         };
         Runner.prototype.detachPanda = function (panda) {
-            if (panda.next != null) {
+            if (panda.next != null /* && panda.prev != null*/) {
                 panda.next.attachTo(panda.prev);
             }
             this.linked_pandas.remove(panda);
@@ -944,76 +960,109 @@ var State;
             this.gunner.force_target = new Phaser.Point(this.gunner.position.x, this.gunner.position.y - 100);
             this.runner.force_target = new Phaser.Point(this.runner.position.x, this.runner.position.y);
             //spawn the lives for the gunner
-            var panda1 = this.spawnPandaInState(this.gunner.x - 230, this.gunner.y, "hostile");
-            this.pandas.add(panda1);
-            var panda2 = this.spawnPandaInState(this.gunner.x - 50, this.gunner.y - 400, "hostile");
-            this.pandas.add(panda2);
-            var panda3 = this.spawnPandaInState(this.gunner.x + 100, this.gunner.y - 400, "hostile");
-            this.pandas.add(panda3);
-            // shot them            
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function () {
-                // aim panda1
-                this.gunner.force_target = panda1.position;
-            }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function () {
+            this.panda1 = this.spawnPandaInState(this.gunner.x - 230, this.gunner.y, "hostile");
+            this.pandas.add(this.panda1);
+            this.panda2 = this.spawnPandaInState(this.gunner.x - 50, this.gunner.y - 400, "hostile");
+            this.pandas.add(this.panda2);
+            this.panda3 = this.spawnPandaInState(this.gunner.x + 100, this.gunner.y - 400, "hostile");
+            this.pandas.add(this.panda3);
+            this.wait_for_panda1 = true;
+        };
+        Game_state.prototype.start_demo_phase1 = function () {
+            // aim panda1
+            this.gunner.force_target = this.panda1.position;
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 1, 1, function () {
                 // stun it!
                 this.gunner.fire();
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 3.6, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 1.6, 1, function () {
                 // the runner try to catch it
-                this.runner.force_target = new Phaser.Point(panda1.x, this.runner.y);
+                this.runner.force_target = new Phaser.Point(this.panda1.x, this.runner.y);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 4, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function () {
                 // runner keep going and catch it
-                this.runner.force_target = panda1.position;
+                this.runner.force_target = this.panda1.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 4.2, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2.2, 1, function () {
                 // the runner starts to  bring it back
                 this.runner.force_target = new Phaser.Point(this.gunner.x, this.gunner.y + 50);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function () {
                 // bring it back safe
                 this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
+                this.wait_for_panda2 = true;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 5.8, 1, function () {
-                // panda2 is coming, aim it!
-                this.gunner.force_target = panda2.position;
-            }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 6.2, 1, function () {
+        };
+        Game_state.prototype.start_demo_phase2 = function () {
+            // panda2 is coming, aim it!
+            this.gunner.force_target = this.panda2.position;
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 0.4, 1, function () {
                 // stun it!
                 this.gunner.fire();
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 6.8, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 1, 1, function () {
                 // runner try to catch it
-                this.runner.force_target = panda2.position;
+                this.runner.force_target = this.panda2.position;
+                this.wait_for_panda3 = true;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.2, 1, function () {
-                // but wait.. panda3 is coming
-                this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
-            }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 7.5, 1, function () {
+        };
+        Game_state.prototype.start_demo_phase3 = function () {
+            // but wait.. panda3 is coming
+            this.runner.force_target = new Phaser.Point(this.gunner.x + 80, this.gunner.y);
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 0.3, 1, function () {
                 // gunner aim panda3                
-                this.gunner.force_target = panda3.position;
+                this.gunner.force_target = this.panda3.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 8, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 0.8, 1, function () {
                 // stun it!
                 this.gunner.fire();
                 this.gunner.force_target = new Phaser.Point(this.gunner.force_target);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 9, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 2, 1, function () {
                 // then runner can safely catch both of them
-                this.runner.force_target = panda2.position;
+                this.runner.force_target = this.panda2.position;
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 10, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 3, 1, function () {
                 // bring them back home
                 this.runner.force_target = new Phaser.Point(this.gunner.position.x + 50, this.gunner.position.y + 10);
             }, this);
-            this.game.time.events.repeat(Phaser.Timer.SECOND * 11, 1, function () {
+            this.game.time.events.repeat(Phaser.Timer.SECOND * 4, 1, function () {
                 this.stop_demo();
             }, this);
-            //ended
+        };
+        Game_state.prototype.update_demo = function () {
+            if (this.wait_for_panda1) {
+                var wait_distance_sqr = 120 * 120;
+                var diff_x = this.panda1.x - this.gunner.x;
+                var diff_y = this.panda1.y - this.gunner.y;
+                var distance = diff_x * diff_x + diff_y * diff_y;
+                if (distance < wait_distance_sqr) {
+                    this.start_demo_phase1();
+                    this.wait_for_panda1 = false;
+                }
+            }
+            else if (this.wait_for_panda2) {
+                var wait_distance_sqr = 120 * 120;
+                var diff_x = this.panda2.x - this.gunner.x;
+                var diff_y = this.panda2.y - this.gunner.y;
+                var distance = diff_x * diff_x + diff_y * diff_y;
+                if (distance < wait_distance_sqr) {
+                    this.start_demo_phase2();
+                    this.wait_for_panda2 = false;
+                }
+            }
+            else if (this.wait_for_panda3) {
+                var wait_distance_sqr = 130 * 130;
+                var diff_x = this.panda3.x - this.gunner.x;
+                var diff_y = this.panda3.y - this.gunner.y;
+                var distance = diff_x * diff_x + diff_y * diff_y;
+                if (distance < wait_distance_sqr) {
+                    this.start_demo_phase3();
+                    this.wait_for_panda3 = false;
+                }
+            }
         };
         Game_state.prototype.stop_demo = function () {
             //this.game.time.events.removeAll();
@@ -1037,6 +1086,7 @@ var State;
                 this.spawn_system.autoSpawn = false; //disable spawns
             }
             if (this.playState == "demo") {
+                this.update_demo();
             }
             if (this.playState == "play") {
                 this.updateProgress();
@@ -1071,7 +1121,7 @@ var State;
             }, this);
             //bullet collisions
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.shotPanda, null, this);
-            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, function () { return this.runner.state != 'warping'; }, this);
+            this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, function () { return this.runner.state == 'alive'; }, this);
         };
         Game_state.prototype.render = function () {
             var _this = this;
@@ -1318,16 +1368,16 @@ var State;
             this.title_init = false;
             // preload all sfx and music
             //  Firefox doesn't support mp3 files, so use ogg
-            this.game.load.audio('Generic_ShortSpit_SFX', ['assets/snd/Generic_ShortSpit_SFX.ogg']);
+            //this.game.load.audio('Generic_ShortSpit_SFX', ['assets/snd/Generic_ShortSpit_SFX.ogg']);
             this.game.load.audio('Ghost_Merges_To_Turret', ['assets/snd/Ghost_Merges_To_Turret.ogg']);
             this.game.load.audio('Music_LayerBuildUp', ['assets/snd/Music_LayerBuildUp.ogg']);
-            this.game.load.audio('Music_PrimaryLayerLoop', ['assets/snd/Music_PrimaryLayerLoop.ogg']);
+            //this.game.load.audio('Music_PrimaryLayerLoop', ['assets/snd/Music_PrimaryLayerLoop.ogg']);
             this.game.load.audio('Music_Together', ['assets/snd/Music_Together.ogg']);
             this.game.load.audio('Turret_Fire', ['assets/snd/Turret_Fire.ogg']);
             this.game.load.audio('Turret_HitsGhost2', ['assets/snd/Turret_HitsGhost2.ogg']);
             this.game.load.audio('Turret_HitsHatter1', ['assets/snd/Turret_HitsHatter1.ogg']);
             this.game.load.audio('Turret_HitsHatter2', ['assets/snd/Turret_HitsHatter2.ogg']);
-            this.game.load.audio('Turret_HitsNothing', ['assets/snd/Turret_HitsNothing.ogg']);
+            //this.game.load.audio('Turret_HitsNothing', ['assets/snd/Turret_HitsNothing.ogg']);
         };
         Menu_state.prototype.create = function () {
             this.game.stage.backgroundColor = "#4488AA";
