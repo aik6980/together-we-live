@@ -26,6 +26,7 @@ module Objects{
             this.linked_pandas.add(this); //add self at top of list
 
             setCollisionWithWalls(this, true);
+            this.anchor.setTo(0.5);
         }
 
         update(){

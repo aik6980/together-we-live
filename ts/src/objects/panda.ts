@@ -17,7 +17,7 @@ module Objects{
         constructor(game : Phaser.Game, x: number, y: number, startState: pandaStates){        
             super(game, x, y, 'ghosts');
 
-            //this.anchor.set(0.5,0.5);
+            this.anchor.set(0.5,0.5);
             this.game.physics.enable(this, Phaser.Physics.ARCADE); //enable physics on the newly created Panda
             setCollisionWithWalls(this, false); //panda ghosts can float through walls.
             
