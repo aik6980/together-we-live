@@ -41,7 +41,6 @@ module Objects{
 
             //offset bounding box to be a little larger than the 30x32 sprite (also make it square)
             //this.body.setSize(24, 24, 3, 4);
-
             this.changeState(startState);
         }
 
