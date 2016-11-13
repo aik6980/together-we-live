@@ -70,6 +70,13 @@ module State{
             this.spawner = this.game.add.group();
             this.spawn_system = new Objects.Spawn_System(this);
             console.log("this.spawn_system created ", this.spawn_system);
+            
+            /*//make 3 lives
+            this.spawn_system.spawnInState("rescued");
+            this.spawn_system.spawnInState("rescued");
+            this.spawn_system.spawnInState("rescued");
+            console.log("spawned 3 lives");*/
+
             this.spawn_system.spawnCountdownStart();
 
             // world scaling helper
@@ -82,31 +89,31 @@ module State{
             this.level.add_gameobjects(this);
 
             //dev controls
-            //if (this.devMode)
-            //    this.changeAllPandasState(null, "sleepy");
-            ///num keys to change all the pandas states?
-            //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
-            //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeWorldScale, this, null, 2.0);
+            if (this.devMode){
+                ///num keys to change all the pandas states?
+                //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
+                //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeWorldScale, this, null, 2.0);
             this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeWorldScale, this, null, 1.0);
             this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeWorldScale, this, null, 0.66);
-            this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR).onUp.add(this.changeWorldScale, this, null, 0.5);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR).onUp.add(this.changeWorldScale, this, null, 0.5);
 
-            this.game.input.keyboard.addKey(Phaser.Keyboard.SIX).onUp.add(this.spawn_trigger, this, null);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.SIX).onUp.add(this.spawn_trigger, this, null);
 
-            this.game.input.keyboard.addKey(Phaser.Keyboard.SEVEN).onUp.add(this.changeAllPandasState, this, null, "rescued");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
-            this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.SEVEN).onUp.add(this.changeAllPandasState, this, null, "rescued");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
+                this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
 
-            this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnePandaFromGunner, this);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnePandaFromGunner, this);
 
-            this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_UP).onUp.add(this.winTheGame, this);
-            this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_DOWN).onUp.add(this.loseTheGame, this);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_UP).onUp.add(this.winTheGame, this);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_DOWN).onUp.add(this.loseTheGame, this);
 
-            // TEST for gunner
-            //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
-            //this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 30, this.createHostilePanda, this);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.HOME).onUp.add(function(){ this.spawn_system.spawnEnabled = true; }, this);
+                this.game.input.keyboard.addKey(Phaser.Keyboard.END).onUp.add(function(){ this.spawn_system.spawnEnabled = false; }, this);
             //this.game.time.events.repeat(Phaser.Timer.SECOND, 3, this.createFollowingPanda, this);
+            
+            }
         }
 
         spawn_trigger(args){
@@ -122,9 +129,16 @@ module State{
             ///Collisions
             //N.b. the player when "warping" is not checked for collision;
 
+            ///DID YOU LOSE YET?
+            if (this.gunner.recruits.length == 0){
+                this.loseTheGame();
+                //this.game.paused = true;
+            }
+
             ////DID YOU WIN YET??
             if (this.gunner.recruits.length >= gameplay_gunner_winRecruits){
                 this.winTheGame();
+                this.game.paused = true;
             }
             
 
@@ -134,8 +148,15 @@ module State{
             this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
 
             //level collisions
-            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this); 
-            //this.game.physics.arcade.collide(this.pandas, this.level.collision_layer);
+            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this);
+            //this.game.physics.arcade.collide(this.pandas, this.level.collision_layer); 
+            this.game.physics.arcade.collide(this.pandas, this.level.collision_layer, null, function(panda, layer){  
+                    if (panda.state == 'rescued'){
+                        return false; //don't colide
+                    } else { 
+                        return true; 
+                    }   
+                }, this);
 
             //bullet collisions
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.shotPanda, null, this);
@@ -150,7 +171,7 @@ module State{
             this.game.debug.text(progressText, 20, 0+20); //progress Text in top left
 			
             var debugBoundingBoxes = false;
-            if (this.devMode)
+            if (this.devMode){
 
                 if (debugBoundingBoxes){
                     //bounding boxes
@@ -164,10 +185,12 @@ module State{
                     this.gunner.anchor
                 }
                 
-                this.game.debug.text("object in world_objects: " + this.world_objects.total, 10, this.game.height - 60);
+                //this.game.debug.text("object in world_objects: " + this.world_objects.total, 10, this.game.height - 60);
+                this.game.debug.text("Spawner enabled: " + this.spawn_system.spawnEnabled, 10, this.game.height - 60);
                 //this.game.debug.text("Gunner position" + this.gunner.x + ", "+ this.gunner.y, 10, this.game.height - 40);
                 this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
                 this.game.debug.text("Runner: " + this.runner.alive + " " + this.runner.state + " with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
+            }
 
                 //this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
 
@@ -180,7 +203,7 @@ module State{
             this.game.debug.text(str, 250, 250);
             //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
-            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
         }
 
@@ -190,7 +213,7 @@ module State{
             this.game.debug.text(str, 250, 250);
             //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
-            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
         }
 
@@ -216,11 +239,23 @@ module State{
         }
 
         spawnPandaInState(x, y, state: pandaStates){
-            var pobj = new Objects.Panda(this.game, x, y, state);
-            pobj.body.height = pobj.body.height * this.level.current_scale;
-            pobj.body.width = pobj.body.width * this.level.current_scale;
-            pobj.target = this.gunner.position; //pandas target the Gunner by default
-            return pobj;
+
+            if (state == "rescued")
+            {
+                var pobj = new Objects.Panda(this.game, x, y, "sleepy");
+                pobj.body.height = pobj.body.height * this.level.current_scale;
+                pobj.body.width = pobj.body.width * this.level.current_scale;
+                this.gunner.rescuePanda(pobj);
+                return pobj;
+            }
+            else
+            {
+                var pobj = new Objects.Panda(this.game, x, y, state);
+                pobj.body.height = pobj.body.height * this.level.current_scale;
+                pobj.body.width = pobj.body.width * this.level.current_scale;
+                pobj.target = this.gunner.position; //pandas target the Gunner by default
+                return pobj;
+            }
         }
 
         changeAllPandasState(args, state: string){
@@ -253,6 +288,7 @@ module State{
         {
             var panda = this.gunner.recruits.getAt(0) as Objects.Panda;
             this.gunner.removePanda(panda);
+            panda.kill();
         }
     }
 }
@@ -277,15 +313,15 @@ function moveToTarget(source: Phaser.Sprite, target: PIXI.Point, distance: numbe
         {
             source.body.velocity.x = 0;
             source.body.velocity.y = 0;
-        }
+    }
     }
     else if (source.body.velocity.x > distance || source.body.velocity.x < -distance ||
         source.body.velocity.y > distance || source.body.velocity.y < -distance)
     {
-        //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
+    //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
         var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y);
-        source.body.velocity.x *= gospeed / magnitude;
-        source.body.velocity.y *= gospeed / magnitude;
+    source.body.velocity.x *= gospeed / magnitude;
+    source.body.velocity.y *= gospeed / magnitude;
     }
     else
     {

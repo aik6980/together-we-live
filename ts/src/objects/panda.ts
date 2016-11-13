@@ -2,7 +2,7 @@
 
 module Objects{
 
-    type pandaStates = "hostile" | "stunned" | "attached" | "rescued" | "sleepy";
+    type pandaStates = "hostile" | "stunned" | "attached" | "rescued" | "released" | "sleepy";
 
     export class Panda extends Phaser.Sprite{
         state: pandaStates;
@@ -53,6 +53,9 @@ module Objects{
                 case "rescued":
                     this.update_rescued();
                     break;
+                case "released":
+                    this.update_released();
+                    break;
                 case "sleepy":
                     this.update_sleepy();
                     break;
@@ -60,7 +63,8 @@ module Objects{
                     break;                
             }
 
-            if (this.state == "rescued" || (this.body.velocity.x == 0 && this.body.velocity.y == 0))
+            if (this.state == "rescued" || this.state == "released"
+                || (this.body.velocity.x == 0 && this.body.velocity.y == 0))
             {
                 if (this.animations.currentAnim.name != 'idle')
                 {
@@ -235,13 +239,19 @@ module Objects{
                     this.colorNum = Phaser.Color.getColor(255,0,0); //red
                     break;
                 case "stunned":
+                    this.idle_time = 0.0;
                     this.colorNum = Phaser.Color.getColor(0, 255, 255); //yellow                   
                     break;
                 case "attached":
                     this.colorNum = Phaser.Color.getColor(30, 10, 250); //blue
                     break;
                 case "rescued":
+                    this.idle_time = 0.0;
                     this.colorNum = Phaser.Color.getColor(0, 255, 0); //green
+                    break;
+                case "released":
+                    this.idle_time = 0.0;
+                    // keep color from previous state
                     break;
                 case "sleepy":
                     this.colorNum = Phaser.Color.getColor(255, 255, 255); //white
@@ -251,7 +261,7 @@ module Objects{
                     break;
             }
 
-                this.tint = this.colorNum;
+            this.tint = this.colorNum;
         }
 
         update_hostile()
@@ -277,6 +287,14 @@ module Objects{
             moveToTarget(this, this.target, 0, 100)
         }
 
+        update_released(){
+            //follow the target far away
+            moveToTarget(this, this.target, 10, 100)
+
+            // TODO
+            // check offscreen for killing
+        }
+
         update_sleepy(){
             //stay perfectly still (might also be hidden)
             this.attachedTo = null; //break attachment
@@ -288,7 +306,7 @@ module Objects{
             if (this.attachedTo != null)
             {
                 (Object)(this.attachedTo).detachPanda(panda);
-    }
+            }
         }
     }
 }

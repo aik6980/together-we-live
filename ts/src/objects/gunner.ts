@@ -36,11 +36,11 @@ module Objects{
             // init physics            
             this.game.physics.arcade.enable(this);
 
-            // init weapon            
-            this.weapon = this.game.add.weapon(60, 'bullet');
+            // init weapon based on powerLevel
+            this.weapon = this.game.add.weapon(30, 'bullet');
             this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
             this.weapon.bulletSpeed = 200;
-            this.weapon.fireRate = 200;
+            this.weapon.fireRate = 400;
         }
 
         update(){
@@ -80,7 +80,11 @@ module Objects{
         collidePanda(gunner, panda){
             switch (panda.state){
                 case "hostile":
-                    gunner.die(); //lose 1 life
+                    //release 1 recruit or gameover
+                    if (gunner.recruits.total > 0)
+                    {
+                        gunner.kidnapPandaWith(panda);
+                    }
                     break;
                 case "attached":
                     gunner.rescuePanda(panda);
@@ -92,7 +96,7 @@ module Objects{
 
         die(){
             console.log("gunner is dying (lose 1 life)")
-            //this.recruits.remove()
+            //
             //this.kill()
         }
 
@@ -111,17 +115,48 @@ module Objects{
 
             this.refreshRing();
         }
+
+        kidnapPandaWith(kidnapper : Panda)
+        {
+            var panda = this.recruits.getAt(0) as Objects.Panda;
+            this.removePanda(panda);
+
+            // pick offscreen direction
+            var offscreen_dir_x = panda.x - kidnapper.x;
+            var offscreen_dir_y = panda.y - kidnapper.y;
+            var magnitude = Math.sqrt(offscreen_dir_x*offscreen_dir_x + offscreen_dir_y*offscreen_dir_y);
+            if (magnitude > 0.0)
+            {
+                offscreen_dir_x /= magnitude;
+                offscreen_dir_y /= magnitude;
+            }
+            else
+            {
+                var random_angle = this.game.rnd.angle();
+                offscreen_dir_x = Math.cos(random_angle * Math.PI / 180.0);
+                offscreen_dir_y = Math.sin(random_angle * Math.PI / 180.0);
+            }
+            
+            // kidnapper go away
+            kidnapper.changeState("released");
+            kidnapper.target = new Phaser.Point(
+                this.game.world.width * offscreen_dir_x,
+                this.game.world.height * offscreen_dir_y);
+            
+            // lost panda go away together
+            panda.changeState("released");
+            panda.target = kidnapper.position;
+
+            AddToWorldObjects(panda);
+            AddToWorldObjects(kidnapper);
+        }
         
         removePanda(panda : Panda)
         {
             var anchor = this.anchors.getAt(0) as Phaser.Sprite;
             this.anchors.remove(anchor);
 
-            console.log(panda);
-
-            panda.kill();
             this.recruits.remove(panda);
-
             this.refreshRing();
         }
 
