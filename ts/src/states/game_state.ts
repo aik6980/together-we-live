@@ -86,7 +86,7 @@ module State{
             var obj = null; //reused lots.
 
             this.gray_filter = this.game.add.filter('Gray');
-            this.gray_filter.gray = 0.5;
+            this.gray_filter.gray = 1.0;
 
             //create level
             this.level = new Level.Level(this.game);
@@ -156,7 +156,7 @@ module State{
                 this.spawnPandaInState(200,50, "rescued");
                 this.spawnPandaInState(50,200, "rescued");
 
-                this.game.stage.filters = null;
+                //this.game.stage.filters = null;
                 this.startPlay();
                 return;
             }
@@ -252,7 +252,7 @@ module State{
             this.gunner.force_target = null;
             this.runner.force_target = null;
 
-            this.game.stage.filters = null;
+            //this.game.stage.filters = null;
             this.startPlay();
         }
 
@@ -466,11 +466,14 @@ module State{
         }
 
         updateProgress(){
+            
             ///Update progress
             var prevProgressPercent = this.progressPercent;
             var newProgressPercent = Math.floor(this.gunner.recruits.length / settings.gameplay.gunner.winRecruits * 100);
             newProgressPercent = clamp(newProgressPercent, 0, 100); //clamp it 0-100
             this.progressPercent = newProgressPercent;
+
+            this.gray_filter.gray = 1.0 - newProgressPercent/100.0;
             
             this.peakProgressPercent = clamp(newProgressPercent, this.peakProgressPercent, 100) //increase (never decrease the peakProgressPercent);
 
