@@ -10,8 +10,9 @@ var SimpleGame;
         function Game() {
             _super.call(this, 512, 512, Phaser.AUTO, 'content', null);
             // add states
+            this.state.add('menu', new State.Menu_state);
             this.state.add('game', new State.Game_state);
-            this.state.start('game');
+            this.state.start('menu');
         }
         return Game;
     }(Phaser.Game));
@@ -40,7 +41,7 @@ var Level;
                     //game_state.world_objects.add(game_state.gunner.weapon);
                     game_state.world_objects.add(game_state.gunner.weapon.bullets);
                     //this.gunner.filters = [this.gray_filter];
-                    //spawn the lives for the gunner (not working yet) - also even if making all rescued they don't attach to the gunner yet.
+                    //spawn the lives for the gunner
                     console.log("spawn lives *3 at set position");
                     game_state.spawnPandaInState(0, 0, "rescued");
                     game_state.spawnPandaInState(200, 50, "rescued");
@@ -156,6 +157,8 @@ var Objects;
             //super(game, x, y, 'ship');
             _super.call(this, game, x, y, 'gunner_turret');
             this.rotateSpeed = settings.gameplay.gunner.baseTurnSpeed;
+            //bulletSpeed: number = ;
+            this.fire_angle_offset = 90;
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
             this.body.immovable = true; //stop shoving the gunner!
             this.recruits = this.game.add.group();
@@ -178,19 +181,38 @@ var Objects;
         }
         Gunner.prototype.update = function () {
             var _this = this;
-            if (this.left_button.isDown) {
-                this.body.angularVelocity = -this.rotateSpeed;
-            }
-            else if (this.right_button.isDown) {
-                this.body.angularVelocity = this.rotateSpeed;
+            if (this.force_target == null) {
+                if (this.left_button.isDown) {
+                    this.body.angularVelocity = -this.rotateSpeed;
+                }
+                else if (this.right_button.isDown) {
+                    this.body.angularVelocity = this.rotateSpeed;
+                }
+                else {
+                    this.body.angularVelocity = 0;
+                }
             }
             else {
-                this.body.angularVelocity = 0;
+                var diff_x = this.force_target.x - this.x;
+                var diff_y = this.force_target.y - this.y;
+                var target_angle = -Math.atan2(-diff_y, diff_x) * 180.0 / Math.PI;
+                var diff_angle = target_angle - (this.angle + this.fire_angle_offset);
+                if (diff_angle > 180)
+                    diff_angle -= 360;
+                else if (diff_angle < -180)
+                    diff_angle += 360;
+                if (diff_angle > 5) {
+                    this.body.angularVelocity = this.rotateSpeed;
+                }
+                else if (diff_angle < -5) {
+                    this.body.angularVelocity = -this.rotateSpeed;
+                }
+                else {
+                    this.body.angularVelocity = 0;
+                }
             }
-            if (this.fire_button.isDown) {
-                this.weapon.x = this.position.x;
-                this.weapon.y = this.position.y;
-                this.weapon.fireAtXY(this.weapon.x + Math.cos(this.body.rotation * Math.PI / 180.0), this.weapon.y + Math.sin(this.body.rotation * Math.PI / 180.0));
+            if (!this.force_not_firing && this.fire_button.isDown) {
+                this.fire();
             }
             // rotate the ring
             var index = 0;
@@ -201,10 +223,19 @@ var Objects;
                 panda.target.y = (anchor.worldPosition.y - _this.worldPosition.y) / global_game_scale + anchor.position.y;
             }, null, true);
         };
+        Gunner.prototype.fire = function () {
+            var fire_angle = this.body.rotation + this.fire_angle_offset;
+            this.weapon.x = this.position.x;
+            this.weapon.y = this.position.y;
+            this.weapon.fireAtXY(this.weapon.x + Math.cos(fire_angle * Math.PI / 180.0), this.weapon.y + Math.sin(fire_angle * Math.PI / 180.0));
+        };
         Gunner.prototype.collidePanda = function (gunner, panda) {
             switch (panda.state) {
                 case "hostile":
                     //release 1 recruit or gameover
+                    if (gunner.recruits.total > 0) {
+                        gunner.kidnapPandaWith(panda);
+                    }
                     break;
                 case "attached":
                     gunner.rescuePanda(panda);
@@ -227,13 +258,49 @@ var Objects;
             panda.target = new Phaser.Point();
             this.refreshRing();
         };
+        Gunner.prototype.kidnapPandaWith = function (kidnapper) {
+            var panda = this.getClosestRecruit(kidnapper.position);
+            this.removePanda(panda);
+            // pick offscreen direction
+            var offscreen_dir_x = panda.x - kidnapper.x;
+            var offscreen_dir_y = panda.y - kidnapper.y;
+            var magnitude = Math.sqrt(offscreen_dir_x * offscreen_dir_x + offscreen_dir_y * offscreen_dir_y);
+            if (magnitude > 0.0) {
+                offscreen_dir_x /= magnitude;
+                offscreen_dir_y /= magnitude;
+            }
+            else {
+                var random_angle = this.game.rnd.angle();
+                offscreen_dir_x = Math.cos(random_angle * Math.PI / 180.0);
+                offscreen_dir_y = Math.sin(random_angle * Math.PI / 180.0);
+            }
+            // kidnapper go away
+            kidnapper.changeState("released");
+            kidnapper.target = new Phaser.Point(this.game.world.width * offscreen_dir_x, this.game.world.height * offscreen_dir_y);
+            // lost panda go away together
+            panda.changeState("released");
+            panda.target = kidnapper.position;
+            AddToWorldObjects(panda);
+            AddToWorldObjects(kidnapper);
+        };
         Gunner.prototype.removePanda = function (panda) {
             var anchor = this.anchors.getAt(0);
             this.anchors.remove(anchor);
-            console.log(panda);
-            panda.kill();
             this.recruits.remove(panda);
             this.refreshRing();
+        };
+        Gunner.prototype.getClosestRecruit = function (target) {
+            var closest_panda;
+            var closest_distance;
+            this.recruits.forEach(function (panda) {
+                var diff_x = target.x - panda.x;
+                var diff_y = target.y - panda.y;
+                var distance = diff_x * diff_x + diff_y * diff_y;
+                if (closest_panda == null || distance < closest_distance) {
+                    closest_panda = panda;
+                }
+            }, null, true);
+            return closest_panda;
         };
         Gunner.prototype.refreshRing = function () {
             var _this = this;
@@ -295,13 +362,17 @@ var Objects;
                 case "rescued":
                     this.update_rescued();
                     break;
+                case "released":
+                    this.update_released();
+                    break;
                 case "sleepy":
                     this.update_sleepy();
                     break;
                 default:
                     break;
             }
-            if (this.state == "rescued" || (this.body.velocity.x == 0 && this.body.velocity.y == 0)) {
+            if (this.state == "rescued" || this.state == "released"
+                || (this.body.velocity.x == 0 && this.body.velocity.y == 0)) {
                 if (this.animations.currentAnim.name != 'idle') {
                     if (this.idle_time <= 0) {
                         this.play('idle', 20, true);
@@ -433,13 +504,19 @@ var Objects;
                     this.colorNum = Phaser.Color.getColor(255, 0, 0); //red
                     break;
                 case "stunned":
+                    this.idle_time = 0.0;
                     this.colorNum = Phaser.Color.getColor(0, 255, 255); //yellow                   
                     break;
                 case "attached":
                     this.colorNum = Phaser.Color.getColor(30, 10, 250); //blue
                     break;
                 case "rescued":
+                    this.idle_time = 0.0;
                     this.colorNum = Phaser.Color.getColor(0, 255, 0); //green
+                    break;
+                case "released":
+                    this.idle_time = 0.0;
+                    // keep color from previous state
                     break;
                 case "sleepy":
                     this.colorNum = Phaser.Color.getColor(255, 255, 255); //white
@@ -467,6 +544,12 @@ var Objects;
         Panda.prototype.update_rescued = function () {
             //follow the gunner's anchor position
             moveToTarget(this, this.target, 0, 100);
+        };
+        Panda.prototype.update_released = function () {
+            //follow the target far away
+            moveToTarget(this, this.target, 10, 100);
+            // TODO
+            // check offscreen for killing
         };
         Panda.prototype.update_sleepy = function () {
             //stay perfectly still (might also be hidden)
@@ -528,52 +611,43 @@ var Objects;
                 chainSlowDown = settings.gameplay.runner.chainMaxSlowDown;
             chainSlowDown = 1; //overwrite for now
             var gospeed = this.speed * chainSlowDown;
-            //Runner movement
-            var leftOrRight = 0; //-1 = left, 0 =none, +1 = right
-            var upOrDown = 0; //-1 = Up, 0= none, +1 = down
-            if (this.cursors.left.isDown) {
-                leftOrRight = -1;
-            }
-            else if (this.cursors.right.isDown) {
-                leftOrRight = +1;
-            }
-            if (this.cursors.up.isDown) {
-                upOrDown = -1;
-            }
-            else if (this.cursors.down.isDown) {
-                upOrDown = +1;
-            }
-            this.body.velocity.x = gospeed * leftOrRight;
-            this.body.velocity.y = gospeed * upOrDown;
-            if (upOrDown == +1) {
-                this.animations.play("up");
-            }
-            else if (upOrDown == -1 && leftOrRight == 0) {
-                this.animations.play("down");
-            }
-            else if (leftOrRight == -1) {
-                this.animations.play("left");
-            }
-            else if (leftOrRight == 1) {
-                this.animations.play("right");
+            if (this.force_target == null) {
+                //Runner movement
+                var leftOrRight = 0; //-1 = left, 0 =none, +1 = right
+                var upOrDown = 0; //-1 = Up, 0= none, +1 = down
+                if (this.cursors.left.isDown) {
+                    leftOrRight = -1;
+                }
+                else if (this.cursors.right.isDown) {
+                    leftOrRight = +1;
+                }
+                if (this.cursors.up.isDown) {
+                    upOrDown = -1;
+                }
+                else if (this.cursors.down.isDown) {
+                    upOrDown = +1;
+                }
+                this.body.velocity.x = gospeed * leftOrRight;
+                this.body.velocity.y = gospeed * upOrDown;
+                if (upOrDown == +1) {
+                    this.animations.play("up");
+                }
+                else if (upOrDown == -1 && leftOrRight == 0) {
+                    this.animations.play("down");
+                }
+                else if (leftOrRight == -1) {
+                    this.animations.play("left");
+                }
+                else if (leftOrRight == 1) {
+                    this.animations.play("right");
+                }
+                else {
+                    this.animations.play("idle");
+                }
             }
             else {
-                this.animations.play("idle");
+                moveToTarget(this, this.force_target, 0, gospeed);
             }
-            /*
-                        //Runner Movement
-                        //horizontal movement
-                        if (this.cursors.left.isDown)
-                            this.body.velocity.x = -gospeed;
-                        else if (this.cursors.right.isDown)
-                            this.body.velocity.x = gospeed;
-            
-                        //vertical movement
-                        if (this.cursors.up.isDown)
-                            this.body.velocity.y = -gospeed;
-                        else if (this.cursors.down.isDown)
-                            this.body.velocity.y = gospeed;
-            */
         };
         Runner.prototype.changeState = function (targetState) {
             var prevState = this.state;
@@ -653,6 +727,7 @@ var Objects;
             _super.call(this, game, x, y, game.cache.getBitmapData('unit_white'));
             this.tint = Phaser.Color.getColor(0, 0, 64);
             //this.alpha = 0;
+            this.visible = false;
         }
         Spawner.prototype.update = function () {
         };
@@ -809,6 +884,7 @@ var State;
             //N.b. the player when "warping" is not checked for collision;
             ///DID YOU LOSE YET?
             if (this.gunner.recruits.length == 0) {
+                this.loseTheGame();
             }
             ////DID YOU WIN YET??
             if (this.gunner.recruits.length >= settings.gameplay.gunner.winRecruits) {
@@ -866,8 +942,9 @@ var State;
             this.game.debug.text(str, 250, 250);
             //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
-            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
+            AddToWorldObjects(text);
         };
         Game_state.prototype.loseTheGame = function () {
             console.log("loseTheGame()");
@@ -875,8 +952,9 @@ var State;
             this.game.debug.text(str, 250, 250);
             //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
-            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            var text = this.add.text(this.gunner.position.x, this.gunner.position.y, str, style);
             text.anchor.set(0.5);
+            AddToWorldObjects(text);
         };
         Game_state.prototype.shotPanda = function (bullet, panda) {
             if (panda.state != "rescued") {
@@ -895,11 +973,20 @@ var State;
             return this.spawnPandaInState(x, y, "hostile");
         };
         Game_state.prototype.spawnPandaInState = function (x, y, state) {
-            var pobj = new Objects.Panda(this.game, x, y, state);
-            pobj.body.height = pobj.body.height * this.level.current_scale;
-            pobj.body.width = pobj.body.width * this.level.current_scale;
-            pobj.target = this.gunner.position; //pandas target the Gunner by default
-            return pobj;
+            if (state == "rescued") {
+                var pobj = new Objects.Panda(this.game, x, y, "sleepy");
+                pobj.body.height = pobj.body.height * this.level.current_scale;
+                pobj.body.width = pobj.body.width * this.level.current_scale;
+                this.gunner.rescuePanda(pobj);
+                return pobj;
+            }
+            else {
+                var pobj = new Objects.Panda(this.game, x, y, state);
+                pobj.body.height = pobj.body.height * this.level.current_scale;
+                pobj.body.width = pobj.body.width * this.level.current_scale;
+                pobj.target = this.gunner.position; //pandas target the Gunner by default
+                return pobj;
+            }
         };
         Game_state.prototype.changeAllPandasState = function (args, state) {
             this.pandas.forEachExists(function (panda) { panda.changeState(state); }, null);
@@ -923,6 +1010,7 @@ var State;
         Game_state.prototype.removeOnePandaFromGunner = function () {
             var panda = this.gunner.recruits.getAt(0);
             this.gunner.removePanda(panda);
+            panda.kill();
         };
         return Game_state;
     }(Phaser.State));
@@ -977,4 +1065,56 @@ function randomIntFromInterval(min, max) {
 }
 ////Global Gameplay variables (Time units should be ms as the functions will divide by 1000)
 var settings; //object loaded via json
+var State;
+(function (State) {
+    var Menu_state = (function (_super) {
+        __extends(Menu_state, _super);
+        function Menu_state() {
+            _super.apply(this, arguments);
+            this.timer = 0;
+        }
+        Menu_state.prototype.preload = function () {
+            // load all character pictures
+            for (var i = 0; i < 6; ++i) {
+                this.game.load.image('logo' + i, 'assets/img/logo' + i + '.png');
+            }
+        };
+        Menu_state.prototype.create = function () {
+            this.game.stage.backgroundColor = "#4488AA";
+            // add character image
+            for (var i = 0; i < 12; i++) {
+                var logo = this.game.add.sprite(this.game.world.randomX, -150 + this.game.world.randomY, 'logo' + this.game.rnd.between(0, 5));
+                logo.anchor.set(0.5);
+                logo.scale.set(this.game.rnd.realInRange(0.8, 1.2));
+                this.game.add.tween(logo).to({ y: "+300" }, 1000 + this.game.rnd.between(1000, 2000), "Bounce.easeOut", true, 0, -1, true);
+            }
+            // add text
+            var bar = this.game.add.graphics(0, 0);
+            bar.beginFill(0x000000, 0.2);
+            bar.drawRect(0, this.game.height * 0.6, this.game.width, 50);
+            var style = { font: "bold 18px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+            //  The Text is positioned at 0, 100
+            this.text = this.game.add.text(0, 0, "press SPACE to start game", style);
+            this.text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+            //  We'll set the bounds to be from x0, y100 and be 800px wide by 100px high
+            this.text.setTextBounds(0, this.game.height * 0.6, this.game.width, 50);
+            // press space bar to start the game
+            this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onUp.add(this.changeState, this, null);
+        };
+        Menu_state.prototype.update = function () {
+            this.timer += this.game.time.elapsed;
+            if (this.timer > 400) {
+                this.timer = 0;
+                this.text.visible = !this.text.visible;
+            }
+        };
+        Menu_state.prototype.render = function () {
+        };
+        Menu_state.prototype.changeState = function () {
+            this.game.state.start('game');
+        };
+        return Menu_state;
+    }(Phaser.State));
+    State.Menu_state = Menu_state;
+})(State || (State = {}));
 //# sourceMappingURL=game.js.map
