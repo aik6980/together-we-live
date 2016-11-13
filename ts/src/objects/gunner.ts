@@ -4,7 +4,9 @@ module Objects{
 
         weapon : Phaser.Weapon;
         powerLevel: number; //based on number of recruits (i.e. the rescued pandas)
-        rotateSpeed: number = gameplay_gunner_baseTurnSpeed;
+        rotateSpeed: number = settings.gameplay.gunner.baseTurnSpeed;
+
+        //bulletSpeed: number = ;
 
         recruits : Phaser.Group;
         anchors : Phaser.Group;
@@ -16,7 +18,8 @@ module Objects{
         right_button : Phaser.Key;
 
         constructor(game : Phaser.Game, x: number, y: number){
-            super(game, x, y, 'ship');
+            //super(game, x, y, 'ship');
+            super(game, x, y, 'gunner_turret');
             this.game.physics.enable(this, Phaser.Physics.ARCADE);
             this.body.immovable = true; //stop shoving the gunner!
 
@@ -38,7 +41,8 @@ module Objects{
 
             // init weapon based on powerLevel
             this.weapon = this.game.add.weapon(30, 'bullet');
-            this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
+            this.weapon.bulletLifespan = 2000; //2 seconds
+            this.weapon.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
             this.weapon.bulletSpeed = 200;
             this.weapon.fireRate = 400;
         }
@@ -118,7 +122,7 @@ module Objects{
 
         kidnapPandaWith(kidnapper : Panda)
         {
-            var panda = this.recruits.getAt(0) as Objects.Panda;
+            var panda = this.getClosestRecruit(kidnapper.position);
             this.removePanda(panda);
 
             // pick offscreen direction
@@ -158,6 +162,26 @@ module Objects{
 
             this.recruits.remove(panda);
             this.refreshRing();
+        }
+
+        getClosestRecruit(target : Phaser.Point)
+        {
+            var closest_panda : Panda;
+            var closest_distance;
+
+            this.recruits.forEach(panda => {
+
+                var diff_x = target.x - panda.x; 
+                var diff_y = target.y - panda.y; 
+                var distance = diff_x*diff_x + diff_y*diff_y;
+
+                if (closest_panda == null || distance < closest_distance)
+                {
+                    closest_panda = panda;
+                }
+            }, null, true);
+
+            return closest_panda;
         }
 
         refreshRing()

@@ -1,0 +1,29 @@
+{ 
+  "devMode": true
+, "debugBoundingBoxes": false
+, "gameplay": {
+	  "gunner": {
+		  "baseTurnSpeed": 300
+		, "startingRecruits": 3
+		, "winRecruits": 10
+		}
+	, "runner": {
+		  "baseSpeed": 150
+		, "chainLengthSlowDown": 5
+		, "chainMaxSlowDown": 0.7
+		, "prewarpTime": 1000
+		}
+	, "panda": {
+		  "baseSpeed": 100
+		, "stunTime": 5000
+		, "stunLockCount": 4
+		}
+	, "spawnsystem": {
+		  "spawnRateMin": 500
+		, "spawnRateMax": 3000
+		, "spawnLimit": 50
+		, "hostileLimit": 20
+		, "spawnQuantity": 1
+		}
+	}
+}
