@@ -5,7 +5,7 @@
 	  "gunner": {
 		  "baseTurnSpeed": 300
 		, "startingRecruits": 3
-		, "winRecruits": 10
+		, "winRecruits": 4
 		}
 	, "runner": {
 		  "baseSpeed": 150
@@ -21,8 +21,7 @@
 	, "spawnsystem": {
 		  "spawnRateMin": 500
 		, "spawnRateMax": 3000
-		, "spawnLimit": 50
-		, "hostileLimit": 20
+		, "spawnLimit": 30
 		, "spawnQuantity": 1
 		}
 	}

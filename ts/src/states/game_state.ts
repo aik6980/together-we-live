@@ -100,7 +100,6 @@ module State{
 
             //dev controls
             if (settings.devMode){
-                console.log("dev mode enabled")
                 ///num keys to change all the pandas states?
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.ONE).onUp.add(this.changeAllPandasState, this, null, "hostile");
                 //this.game.input.keyboard.addKey(Phaser.Keyboard.TWO).onUp.add(this.changeAllPandasState, this, null, "stunned");
@@ -123,9 +122,6 @@ module State{
                 this.game.input.keyboard.addKey(Phaser.Keyboard.HOME).onUp.add(function(){ this.spawn_system.spawnEnabled = true; }, this);
                 this.game.input.keyboard.addKey(Phaser.Keyboard.END).onUp.add(function(){ this.spawn_system.spawnEnabled = false; }, this);
             //this.game.time.events.repeat(Phaser.Timer.SECOND, 3, this.createFollowingPanda, this);
-            
-            } else {
-                console.log("dev mode disabled")
             }
         }
 
@@ -145,7 +141,7 @@ module State{
             ///DID YOU LOSE YET?
             if (this.gunner.recruits.length == 0){
                 this.loseTheGame();
-                //this.game.paused = true;
+                this.game.paused = true;
             }
 
             ////DID YOU WIN YET??
@@ -214,7 +210,7 @@ module State{
             this.spawn_system.spawnEnabled = false; //disable spawns
             this.changeAllPandasState(null, "rescued"); //rescue all remaining pandas
 
-            var str = "YOU WON!!!!";
+            var str = "YOU\nBOTH\nWON!!!!";
             this.game.debug.text(str, 250, 250);
             //this.game.add.text(this.game.width/2, this.game.height/2, winText);
             var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
