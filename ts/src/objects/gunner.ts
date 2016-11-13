@@ -4,7 +4,7 @@ module Objects{
 
         weapon : Phaser.Weapon;
         powerLevel: number; //based on number of recruits (i.e. the rescued pandas)
-        rotateSpeed: number = 300;
+        rotateSpeed: number = gameplay_gunner_baseTurnSpeed;
 
         recruits : Phaser.Group;
         anchors : Phaser.Group;
@@ -104,9 +104,8 @@ module Objects{
             var anchor = this.game.add.sprite(0, 0);
             this.anchors.add(anchor)
 
-            anchor.x = this.x
-            anchor.y = this.y
-            //anchor.anchor.setTo(0.5);
+            anchor.x = this.x;// - this.width / 2;
+            anchor.y = this.y;// - this.height / 2;
 
             panda.target = new Phaser.Point();
 

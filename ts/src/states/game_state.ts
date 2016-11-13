@@ -1,6 +1,7 @@
 module State{
-    export class Game_state extends Phaser.State{
-
+    type pandaStates = "hostile" | "stunned" | "attached" | "rescued" | "sleepy";
+    
+    export class Game_state extends Phaser.State{  
         unit = 16;
         bmd_unit_white : Phaser.BitmapData;
         bmd_unit_black : Phaser.BitmapData;
@@ -9,11 +10,10 @@ module State{
 
         // world
         level : Level.Level;
-
-        devMode: boolean = true;
+        world_objects : Phaser.Group;
+        devMode: boolean = global_devMode;
 
         // Players
-        world_objects : Phaser.Group;
         runner : Objects.Runner;
         gunner : Objects.Gunner;
 
@@ -46,6 +46,10 @@ module State{
 
             //spritesheet
             this.game.load.spritesheet('ghosts', 'assets/img/tiny32_ghost.png', 30, 32)
+
+            //Sounds
+
+            //Videos
         }
 
         create(){
@@ -65,6 +69,8 @@ module State{
 
             this.spawner = this.game.add.group();
             this.spawn_system = new Objects.Spawn_System(this);
+            console.log("this.spawn_system created ", this.spawn_system);
+            this.spawn_system.spawnCountdownStart();
 
             // world scaling helper
             this.world_objects = this.game.add.group();
@@ -72,7 +78,6 @@ module State{
             
             this.world_objects.add(this.pandas);
             this.world_objects.add(this.spawner);
-            this.world_objects.add(this.colliders);
 
             this.level.add_gameobjects(this);
 
@@ -89,15 +94,19 @@ module State{
 
             this.game.input.keyboard.addKey(Phaser.Keyboard.SIX).onUp.add(this.spawn_trigger, this, null);
 
-            this.game.input.keyboard.addKey(Phaser.Keyboard.THREE).onUp.add(this.changeAllPandasState, this, null, "rescued");
+            this.game.input.keyboard.addKey(Phaser.Keyboard.SEVEN).onUp.add(this.changeAllPandasState, this, null, "rescued");
             this.game.input.keyboard.addKey(Phaser.Keyboard.FIVE).onUp.add(this.changeAllPandasState, this, null, "attached");
             this.game.input.keyboard.addKey(Phaser.Keyboard.ZERO).onUp.add(this.changeAllPandasState, this, null, "sleepy");
 
             this.game.input.keyboard.addKey(Phaser.Keyboard.EIGHT).onUp.add(this.removeOnePandaFromGunner, this);
 
+            this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_UP).onUp.add(this.winTheGame, this);
+            this.game.input.keyboard.addKey(Phaser.Keyboard.PAGE_DOWN).onUp.add(this.loseTheGame, this);
+
             // TEST for gunner
             //this.game.time.events.repeat(Phaser.Timer.SECOND, 30, this.createRescuedPanda, this);
             //this.game.time.events.repeat(Phaser.Timer.SECOND * 5, 30, this.createHostilePanda, this);
+            //this.game.time.events.repeat(Phaser.Timer.SECOND, 3, this.createFollowingPanda, this);
         }
 
         spawn_trigger(args){
@@ -113,23 +122,34 @@ module State{
             ///Collisions
             //N.b. the player when "warping" is not checked for collision;
 
+            ////DID YOU WIN YET??
+            if (this.gunner.recruits.length >= gameplay_gunner_winRecruits){
+                this.winTheGame();
+            }
+            
+
             //character collisions
             this.game.physics.arcade.overlap(this.runner, this.pandas, this.runner.collidePanda, function(){ return this.runner.state != 'warping';}, this); 
             this.game.physics.arcade.overlap(this.gunner, this.pandas, this.gunner.collidePanda, null, this);
             this.game.physics.arcade.collide(this.runner, this.gunner, this.runner.collideGunner, null, this); //don't walk through the gunner
 
             //level collisions
-            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this);
+            this.game.physics.arcade.collide(this.runner, this.level.collision_layer, null, function(){ return this.runner.state != 'warping';}, this); 
             //this.game.physics.arcade.collide(this.pandas, this.level.collision_layer);
 
             //bullet collisions
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.pandas, this.shotPanda, null, this);
             this.game.physics.arcade.overlap(this.gunner.weapon.bullets, this.runner, this.shotRunner, function(){ return this.runner.state != 'warping';}, this);
+
         }
 
         render(){
+
+            //Progress
+            var progressText = "Rescued: " + this.gunner.recruits.length + " / " + gameplay_gunner_winRecruits
+            this.game.debug.text(progressText, 20, 0+20); //progress Text in top left
 			
-            var debugBoundingBoxes = true;
+            var debugBoundingBoxes = false;
             if (this.devMode)
 
                 if (debugBoundingBoxes){
@@ -145,11 +165,33 @@ module State{
                 }
                 
                 this.game.debug.text("object in world_objects: " + this.world_objects.total, 10, this.game.height - 60);
-                this.game.debug.text("Gunner position" + this.gunner.x + ", "+ this.gunner.y, 10, this.game.height - 40);
-  //              this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
-//                this.game.debug.text("Runner: " + this.runner.state + "with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
+                //this.game.debug.text("Gunner position" + this.gunner.x + ", "+ this.gunner.y, 10, this.game.height - 40);
+                this.game.debug.text("Pandas in play: " + this.pandas.total, 10, this.game.height - 40);
+                this.game.debug.text("Runner: " + this.runner.alive + " " + this.runner.state + " with " + (this.runner.linked_pandas.total -1) + " pandas in tow." , 10, this.game.height - 20);
 
-                this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
+                //this.game.debug.text("gunner: " + this.gunner.x + " " + this.gunner.y, 10, 280);
+
+        }
+
+        winTheGame(){
+            //(currently text not appearing for long though - need to change state, freeze the spawns etc)
+            console.log("winTheGame()");
+            var str = "YOU WON!!!!";
+            this.game.debug.text(str, 250, 250);
+            //this.game.add.text(this.game.width/2, this.game.height/2, winText);
+            var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
+            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            text.anchor.set(0.5);
+        }
+
+        loseTheGame(){
+            console.log("loseTheGame()");
+            var str = "YOU\nBOTH\nLOST";
+            this.game.debug.text(str, 250, 250);
+            //this.game.add.text(this.game.width/2, this.game.height/2, winText);
+            var style = { font: "65px Arial", fill: "#ff0044", align: "center" };
+            var text = this.add.text(this.world.centerX, this.world.centerY, str, style);
+            text.anchor.set(0.5);
         }
 
         shotPanda(bullet, panda)
@@ -169,10 +211,16 @@ module State{
         }
 
         spawnPanda(x, y){
-            var obj = new Objects.Panda(this.game, x, y, "hostile");
-            obj.target = this.gunner.position;
-            //console.log(obj.target);
-            return obj;
+            //spawn panda in default Hostile stance
+            return this.spawnPandaInState(x, y, "hostile");
+        }
+
+        spawnPandaInState(x, y, state: pandaStates){
+            var pobj = new Objects.Panda(this.game, x, y, state);
+            pobj.body.height = pobj.body.height * this.level.current_scale;
+            pobj.body.width = pobj.body.width * this.level.current_scale;
+            pobj.target = this.gunner.position; //pandas target the Gunner by default
+            return pobj;
         }
 
         changeAllPandasState(args, state: string){
@@ -189,9 +237,16 @@ module State{
 
         createHostilePanda()
         {            
-            var panda = this.spawnPanda(this.world.width * this.world.scale.x, this.world.height);
+            var panda = this.spawnPanda(this.gunner.position.x + 300, this.gunner.position.y + 300);
             this.pandas.add(panda);
             panda.changeState("hostile");
+        }
+
+        createFollowingPanda()
+        {            
+            var panda = this.spawnPanda(this.runner.position.x, this.runner.position.y);
+            this.pandas.add(panda);
+            this.runner.attachPanda(panda);
         }
 
         removeOnePandaFromGunner()
@@ -218,14 +273,19 @@ function moveToTarget(source: Phaser.Sprite, target: PIXI.Point, distance: numbe
             source.body.velocity.x *= gospeed / magnitude;
             source.body.velocity.y *= gospeed / magnitude;
         }
+        else
+        {
+            source.body.velocity.x = 0;
+            source.body.velocity.y = 0;
+        }
     }
     else if (source.body.velocity.x > distance || source.body.velocity.x < -distance ||
         source.body.velocity.y > distance || source.body.velocity.y < -distance)
     {
-    //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
-    var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y);
-    source.body.velocity.x *= gospeed / magnitude;
-    source.body.velocity.y *= gospeed / magnitude;
+        //the GetMagnitude() velocity function was "not found" despite existing... so Hubert just rewrote it inline :)
+        var magnitude = Math.sqrt(source.body.velocity.x*source.body.velocity.x+source.body.velocity.y*source.body.velocity.y);
+        source.body.velocity.x *= gospeed / magnitude;
+        source.body.velocity.y *= gospeed / magnitude;
     }
     else
     {
@@ -256,22 +316,33 @@ function RemoveFromWorldObjects(object)
 
 var global_game_scale = 1.0;
 
-////Global Gameplay variables
+
+function randomIntFromInterval(min,max)
+{
+    return Math.floor(Math.random()*(max-min+1)+min);
+}
+
+////Global Gameplay variables (Time units should be ms as the functions will divide by 1000)
+var global_devMode: boolean = true;
 
 //Gunner Gameplay
 var gameplay_gunner_baseTurnSpeed: number = 300;
-var gameplay_gunner_startingPandaLives: number = 3;
+var gameplay_gunner_startingRecruits: number = 3;
+var gameplay_gunner_winRecruits: number = 10; //number of pandas required to win
 
 //Runner Gameplay
 var gameplay_runner_baseSpeed: number = 150;
 var gameplay_runner_chainLengthSlowDown: number = 5;
-var gameplay_runner_chainMaxSlowDown: number = 0.7; 
+var gameplay_runner_chainMaxSlowDown: number = 0.7;
+var gameplay_runner_prewarpTime: number = 1000; //how long to wait in shot/scared state before warping 
 
 //Panda Gameplay
 var gameplay_panda_baseSpeed: number = 100;
 var gameplay_panda_stunTime: number = 5000;
 var gameplay_panda_stunLockCount: number = 4; //if stunlocked x times without a break will be respawned elsewhere
 
-var gameplay_pandas_spawnRateMin: number = 1000;
+var gameplay_pandas_spawnRateMin: number = 500;
 var gameplay_pandas_spawnRateMax: number = 3000;
-var gameplay_pandas_maxEmbarrassment: number = 500; //maximum number of pandas
+var gameplay_pandas_spawnLimit: number = 50; //max number of pandas spawned (should be >= the winRecruits)
+var gameplay_pandas_hostileLimit: number = 20; //NOT IMPLEMENTED YET - would be a way to do pandas - recruits = hostiles and not too many spawned (though we don't despawn)
+var gameplay_pandas_spawnQuantity: number = 1; //how many to spawn at once
