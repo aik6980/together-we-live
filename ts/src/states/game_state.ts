@@ -59,7 +59,7 @@ module State{
             this.game.load.image('gunner_turret', 'assets/img/gunner_turret_40.png');
 
             // grayscale shader
-            this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
+            this.game.load.script('gray', 'js/Gray.js');
 
             this.game.load.tilemap('world', 'assets/data/world.json', null, Phaser.Tilemap.TILED_JSON);
             //this.game.load.image('world_tileset', 'assets/img/tiny32.png');
