@@ -15,7 +15,7 @@ var SimpleGame;
             this.state.start('menu');
         }
         return Game;
-    }(Phaser.Game));
+    })(Phaser.Game);
     SimpleGame.Game = Game;
 })(SimpleGame || (SimpleGame = {}));
 // the game
@@ -157,7 +157,7 @@ var Level;
             }
         };
         return Level;
-    }());
+    })();
     Level_1.Level = Level;
 })(Level || (Level = {}));
 var Objects;
@@ -240,7 +240,7 @@ var Objects;
             var index = 0;
             this.anchors.forEach(function (anchor) {
                 anchor.angle += 1;
-                var panda = _this.recruits.getAt(index++);
+                var panda = _this.recruits.getAt(index++), as = Objects.Panda;
                 panda.target.x = (anchor.worldPosition.x - _this.worldPosition.x) / global_game_scale + anchor.position.x;
                 panda.target.y = (anchor.worldPosition.y - _this.worldPosition.y) / global_game_scale + anchor.position.y;
             }, null, true);
@@ -307,7 +307,7 @@ var Objects;
             AddToWorldObjects(kidnapper);
         };
         Gunner.prototype.removePanda = function (panda) {
-            var anchor = this.anchors.getAt(0);
+            var anchor = this.anchors.getAt(0), as = Phaser.Sprite;
             this.anchors.remove(anchor);
             this.recruits.remove(panda);
             this.refreshRing();
@@ -342,12 +342,13 @@ var Objects;
             }, null, true);
         };
         return Gunner;
-    }(Phaser.Sprite));
+    })(Phaser.Sprite);
     Objects.Gunner = Gunner;
 })(Objects || (Objects = {}));
 //pandas are wondering the map, they can be friends, enemies, collectibles and lives
 var Objects;
 (function (Objects) {
+    "hostile" | "stunned" | "attached" | "rescued" | "released" | "sleepy";
     var Panda = (function (_super) {
         __extends(Panda, _super);
         function Panda(game, x, y, startState) {
@@ -593,12 +594,13 @@ var Objects;
             }
         };
         return Panda;
-    }(Phaser.Sprite));
+    })(Phaser.Sprite);
     Objects.Panda = Panda;
 })(Objects || (Objects = {}));
 //The runner is the player that goes and collect
 var Objects;
 (function (Objects) {
+    "alive" | "shot" | "scared" | "warping" | "dead";
     var Runner = (function (_super) {
         __extends(Runner, _super);
         function Runner(game, x, y) {
@@ -775,7 +777,7 @@ var Objects;
             this.kill();
         };
         return Runner;
-    }(Phaser.Sprite));
+    })(Phaser.Sprite);
     Objects.Runner = Runner;
 })(Objects || (Objects = {}));
 var Objects;
@@ -791,7 +793,7 @@ var Objects;
         Spawner.prototype.update = function () {
         };
         return Spawner;
-    }(Phaser.Sprite));
+    })(Phaser.Sprite);
     Objects.Spawner = Spawner;
     var Spawn_System = (function () {
         function Spawn_System(game_state) {
@@ -830,7 +832,7 @@ var Objects;
             this.spawnInState("hostile");
         };
         return Spawn_System;
-    }());
+    })();
     Objects.Spawn_System = Spawn_System;
 })(Objects || (Objects = {}));
 var Objects;
@@ -844,11 +846,12 @@ var Objects;
         Wall.prototype.update = function () {
         };
         return Wall;
-    }(Phaser.Sprite));
+    })(Phaser.Sprite);
     Objects.Wall = Wall;
 })(Objects || (Objects = {}));
 var State;
 (function (State) {
+    "hostile" | "stunned" | "attached" | "rescued" | "sleepy";
     var Game_state = (function (_super) {
         __extends(Game_state, _super);
         function Game_state() {
@@ -873,7 +876,7 @@ var State;
             this.game.load.image('ship', 'assets/img/thrust_ship.png');
             this.game.load.image('gunner_turret', 'assets/img/gunner_turret_40.png');
             // grayscale shader
-            this.game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/Gray.js');
+            this.game.load.script('gray', 'js/Gray.js');
             this.game.load.tilemap('world', 'assets/data/world.json', null, Phaser.Tilemap.TILED_JSON);
             //this.game.load.image('world_tileset', 'assets/img/tiny32.png');
             this.game.load.image('world_tileset', 'assets/img/tiny32_coloured.png');
@@ -1237,7 +1240,7 @@ var State;
             this.runner.attachPanda(panda);
         };
         Game_state.prototype.removeOnePandaFromGunner = function () {
-            var panda = this.gunner.recruits.getAt(0);
+            var panda = this.gunner.recruits.getAt(0), as = Objects.Panda;
             this.gunner.removePanda(panda);
             panda.kill();
         };
@@ -1294,7 +1297,7 @@ var State;
             }
         };
         return Game_state;
-    }(Phaser.State));
+    })(Phaser.State);
     State.Game_state = Game_state;
 })(State || (State = {}));
 //Global Functions
@@ -1435,7 +1438,7 @@ var State;
             this.game.state.start('game');
         };
         return Menu_state;
-    }(Phaser.State));
+    })(Phaser.State);
     State.Menu_state = Menu_state;
 })(State || (State = {}));
 //# sourceMappingURL=game.js.map
