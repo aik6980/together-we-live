@@ -8,7 +8,7 @@ var SimpleGame;
     var Game = (function (_super) {
         __extends(Game, _super);
         function Game() {
-            _super.call(this, 512, 512, Phaser.AUTO, 'theGame', null);
+            _super.call(this, 512, 512, Phaser.WEBGL, 'theGame', null);
             // add states
             this.state.add('menu', new State.Menu_state);
             this.state.add('game', new State.Game_state);
@@ -1381,6 +1381,8 @@ var State;
             this.game.load.audio('Turret_HitsHatter1', ['assets/snd/Turret_HitsHatter1.ogg']);
             this.game.load.audio('Turret_HitsHatter2', ['assets/snd/Turret_HitsHatter2.ogg']);
             //this.game.load.audio('Turret_HitsNothing', ['assets/snd/Turret_HitsNothing.ogg']);
+            //this.game.add.plugin(Phaser.Plugin.Debug);
+            this.game.time.desiredFps = 30.0;
         };
         Menu_state.prototype.create = function () {
             this.game.stage.backgroundColor = "#4488AA";

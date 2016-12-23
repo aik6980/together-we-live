@@ -31,6 +31,9 @@ module State{
             this.game.load.audio('Turret_HitsHatter1', ['assets/snd/Turret_HitsHatter1.ogg']);
             this.game.load.audio('Turret_HitsHatter2', ['assets/snd/Turret_HitsHatter2.ogg']);
             //this.game.load.audio('Turret_HitsNothing', ['assets/snd/Turret_HitsNothing.ogg']);
+
+            //this.game.add.plugin(Phaser.Plugin.Debug);
+            this.game.time.desiredFps = 30.0;
         }
 
         create(){
