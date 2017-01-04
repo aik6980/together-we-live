@@ -504,7 +504,7 @@ module State{
         changeAllPandasState(args, state: string){
             this.pandas.forEachExists(function(panda) { panda.changeState(state); }, null );
             //this.pandas.setAll('state', state);
-            console.log("Made all the pandas " + state);
+            //console.log("Made all the pandas " + state);
     }
 
         createRescuedPanda()
@@ -538,7 +538,7 @@ module State{
             //rescue all remaining pandas
             if (this.pandas.length>0){
                 this.pandas.forEach(function(panda: Phaser.Sprite){
-                    console.log("rescuing panda " + panda);
+                    //console.log("rescuing panda " + panda);
                     this.gunner.rescuePanda(panda);
                 }, this);
             }

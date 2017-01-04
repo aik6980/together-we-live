@@ -215,7 +215,7 @@ module Objects{
         }
 
         die(){
-            console.log("runner is dying")
+            //console.log("runner is dying")
             this.kill()
         }
     }

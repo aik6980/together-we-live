@@ -152,7 +152,7 @@ module Objects{
         }
 
         die(){
-            console.log("gunner is dying (lose 1 life)")
+            //console.log("gunner is dying (lose 1 life)")
             //
             //this.kill()
         }
