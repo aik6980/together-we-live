@@ -1,0 +1,29 @@
+{
+    "app_name": "lovegunner",
+    "main": "index.html",
+    "name": "lovegunner",
+    "nodejs": false,
+    "webexe_settings": {
+        "blacklist": "",
+        "custom_script": "",
+        "download_dir": "G:\\Franco Jam 2016\\Web2ExeWin\\files\\nwjs",
+        "export_dir": "builds",
+        "force_download": false,
+        "nw_compression_level": 0,
+        "nw_version": "0.19.5",
+        "output_pattern": "",
+        "sdk_build": false,
+        "uncompressed_folder": false,
+        "whitelist": "",
+        "windows-x32": false,
+        "windows-x64": true
+    },
+    "webkit": {},
+    "window": {
+        "height": 800,
+        "id": "lovegunner",
+        "position": "center",
+        "title": "lovegunner",
+        "width": 800
+    }
+}

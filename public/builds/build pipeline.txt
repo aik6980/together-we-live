@@ -1,0 +1,27 @@
+Current build pipeline uses NW.JS (formerly node webkit) to provide a standalone web application for the end user.
+Build Tool is Web2Exe by jyapayne on https://github.com/jyapayne/Web2Executable. (using the windows zip release).
+Web2Exe *should* be able to download the required versions of nwjs itself but each time it has crashed for me after creating a 0byte file. Instead manually download the required platform zips from https://nwjs.io/downloads/ (I've been using the latest stable version: 0.19.5). Wherever you save them should be referenced in the "Download Settings" tab of Web2Exe. [N.b. if you want to build SDK versions with dev tools make sure to download these and then tick SDK build in Web2Exe].
+
+I have setup the required json configurations: package.json (nwjs) and web2exe.json although many more configuration options are available.
+
+
+Current Issues:
+When building with an icon selected the build succeeds but the executable won't launch as it can't find the path to the icon - likely a relative pathing issue.
+
+Unresolvable issue:
+NWJS contains a lot of useful framework and api stuff... downside is that this means it clocks in at around 80-100mb. Our game is only about 8mb. There are some compression options but these do affect build and startup time. Alternatively having built our folder we can then zip the whole thing.
+
+Resolved Issues:
+Build succeeds but only contains standard nwjs (no game code). Resolution: make sure the Output Directory is set as a child of the public folder - I have just called it "builds".
+
+NWJS:
+To test NWJS without building just put the whole public folder into an extracted nwjs zip, drop in a package.json with at least this code (below) and then run nwjs.exe.
+	Standard NWJS package.json:
+	{
+		"main": "index.html",
+		"name": "lovegunner"
+	}
+	
+	
+Blog about using this for phaser specifically (though not hugely detailed):
+http://bravebunny.co/blog/getting-a-phaser-game-on-steam-3-executable

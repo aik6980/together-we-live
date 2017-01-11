@@ -1,0 +1,17 @@
+{
+    "webexe_settings": {
+        "blacklist": "Team5nd_redirect.html",
+        "custom_script": "",
+        "download_dir": "G:\\Franco Jam 2016\\Web2ExeWin\\files\\nwjs",
+        "export_dir": "builds",
+        "force_download": false,
+        "nw_compression_level": 0,
+        "nw_version": "0.19.5",
+        "output_pattern": "",
+        "sdk_build": false,
+        "uncompressed_folder": false,
+        "whitelist": "index.html",
+        "windows-x32": false,
+        "windows-x64": true
+    }
+}
